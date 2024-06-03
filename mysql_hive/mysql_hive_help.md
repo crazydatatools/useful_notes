@@ -49,7 +49,6 @@ FROM TBLS t, SDS s, COLUMNS_V2 c
 WHERE t.SD_ID = s.SD_ID
 AND s.cd_id = c.cd_id
 AND lower(tbl_name)  like '%tnacusd%'
-order by create_time
 
 # ==========oozie cmds==============
 
