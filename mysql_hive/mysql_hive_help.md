@@ -36,7 +36,9 @@ from
    on T.TBL_ID=TP.TBL_ID
    where lower(T.TBL_NAME)  like '%projection%'
    order by (T.CREATE_TIME) desc;
-
+Ctrl+Shift-V
+ (Ctrl+K V) as a keyboard shortcut to create
+ trl+Space, and VS Code will provide you with a context sensitive list of Markdown commands
 # ====Hive Std=====================
 
 SELECT c.column_name, tbl_name, c.comment, c.type_name, c.integer_idx,
