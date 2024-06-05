@@ -19,9 +19,9 @@ df_narrow_transform.explain(True)
 - Wide Transformations
   - Repartition -either increase or decrease ur partitions by re-distributing your data
   - Coalesce
-  - joins
+  - joins-- SortMerge Join & Broadcast Join
   - group bys
-     - count
+    - count
     - countDistinct
     - sum
 
