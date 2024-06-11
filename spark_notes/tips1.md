@@ -28,7 +28,7 @@ df_narrow_transform.explain(True)
 ### code snippet
 ```
 df_wide_transform= df.rdd.getNumPartitions()
-df.repartition(24).explain(True)  ---AdaptiveSparkPlan--runtime plan,round robin-partition scheme
+df.repartition(24).explain(True)  ---AdaptiveSparkPlan (AQE-Adaptive QueyExecution--3.0)--runtime plan,round robin-partition scheme
 
 df.rdd.getNumPartitions()
 df.coalesce(1).
@@ -71,3 +71,14 @@ df_txn_amt_city = (
     .agg(F.countDistinct("city").alias("city_cnt"))
 )
 ```
+
+# Spark Execution Container
+- On-Heap Memory (spark.exetor.memory)
+- Execution Memory( joins,shuffles,Sorting,GroupBy)
+- Strorage Memory (RDD,Dataframes,Caching,Broadcast variables)
+- User Memory(user defined data structures,variables,objects)
+- Reserved Memory (300 Mb)
+- Addtions
+    - Off-Heap Memory
+    - Overhead
+

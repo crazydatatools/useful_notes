@@ -359,3 +359,8 @@ group by  ITEM_NAME,DBP.project_name,
                  FROM SDS s, COLUMNS_V2 c , DBS db, TBLS tbls
                  where tbls.SD_ID = s.SD_ID AND s.cd_id = c.cd_id  and db.db_id = tbls.db_id  
                  and location IS NOT  NULL)   tt  
+
+
+##call mysql
+
+mysql -h  maprsqldb.prod.com -u u_bd_ms_mysql_svc -p
