@@ -130,3 +130,81 @@ df_txn_amt_city = (
    - nos. of SP = 50 mb / 10 mb= 5 SP (based on optimal size of partion 1-200 we choose 10 mb) 
    - only 5 used out of 12 and rest sitting idle
    - no of sp = 50mb/12 cores= 4 .2 mb    
+
+
+## Hos to choose which column as partition column
+    - column with high cardinality like --cust_id
+    - low cardinality like state 
+    - low to medium cardinality
+    - filter column column
+
+##  How to control the no of partion while reading as file
+    ``` spark.conf.set("spark.sql.files.maxPartitionBytes","1000") --1kb size
+    df_mod= spark.read.csv("../data/file1.csv", header=True,InferSchema=True)
+    mod_part=df_mod.rdd.getNumPartitions()
+    if the file fize= 444kb then it reads 1kb files to total 448 partitions
+    ```
+
+## Bucketing
+    - operation like filter, groupby and join will be beneficial
+    -- if join then it will have shuffle/sort/merge
+    -- if column is high cardinality then partioning is not option it will create small file problem
+    --if bucketing then the join wud be efficient
+# how to decide optimal number of buckets?
+    - size of the dataset=x
+    - optimal bucket size =128-200 mb
+    - nod of buckets = size fo dataset/optimal bucket size==> 1000 MB/200 MB= 5
+
+# how to estimate the size of a dataset
+- number of megabytes=M=(nof of recrods(N)* number of variables(V)*avg width in bytes of avariable(W) /1024 pow 2 )
+```
+df_prducts.write.bucketBy(4,col='product_id")
+.mode("overwrite"
+.saveAsTable("products_bucketed"))
+```
+
+## RDD's
+- rdd are immutable,once created can't be modifed, operations on RDD's generate new RDD's,also heps data consistency and simlified fault recovery.
+- transformation on RDD's are not executed immediately,it execute only when actions are called.
+## transformations
+--Trasformation in spark refer to process of creating new RDD's from existing one.
+--Transformation do not alter the original RDD's and follow lazy evaluation.
+- transform a Spark DataFrame into a new DataFrame.
+## Actions
+- operation that actually trigger the exection of actions and transformation on RDDs.
+-Actions are any other operations that do not return a Spark DataFrame.like displaying a DataFrame on the screen, writing it to storage, or triggering an intentional computation on a DataFrame and returning the result.
+
+## SparkSession
+- Its an entrypoint to the functionality provided by spark, it will give interface to interact with spark distributed data processing capabilities
+
+## Data Skew
+- Simulating  uniform Dataset
+import pyspark.sql.functions as F
+```
+df_uniform= spark.range(100000)
+df_uniform.show(3,False)
+df_uniform
+    .withColumn("partition",F.spark_partition_id())
+    .groupBy("partition")
+    .count()
+    .orderBy("partition")
+    .show()
+
+```
+- Skewed Dataset
+
+```
+df0= spark.range(0,1000000).repartition(1)
+df1= spark.range(0,10).repartition(1)
+df2= spark.range(0,10).repartition(1)
+df_skew= df0.union(df1).union(df2)
+df_skew.show(3,False)
+(
+    df_skew 
+    .withColumn("partition",F.spark_partition_id())
+    .groupBy("partition")
+    .count()
+    .orderBy("partition")
+    .show()
+)
+```

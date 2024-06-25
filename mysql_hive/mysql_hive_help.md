@@ -364,3 +364,37 @@ group by  ITEM_NAME,DBP.project_name,
 ##call mysql
 
 mysql -h  maprsqldb.prod.com -u u_bd_ms_mysql_svc -p
+
+#2.DENSE_RANK( ): Seamless Ranking without Gaps
+It is similar to RANK(), but it eliminates gaps in the ranking sequence. The DENSE_RANK() assigns a unique, dense rank to each row within a window, ensuring a continuous ranking without skipping numbers.
+
+#3.ROW_NUMBER(): Sequential Identification
+It assigns a unique sequential integer to each row within a specified partition of a result set. The ROW_NUMBER() function in SQL is commonly used in scenarios where you need to assign a unique ranking or sequence to rows within a specified group or partition.
+
+#4.PERCENT_RANK( ): Quantifying Relative Position
+It calculates the percentile rank of each row within a window, providing a normalized measure ranging from 0 to 1. The PERCENT_RANK()is particularly useful when assessing the relative position of data in a distribution.
+
+#5.CUME_DIST( ): Cumulative Distribution Unveiled
+
+It computes the cumulative distribution of each row within a window, revealing its relative position in the entire dataset. The CUME_DIST()delivers a value between 0 and 1, indicating the cumulative percentage of data less than or equal to the current row.
+
+#6.NTILE( ): Dividing Data into Quantiles
+
+It breaks down the dataset into quantile buckets, allowing for the classification of rows based on their relative position. This function assigns a bucket number (1-based) to each row, facilitating the segmentation of data into equal parts.
+
+
+## Slow Changin Dimensions
+
+##SCD Type 1
+- A Slowly Changing Dimension Type 1 refers to an instance where the latest snapshot of a record is maintained in the data warehouse, without any historical records.
+SCD Type 1 are commonly used to correct errors in a dimension updating values that were wrong or irrelevant. No history is retained,A SCD Type 1 would update the record to reflect my name accurately, correcting the error in the name spelling. The incorrect record would be updated without adding any new rows or columns to the data warehouse.
+
+##SCD Type 2
+- So what is used when we want to maintain the history? very time there is a change in the source system, a new row will be added to the data warehouse table. In the resulting table, there will be more records, but the prior history is retained and queryable.In SCD Type 2, there would be two methods to distinguish between current and historical records:
+A column signifying the current record and to_date and from_date columns.
+
+##SCD Type 3
+we would have one row, but an additional column to denote the previous and current salary, along with a date the record was updated:this approach is that it offers the ability to compare a record before and after a change occurred, however limited history is preserved.
+
+##SCD Type 4
+Historical data will be maintained as in SCD Type 2 but the distinction here is that the history will be maintained on a separate table within the data warehouse. The current record will be included in the primary table.
