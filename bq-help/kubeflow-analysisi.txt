@@ -1,0 +1,54 @@
+svc-dev-kubeflow-analytics@sb-analytics-modeling-1.iam.gserviceaccount.com
+
+gcloud config set project sb-analytics-modeling-1
+gcloud container clusters get-credentials gke-dev-kubeflow-datasci-clu1 --zone=us-east1-b
+kubectl config set-context --current --namespace=kubeflow-datasci
+
+gcloud container clusters describe gke-dev-kubeflow-datasci-clu1 --zone=us-east1-b
+
+
+kubectl get pvc -o json | jq -r '.items[].metadata.name'
+
+gcp-subnet-it-prod-lg-use1-1
+
+svc-prod-terraform-gcpadmin@gpcadmin.iam.gserviceaccount.com
+sudo apt-get install google-cloud-sdk-gke-gcloud-auth-plugin kubectl
+export USE_GKE_GCLOUD_AUTH_PLUGIN=True
+source ~/.bashrc
+gcloud compute instances create adhoc-edge \
+    --project=gpcadmin \
+    --zone=us-east1-b \
+    --machine-type=e2-medium \
+    --network-interface=stack-type=IPV4_ONLY,subnet=projects/prod-pch-it-networking/regions/us-east1/subnetworks/gcp-subnet-it-prod-lg-use1-1,no-address \
+    --maintenance-policy=MIGRATE \
+    --provisioning-model=STANDARD \
+    --service-account=svc-prod-terraform-gcpadmin@gpcadmin.iam.gserviceaccount.com \
+    --scopes=https://www.googleapis.com/auth/cloud-platform \
+    --create-disk=auto-delete=yes,boot=yes,device-name=test,image=projects/debian-cloud/global/images/debian-11-bullseye-v20230509,mode=rw,size=20,type=projects/gpcadmin/zones/us-east1-b/diskTypes/pd-balanced \
+    --no-shielded-secure-boot \
+    --shielded-vtpm \
+    --shielded-integrity-monitoring \
+    --labels=purpose=admin_activities,usage=adhoc,goog-ec-src=vm_add-gcloud \
+    --reservation-affinity=any
+
+
+      gcloud compute ssh  "adhoc-edge" --zone "us-east1-b"  --project "gpcadmin" --internal-ip
+
+      https://cloud.google.com/ai-platform/pipelines/docs/upgrading
+
+      bkt-tigeranalytics-artifacts-repository
+      namespace: kubeflow-datasci
+  MYSQL_DATABASE: kubeflow_datasci_metadata
+  MYSQL_HOST: sb-analytics-modeling-1:us-east1:clmysql-prod-mlflow-metastore
+  MYSQL_PORT: "3306"
+  - -instances=sb-analytics-modeling-1:us-east1:clmysql-prod-mlflow-metastore=tcp:0.0.0.0:3306
+      kubeflow_datasci_metadata
+
+
+notebooks --  gcp-subnet-it-prod-sb-use1-1
+
+GKE--gcp-subnet-it-prod-gkebknd-use1-1
+Cluster Pod IPv4 range (default)	10.80.128.0/21
+IPv4 service range	10.80.152.0/22
+Control plane authorized networks	
+(10.80.0.0/16)

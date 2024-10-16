@@ -1,0 +1,94 @@
+bq mk --connection --location=us-central1 --project_id=prod-pch-it-cnstmgmt --connection_type=CLOUD_RESOURCE  bl_ppic_bkt_uat_fq_goldcore
+
+
+-- creating the definition file
+bq mkdef --source_format PARQUET --hive_partitioning_mode=AUTO --hive_partitioning_source_uri_prefix=gs://bkt_uat_fq_goldcore/sa/bigdata/rdbms/prod/spark/geolocationstats/paws_import/20240823/reference/geolocationstats_append/ gs://bkt_uat_fq_goldcore/sa/bigdata/rdbms/prod/spark/geolocationstats/paws_import/20240823/reference/geolocationstats_append/* >/tmp/geolocationstats_append
+ 
+--creating the table
+bq mk --external_table_definition=/tmp/geolocationstats_append it_sa_onl_ing_ref_ext.geolocationstats
+
+prod-pch-it-cnstmgmt.it_sources.src_contests
+
+    CREATE EXTERNAL TABLE it_sa_onl_ing_ref_ext.geolocationstats
+  WITH PARTITION COLUMNS(ing_load_dt DATE)
+WITH CONNECTION `us.bl_ppic_bkt_uat_fq_goldcore`
+OPTIONS(
+  hive_partition_uri_prefix = "gs://bkt_uat_fq_goldcore/sa/bigdata/rdbms/prod/spark/geolocationstats/paws_import/20240823/reference/geolocationstats_append",
+  uris = ['gs://bkt_uat_fq_goldcore/sa/bigdata/rdbms/prod/spark/geolocationstats/paws_import/20240823/reference/geolocationstats_append/*'],
+  format= PARQUET,
+  max_staleness = INTERVAL 1 DAY,
+  metadata_cache_mode = 'AUTOMATIC'
+);
+
+projects/prod-pch-it-cnstmgmt/locations/us-central1/connections/bl_ppic_bkt_uat_fq_goldcore
+
+prod-gold-legacy-vault.it_dms_legacy_objects
+
+
+    CREATE EXTERNAL TABLE prod-gold-legacy-vault.it_dms_legacy_objects.DSMASTER_WK678_YR2022
+WITH CONNECTION `us-east1.bl_pglv_bkt_prod_gold_legacy_vault`
+OPTIONS(
+    format ="CSV",
+    uris = ['gs://bkt_prod_gold_legacy_vault/DB2/sftp/DSMASTER2022/*'],
+    field_delimiter="¦",
+  max_staleness = INTERVAL 2 HOUR,
+  metadata_cache_mode = 'MANUAL'
+    );
+
+
+-- creating the definition file
+bq mkdef --source_format PARQUET --hive_partitioning_mode=AUTO --hive_partitioning_source_uri_prefix=gs://bkt_uat_fq_goldcore/sa/bigdata/rdbms/prod/spark/reftokens/paws_import/20240823/reference/reftokens/ gs://bkt_uat_fq_goldcore/sa/bigdata/rdbms/prod/spark/reftokens/paws_import/20240823/reference/reftokens/* >/tmp/reftokens
+ 
+--creating the table
+bq mk --external_table_definition=/tmp/reftokens it_sa_onl_ing_ref_ext.reftokens
+
+  CREATE EXTERNAL TABLE it_sa_onl_ing_ref_ext.reftokens
+WITH CONNECTION `us.bl_ppic_bkt_uat_fq_goldcore`
+OPTIONS(
+    format ="PARQUET",
+    uris = ['gs://bkt_uat_fq_goldcore/sa/bigdata/rdbms/prod/spark/reftokens/paws_import/20240823/reference/reftokens/*'],
+  max_staleness = INTERVAL 1 DAY,
+  metadata_cache_mode = 'MANUAL'
+    );
+CALL BQ.REFRESH_EXTERNAL_METADATA_CACHE('prod-pch-it-cnstmgmt.it_sa_onl_ing_ref_ext.reftokens'); CALL BQ.REFRESH_EXTERNAL_METADATA_CACHE('prod-pch-it-cnstmgmt.it_sa_onl_ing_ref_ext.geolocationstats');
+
+
+
+  CREATE OR REPLACE EXTERNAL TABLE it_sa_onl_ing_ref_ext.reftokens
+WITH CONNECTION `us.bl_ppic_bkt_uat_fq_goldcore`
+OPTIONS(
+    format ="PARQUET",
+    uris = ['gs://bkt_uat_fq_goldcore/sa/bigdata/rdbms/prod/spark/reftokens/paws_import/20240823/reference/reftokens/*'],
+  max_staleness = INTERVAL 1 HOUR,
+  metadata_cache_mode = 'MANUAL'
+    );
+
+
+create or replace view `prod-pch-it-cnstmgmt.it_sa_onl_ing_ref_ext.vw_geolocationstats`
+as
+SELECT
+  CreatedDate as createddate,
+  GeoLocationCode as geolocationcode,
+  ZipPostalCode as zippostalcode,
+  safe_cast(Age as int64) as age,
+  Gender as gender,
+   safe_cast(NoofWinners as int64) as noofwinners,
+   safe_cast(CashPrizeAmount as int64) as cashprizeamount
+--   , ing_load_dt
+FROM
+  `it_sa_onl_ing_ref_ext.geolocationstats`
+ 
+CREATE OR REPLACE VIEW
+  `prod-pch-it-cnstmgmt.it_sa_onl_ing_ref_ext.vw_reftokens` AS
+SELECT
+  ReferenceID AS referenceid,
+  ReferenceToken AS referencetoken,
+  ParentReferenceToken AS parentreferencetoken,
+  DATETIME(CreatedDate,"America/New_York") AS createddate,
+  DATETIME(MinPrevRefEventDate,"America/New_York") AS minprevrefeventdate,
+  DATETIME(MaxPrevRefEventDate,"America/New_York") AS maxprevrefeventdate,
+  SAFE_CAST(PrevRefEventNo AS int64) AS prevrefeventno,
+  SAFE_CAST(PrevRefEventValue AS int64) AS prevrefeventvalue
+FROM
+  `uat-gold-core.it_sa_onl_ing_ref_ext.reftokens`
+ 

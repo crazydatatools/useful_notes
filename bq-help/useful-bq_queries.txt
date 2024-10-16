@@ -1,0 +1,155 @@
+#standardSQL
+# Fast FID by device
+
+CREATE TEMP FUNCTION IS_GOOD (good FLOAT64, needs_improvement FLOAT64, poor FLOAT64) RETURNS BOOL AS (
+  good / (good + needs_improvement + poor) >= 0.75
+);
+
+CREATE TEMP FUNCTION IS_NON_ZERO (good FLOAT64, needs_improvement FLOAT64, poor FLOAT64) RETURNS BOOL AS (
+  good + needs_improvement + poor > 0
+);
+
+SELECT
+  REGEXP_REPLACE(CAST(yyyymm AS STRING), '(\\d{4})(\\d{2})', '\\1_\\2_01') AS date,
+  UNIX_DATE(CAST(REGEXP_REPLACE(CAST(yyyymm AS STRING), '(\\d{4})(\\d{2})', '\\1-\\2-01') AS DATE)) * 1000 * 60 * 60 * 24 AS timestamp,
+  IF(device = 'desktop', 'desktop', 'mobile') AS client,
+  SAFE_DIVIDE(
+    COUNT(DISTINCT IF(IS_GOOD(fast_fid, avg_fid, slow_fid), origin, NULL)),
+    COUNT(DISTINCT IF(IS_NON_ZERO(fast_fid, avg_fid, slow_fid), origin, NULL))
+  ) * 100 AS percent
+FROM
+  `chrome-ux-report.materialized.device_summary`
+WHERE
+  device IN ('desktop', 'phone') AND
+  yyyymm >= 201806
+GROUP BY
+  date,
+  timestamp,
+  client
+ORDER BY
+  date DESC,
+  client
+
+
+    #standardSQL
+SELECT
+  SUBSTR(_TABLE_SUFFIX, 0, 10) AS date,
+  UNIX_DATE(CAST(REPLACE(SUBSTR(_TABLE_SUFFIX, 0, 10), '_', '-') AS DATE)) * 1000 * 60 * 60 * 24 AS timestamp,
+  IF(ENDS_WITH(_TABLE_SUFFIX, 'desktop'), 'desktop', 'mobile') AS client,
+  ROUND(SUM(IF(JSON_EXTRACT(report, '$.audits.image-alt.score') IN ('true', '1'), 1, 0)) * 100 / COUNT(0), 2) AS percent
+FROM
+  `httparchive.lighthouse.*`
+WHERE
+  report IS NOT NULL
+GROUP BY
+  date,
+  timestamp,
+  client
+ORDER BY
+  date DESC,
+  client
+
+  #standardSQL
+SELECT
+  SUBSTR(_TABLE_SUFFIX, 0, 10) AS date,
+  UNIX_DATE(CAST(REPLACE(SUBSTR(_TABLE_SUFFIX, 0, 10), '_', '-') AS DATE)) * 1000 * 60 * 60 * 24 AS timestamp,
+  IF(ENDS_WITH(_TABLE_SUFFIX, 'desktop'), 'desktop', 'mobile') AS client,
+  ROUND(COUNT(DISTINCT IF(LOWER(attr) = '"lazy"', url, NULL)) * 100 / COUNT(DISTINCT url), 2) AS percent
+FROM
+  `httparchive.pages.*`
+LEFT JOIN
+  UNNEST(JSON_EXTRACT_ARRAY(JSON_EXTRACT_SCALAR(payload, "$['_img-loading-attr']"), '$')) AS attr
+GROUP BY
+  date,
+  timestamp,
+  client
+ORDER BY
+  date DESC,
+  client
+
+  SELECT
+  SUBSTR(_TABLE_SUFFIX, 0, 10) AS date,
+  UNIX_DATE(CAST(REPLACE(SUBSTR(_TABLE_SUFFIX, 0, 10), '_', '-') AS DATE)) * 1000 * 60 * 60 * 24 AS timestamp,
+  IF(ENDS_WITH(_TABLE_SUFFIX, 'desktop'), 'desktop', 'mobile') AS client,
+  ROUND(
+    SUM(
+      IF(
+        respHttpVersion IN ('HTTP/3', 'h3', 'h3-29') OR
+        reqHttpVersion IN ('HTTP/3', 'h3', 'h3-29') OR
+        REGEXP_EXTRACT(REGEXP_EXTRACT(respOtherHeaders, r'alt-svc = (.*)'), r'(.*?)(?:, [^ ]* = .*)?$') LIKE '%h3=%' OR
+        REGEXP_EXTRACT(REGEXP_EXTRACT(respOtherHeaders, r'alt-svc = (.*)'), r'(.*?)(?:, [^ ]* = .*)?$') LIKE '%h3-29=%',
+        1, 0)) * 100 / COUNT(0), 2) AS percent
+FROM
+  `httparchive.summary_requests.*`
+WHERE
+  SUBSTR(_TABLE_SUFFIX, 0, 10) >= '2020_01_01'
+GROUP BY
+  date,
+  timestamp,
+  client
+ORDER BY
+  date DESC,
+  client
+
+
+  with vw_curr as (
+SELECT substr(view_definition, -11,10) sel_dt from  (select view_definition FROM prod-gold-core.analytics_dms_flat_variables.INFORMATION_SCHEMA.VIEWS where table_name ='dmsm10_dmdo002_current')) 
+select if (sel_dt=(SELECT string(DATE_TRUNC(CURRENT_DATE(), WEEK(SATURDAY)))),1,0) check_cond from vw_curr
+
+#standardsql
+
+  WITH a AS (
+SELECT * FROM UNNEST([1,2,3,4]) AS n
+
+    ), b AS (
+SELECT * FROM UNNEST([4,5,6,7]) AS n)
+
+SELECT * FROM a
+
+INTERSECT DISTINCT
+
+SELECT * FROM b
+
+-- | n |
+-- | 4 |
+
+#standardsql
+
+  WITH a AS (
+SELECT * FROM UNNEST([1,2,3,4]) AS n
+
+    ), b AS (
+SELECT * FROM UNNEST([4,5,6,7]) AS n)
+
+SELECT * FROM a
+
+EXCEPT DISTINCT
+
+SELECT * FROM b
+
+-- | n |
+-- | 1 |
+-- | 2 |
+-- | 3 |
+
+
+DECLARE schema_list ARRAY<STRING>;
+DECLARE iter INT64 DEFAULT 0;
+DECLARE query_string STRING;
+
+SET schema_list = (
+  SELECT
+    ARRAY_AGG(schema_name)
+  FROM
+    INFORMATION_SCHEMA.SCHEMATA
+  WHERE
+    (schema_name = "hellometadata")
+    OR (schema_name = "geo"));
+
+WHILE
+  iter < ARRAY_LENGTH(schema_list) DO
+    SET query_string = "SELECT * EXCEPT (table_catalog) FROM "
+      || schema_list[OFFSET(iter)] || ".INFORMATION_SCHEMA.TABLES";
+    EXECUTE IMMEDIATE query_string;
+    SET iter = iter + 1;
+END WHILE;

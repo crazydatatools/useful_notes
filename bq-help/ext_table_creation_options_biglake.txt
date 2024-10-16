@@ -1,0 +1,239 @@
+-- NOTE: You do not have access to run this command (the table is already created)
+--       If you want to run this use the dataset "ce_playground_aws"
+CREATE OR REPLACE EXTERNAL TABLE `${project_id}.${aws_omni_biglake_dataset_name}.taxi_s3_yellow_trips_csv`
+(
+    Vendor_Id	            INTEGER,
+    Pickup_DateTime	        TIMESTAMP,
+    Dropoff_DateTime	    TIMESTAMP,
+    Passenger_Count	        INTEGER,
+    Trip_Distance	        NUMERIC,
+    Rate_Code_Id	        INTEGER,	
+    Store_And_Forward	    STRING,
+    PULocationID	        INTEGER,	
+    DOLocationID	        INTEGER,
+    Payment_Type_Id	        INTEGER,
+    Fare_Amount	            NUMERIC,
+    Surcharge	            NUMERIC,
+    MTA_Tax	                NUMERIC,
+    Tip_Amount	            NUMERIC,
+    Tolls_Amount	        NUMERIC,
+    Improvement_Surcharge	NUMERIC,
+    Total_Amount	        NUMERIC,
+    Congestion_Surcharge	NUMERIC
+)
+WITH PARTITION COLUMNS 
+(
+    -- column order must match the external path
+    year INTEGER, 
+    month INTEGER
+)
+WITH CONNECTION `${shared_demo_project_id}.${aws_omni_biglake_dataset_region}.${aws_omni_biglake_connection}`
+OPTIONS (
+    format = "CSV",
+    field_delimiter = ',',
+    skip_leading_rows = 1,
+    hive_partition_uri_prefix = "s3://${aws_omni_biglake_s3_bucket}/taxi-data/yellow/trips_table/csv/",
+    uris = ['s3://${aws_omni_biglake_s3_bucket}/taxi-data/yellow/trips_table/csv/*.csv']
+);
+-- NOTE: You do not have access to run this command (the table is already created)
+--       If you want to run this use the dataset "ce_playground_aws"
+CREATE OR REPLACE EXTERNAL TABLE `${project_id}.${aws_omni_biglake_dataset_name}.taxi_s3_yellow_trips_json`
+(
+    Vendor_Id	            INTEGER,
+    Pickup_DateTime	        TIMESTAMP,
+    Dropoff_DateTime	    TIMESTAMP,
+    Passenger_Count	        INTEGER,
+    Trip_Distance	        NUMERIC,
+    Rate_Code_Id	        INTEGER,	
+    Store_And_Forward	    STRING,
+    PULocationID	        INTEGER,	
+    DOLocationID	        INTEGER,
+    Payment_Type_Id	        INTEGER,
+    Fare_Amount	            NUMERIC,
+    Surcharge	            NUMERIC,
+    MTA_Tax	                NUMERIC,
+    Tip_Amount	            NUMERIC,
+    Tolls_Amount	        NUMERIC,
+    Improvement_Surcharge	NUMERIC,
+    Total_Amount	        NUMERIC,
+    Congestion_Surcharge	NUMERIC
+)
+WITH PARTITION COLUMNS (
+    -- column order must match the external path
+    year INTEGER, 
+    month INTEGER
+)
+WITH CONNECTION `${shared_demo_project_id}.${aws_omni_biglake_dataset_region}.${aws_omni_biglake_connection}`
+OPTIONS (
+    format = "JSON",
+    hive_partition_uri_prefix = "s3://${aws_omni_biglake_s3_bucket}/taxi-data/yellow/trips_table/json/",
+    uris = ['s3://${aws_omni_biglake_s3_bucket}/taxi-data/yellow/trips_table/json/*.json']
+);
+
+-- NOTE: You do not have access to run this command (the table is already created)
+--       If you want to run this use the dataset "ce_playground_aws"
+CREATE OR REPLACE EXTERNAL TABLE `${project_id}.${aws_omni_biglake_dataset_name}.taxi_s3_vendor`
+WITH CONNECTION `${shared_demo_project_id}.${aws_omni_biglake_dataset_region}.${aws_omni_biglake_connection}`
+    OPTIONS (
+    format = "PARQUET",
+    uris = ['s3://${aws_omni_biglake_s3_bucket}/taxi-data/vendor_table/*.parquet']
+);
+--       If you want to run this use the dataset "ce_playground_aws"
+CREATE OR REPLACE EXTERNAL TABLE `${project_id}.${aws_omni_biglake_dataset_name}.taxi_s3_yellow_trips_parquet_cls`
+WITH PARTITION COLUMNS 
+/* Use auto detect for now
+(
+    year  INTEGER, -- column order must match the external path
+    month INTEGER
+)
+*/
+WITH CONNECTION `${shared_demo_project_id}.${aws_omni_biglake_dataset_region}.${aws_omni_biglake_connection}`
+OPTIONS (
+    format = "PARQUET",
+    hive_partition_uri_prefix = "s3://${aws_omni_biglake_s3_bucket}/taxi-data/yellow/trips_table/parquet/",
+    uris = ['s3://${aws_omni_biglake_s3_bucket}/taxi-data/yellow/trips_table/parquet/*.parquet']
+);
+
+-- Run the same query as Query 6, but now save to storage (S3)
+-- NOTE: If two people are running this at the same time change the "query-7" in the uri="s3://${aws_omni_biglake_s3_bucket}/taxi-export/query-7/*" 
+EXPORT DATA WITH CONNECTION `${shared_demo_project_id}.${aws_omni_biglake_dataset_region}.${aws_omni_biglake_connection}`
+OPTIONS(
+ uri="s3://${aws_omni_biglake_s3_bucket}/taxi-export/query-7/*",
+ format="CSV"
+)
+AS 
+WITH MaxPickupTotalAmountPerDay AS
+(
+    SELECT TIMESTAMP_TRUNC(Pickup_DateTime, DAY) AS TripDay, PULocationID, Max(Total_Amount) AS MaxPickup,
+      FROM `${project_id}.${aws_omni_biglake_dataset_name}.taxi_s3_yellow_trips_parquet`
+     GROUP BY TripDay, PULocationID
+),
+MaxDropoffTotalAmountPerDay AS
+(
+    SELECT TIMESTAMP_TRUNC(Pickup_DateTime, DAY) AS TripDay, DOLocationID, Max(Total_Amount) AS MaxDropOff,
+      FROM `${project_id}.${aws_omni_biglake_dataset_name}.taxi_s3_yellow_trips_parquet`
+     GROUP BY TripDay, DOLocationID
+),
+PickupMax AS 
+(
+    SELECT TripDay, PULocationID, MaxPickup, RANK() OVER (PARTITION BY TripDay ORDER BY MaxPickup DESC) AS Ranking
+    FROM MaxPickupTotalAmountPerDay
+),
+DropOffMax AS 
+(
+    SELECT TripDay, DOLocationID, MaxDropOff, RANK() OVER (PARTITION BY TripDay ORDER BY MaxDropOff DESC) AS Ranking
+      FROM MaxDropoffTotalAmountPerDay
+)
+SELECT PickupMax.TripDay            AS PickupMax_TripDay, 
+       PickupMax.PULocationID       AS PickupMax_PULocationID, 
+       PickupMax.MaxPickup          AS PickupMax_MaxPickup,
+       DropOffMax.TripDay           AS DropOffMax_TripDay, 
+       DropOffMax.DOLocationID      AS DropOffMax_DOLocationID, 
+       DropOffMax.MaxDropOff        AS DropOffMax_MaxDropOff
+  FROM PickupMax
+       INNER JOIN DropOffMax
+       ON PickupMax.TripDay = DropOffMax.TripDay
+       AND PickupMax.Ranking = 1
+       AND DropOffMax.Ranking = 1
+ORDER BY PickupMax.TripDay;
+
+
+/* 
+-- Load the data back into BigQuery from S3 into a BigQuery table in Google Cloud
+-- You can now do cross cloud data analysis
+-- You want to do as much processing of data in AWS/Azure as possible in order to keep your transfered data sizes reasonable
+
+-- You can load data from AWS directly into a BigQuery table
+-- Reference: https://cloud.google.com/bigquery/docs/omni-aws-cross-cloud-transfer
+*/
+https://github.com/m-p-esser/unsplash_photo_trends
+
+https://github.com/intel/terraform-intel-gcp-vm/tree/main/examples
+terraform examples --gcp
+
+https://github.com/cloud-custodian/cloud-custodian/blob/main/tools/c7n_gcp/c7n_gcp/actions/iampolicy.py
+iam policy--remove
+
+
+https://github.com/pass-culture/data-gcp/blob/master/jobs/etl_jobs/external/adage/scripts/import_adage.py
+get api call 
+
+appsflyer report
+https://github.com/pass-culture/data-gcp/blob/master/jobs/etl_jobs/external/appsflyer/appsflyer.py
+
+https://github.com/cado-security/cloudgrep
+download--gcs files multiple
+https://github.com/prowler-cloud/prowler/blob/master/prowler/providers/gcp/gcp_provider.py
+
+
+-- Load the parquet files into the BigQuery US dataset: ${project_id}.${bigquery_taxi_dataset}
+LOAD DATA INTO `${project_id}.${bigquery_taxi_dataset}.aws_results_parquet` 
+FROM FILES (uris = ['s3://${aws_omni_biglake_s3_bucket}/taxi-export/taxi-export-parquet/*'], format = 'PARQUET')
+WITH CONNECTION `${shared_demo_project_id}.${aws_omni_biglake_dataset_region}.${aws_omni_biglake_connection}`;
+
+
+-- Load the CSV files into the BigQuery US dataset: ${project_id}.${bigquery_taxi_dataset}
+LOAD DATA INTO `${project_id}.${bigquery_taxi_dataset}.aws_results_csv` (
+  PickupMax_TripDay TIMESTAMP,
+  PickupMax_PULocationID INTEGER,
+  PickupMax_MaxPickup NUMERIC,
+  DropOffMax_TripDay TIMESTAMP,
+  DropOffMax_DOLocationID INTEGER,
+  DropOffMax_MaxDropOff NUMERIC)
+FROM FILES (uris = ['s3://${aws_omni_biglake_s3_bucket}/taxi-export/taxi-export-csv/*'], format = 'CSV')
+WITH CONNECTION `${shared_demo_project_id}.${aws_omni_biglake_dataset_region}.${aws_omni_biglake_connection}`;
+
+
+CREATE TABLE my_dataset.processed_table
+PARTITION BY RANGE_BUCKET(export_id, GENERATE_ARRAY(0, n, 1))
+CLUSTER BY export_id
+AS (
+  SELECT *, CAST(FLOOR(n*RAND()) AS INT64) AS export_id,
+  CAST(ROUND(1+ RAND() * (29120 - 1)) as INT64) product_id,
+  MOD(PULocationID,10) + 1  AS distribution_center_id
+  FROM my_dataset.source_table
+);
+
+
+EXPORT DATA 
+WITH CONNECTION `dev-gold-core`.`us`.`bl_dgc_bkt_bkt_dev_fq_goldcore`
+OPTIONS(
+ uri="gs://bkt_dev_fq_goldcore/test/biglake_data/*",
+ format="CSV"
+)
+AS 
+select * from dev-gold-core.it_autoship.club_central_return_tdmkrtn
+
+
+
+EXPORT DATA OPTIONS(
+uri='gs://bkt_dev_fq_goldcore/test/biglake_data/test_'||CURRENT_DATE()||'*.csv',
+format='CSV',
+overwrite=true,
+header=true,
+field_delimiter='|') AS  select * from dev-gold-core.it_autoship.club_central_return_tdmkrtn limit 1000
+
+
+SELECT
+  sum(case  when job_type="QUERY" then 1 else 0 end) as QRY_CNT,
+  sum(case  when job_type="LOAD" then 1 else 0 end) as LOAD_CNT,
+  sum(case  when job_type="EXTRACT" then 1 else 0 end) as EXT_CNT,
+  sum(case  when job_type="COPY" then 1 else 0 end) as CPY_CNT
+FROM `region-eu`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
+WHERE date(creation_time)= CURRENT_DATE()
+
+CASE WHEN LENGTH(products.name) > 50
+             THEN CONCAT(SUBSTR(products.name,1,50),'...') -- for display purposes
+             ELSE products.name
+        END       
+
+
+
+SELECT element AS order_number,
+      DATE_SUB(CURRENT_DATE, INTERVAL CAST(ROUND(1 + RAND() * (90 - 1)) AS INT64) DAY) AS order_date,
+      DATE_ADD(DATE_SUB(CURRENT_DATE, INTERVAL 5 DAY), INTERVAL CAST(ROUND(1 + RAND() * (90 - 7)) AS INT64) DAY) AS expected_delivery_date,
+      CAST(ROUND(1 + RAND() * (10 - 1)) AS INT64) AS distribution_center_id,
+      CAST(ROUND(1 + RAND() * (29120 - 1)) AS INT64) AS product_id,
+      CAST(ROUND(10 + RAND() * (200 - 10)) AS INT64) AS quantity
+FROM UNNEST(GENERATE_ARRAY(1, 200)) AS element
+ORDER BY element;

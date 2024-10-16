@@ -1,0 +1,9 @@
+Hi Ravi, you can generate an API token by visiting this page: https://app2.adlibdsp.com/user/api-tokens
+pch_bq_pull_rpt
+
+AdLib_DSP_8dnD1miCKKagwvwTTf4tvPN5FBRdggCe4DEHgJhjc0da347d
+
+curl --request GET \
+  --url 'https://app2.adlibdsp.com/api/reporting/download/campaigns?aggregation=start_date&time_range=30_days' \
+  --header 'Accept: application/json' \
+  --header 'Authorization: Bearer AdLib_DSP_8dnD1miCKKagwvwTTf4tvPN5FBRdggCe4DEHgJhjc0da347d'

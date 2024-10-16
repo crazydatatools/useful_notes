@@ -1,0 +1,55 @@
+Certainly, it is crucial for us to prioritize and complete the migration of all HDL objects to GCP by the end of October 2023. This will provide us with a sufficient buffer of 1 or 2 months to address any remaining miscellaneous processes that might need migration. Moreover, it is imperative for us to focus on enhancing our monitoring reports so that we can proactively identify and resolve any issues before they are brought up by end-users. This will help us ensure a seamless and efficient transition to GCP.
+
+On another note, I noticed that you are planning to pursue the CKAD - Kubernetes certification. That's a fantastic initiative! I want to wish you the best of luck in your preparation as you upskill your expertise in Kubernetes. It's a valuable certification that will undoubtedly benefit both you and our team.
+
+
+Your contribution to the GCP Admin team is truly remarkable. We are currently in the midst of migration activities, aiming to replace outdated and unsupported versions with the latest and greatest ones. Our goal is to address pain points expressed by developers while minimizing the impact on existing production processes.
+
+Another significant objective for this year is the migration of all processes from HDL to GCP. By the end of this year, we aim to ensure a smooth and efficient transition of all applications. Additionally, we plan to leverage the HDL infrastructure as an on-prem compute resource for adhoc processes, alongside GCP, after evaluating the cost benefits.
+
+Furthermore, it is crucial for us to prioritize the enhancement of our dashboard monitoring reports. This will enable us to proactively identify and resolve issues related to cost spikes, security, storage, and compute before they are raised by end-users. Your support in this endeavor is greatly appreciated. Keep up the excellent work!
+
+
+Thank you once again for all your hard work and dedication. Your contributions are crucial to the success of our team. Keep up the excellent work, and let's continue striving for excellence together!
+
+
+Your contribution to the CDA team has been exceptional, and we truly appreciate the tremendous effort you have put into enhancements to all data marts preparation, dimensions implementation, dims auditing, recommendation analysis translation, and improving interactive interfaces. No doubt, your efforts have contributed to increased efficiency, streamlined processes, and improved retool user experience ,the heavy usage of this retool app by end-user communcity itself shows that.
+
+I will vote for the priciple-"Don't Repeat Yourself" (DRY) you follow,bring more pipeline templates that help team maintain clean code and foucs on necessary business logic instead of writing from scratch,also pick best open-source implementations that will fit our team need and also adhering to design,process,maintianabiltiy according to the latest industry standards.
+
+
+Thank you once again for all your hard work and dedication. Your contributions are crucial to the success of our team. Keep up the excellent work, and let's continue striving for excellence together!
+
+
+
+
+Your contribution to the CDA team has been exceptional,and your dedication and effort in enhancing various aspects such as data marts preparation, implementation of dimensions, auditing dims, translating recommendation analysis, and improving interactive interfaces have not gone unnoticed. Undoubtedly, your hard work has led to increased efficiency, streamlined processes, and a significant improvement in the user experience of the retool application. The extensive usage of this app by our end-user community is a testament to its effectiveness.
+
+I wholeheartedly support your adherence to the principle of "Don't Repeat Yourself" (DRY). Your focus on creating pipeline templates that enable the team to maintain clean code and concentrate on essential business logic rather than starting from scratch. Additionally, leveraging the best open-source implementations that align with our team's needs while adhering to the latest industry standards in terms of design, processes, cost aspect and maintainability is a wise approach.
+
+Thank you once again for all your hard work and dedication. Your contributions are crucial to the success of our team. Keep up the excellent work, Let's continue pushing forward together and striving for excellence in all that we do!.
+
+
+
+
+Your contribution to the CDA team has been exceptional,and your dedication and effort in enhancing and supporting several high priority processes like Liveram,Retool Audience Sizing data validations,Staq,EDP Cheetah Feed and Topline reports enhancement have not gone unnoticed. Undoubtedly, your hard work has led to increased efficiency, streamlined processes, and a significant improvement after your valdiations activity for ReTool Audience Sizing tool helped a lot in gaining user trust in data of the retool application. The extensive usage of this app by our end-user community is a testament to its effectiveness.
+
+I wholeheartedly appreciate your effort for this as you focused on BQ Space Optimization for some of the larger object that were ocuppying TB's in size and costing a lot of storage and compute cost in GCP.
+
+Thank you once again for all your support in mentoring offshore reosurces and help in compliance acitivities . Your contributions are crucial to the success of our team. Keep up the excellent work, Let's continue pushing forward together and striving for excellence in all that we do!.
+
+
+We greatly value your exceptional contribution to the CDA team. Your dedication and effort in enhancing and supporting several high-priority processes such as Liveram, Retool Audience Sizing data validations, Staq, EDP Cheetah Feed, and Topline reports have not gone unnoticed. Your hard work has undeniably resulted in increased efficiency, streamlined processes, and significant improvements. The trust gained in the data of the retool application through your validation activities for the ReTool Audience Sizing tool is evident from the extensive usage by our end-user community.
+
+I want to express my wholehearted appreciation for your efforts in BQ Space Optimization. Your focus on optimizing the storage and compute costs in GCP by addressing larger objects that were occupying terabytes in size is remarkable. Your contribution in this area has helped us achieve significant savings in storage and compute cost and improve resource utilization.
+
+Furthermore, I would like to thank you for your support in mentoring offshore resources and your assistance in compliance activities. Your guidance and expertise advices always valuable to our team's success.
+
+Once again, I want to acknowledge and appreciate your exceptional contributions. Your dedication plays a crucial role in the achievements of our team. Let's continue working together, pushing forward, and striving for excellence in everything we do!
+
+
+We want to express our sincere appreciation for the tremendous effort your investing in the migration of all DW data marts. Your dedication is evident in the ongoing deprecation or relocation of legacy systems' data warehouse and Hadoop jobs, as well as the migration of various BigQuery jobs and processes to the new environment, leveraging new SQL or BigQuery. We have observed significant progress that has been made thus far.
+
+We want to encourage you to maintain your current momentum and adhere to the established plan. It is crucial that we continue to focus on migrating all high-priority and critical processes in Phase-I of the project. Additionally, parallelly prioritize Phase-II, which involves revamping/removing outdated processes and recoding them according to the new platform's requirements.
+
+Your commitment to this compliance and DW migration tasks is highly valued, and we recognize the importance of sticking to the plan to ensure a smooth and successful migration. Thank you for your hard work, and please continue to drive forward with determination and dedication.

@@ -1,0 +1,157 @@
+-- Create Historical Table (table_a)
+CREATE OR REPLACE TABLE `dev-gold-core.it_autoship.scores_a` (
+  gtm INT64,
+  score_name STRING,
+  score_category STRING,
+  score FLOAT64,
+  rank INT64
+);
+
+-- Create Current Table (table_b)
+CREATE OR REPLACE TABLE `dev-gold-core.it_autoship.scores_b` (
+  gtm INT64,
+  score_name STRING,
+  score_category STRING,
+  score FLOAT64,
+  rank INT64
+);
+
+-- Insert data into table_a (historical data)
+INSERT INTO `dev-gold-core.it_autoship.scores_a`  (gtm, score_name, score_category, score, rank)
+VALUES 
+  (123, 'score1', 'mkt_score', 0.23, 23),
+  (456, 'score1', 'mkt_score', 0.45, 56),
+  (345, 'score1', 'mkt_score', 0.90, 99),
+  (123, 'score2', 'ktl_score', 0.20, 20),
+  (456, 'score2', 'ktl_score', 0.25, 45);
+
+-- Insert data into table_b (current data)
+INSERT INTO `dev-gold-core.it_autoship.scores_b` (gtm, score_name, score_category, score, rank)
+VALUES 
+  (123, 'score1', 'mkt_score', 0.23, 23),  -- Same as historical
+  (456, 'score1', 'mkt_score', 0.50, 55),  -- Updated score and rank
+  (345, 'score1', 'mkt_score', 0.90, 99),  -- Same as historical
+  (123, 'score2', 'ktl_score', 0.21, 21),  -- Updated score and rank
+  (676, 'score2', 'ktl_score', 0.80, 80);  -- New entry
+
+
+-- Historical Data (table_a)
+WITH table_a AS (
+  SELECT 
+    gtm,
+    ARRAY_AGG(STRUCT(score_name, score_category, score, rank)) AS score_data,
+    FARM_FINGERPRINT(
+      ARRAY_TO_STRING(
+        ARRAY_AGG(CONCAT(score_name, '-', score_category, '-', CAST(score AS STRING), '-', CAST(rank AS STRING))), ','
+      )
+    ) AS hash_value
+  FROM `dev-gold-core.it_autoship.scores_a`
+  GROUP BY gtm
+),
+
+-- Current Data (table_b)
+table_b AS (
+  SELECT 
+    gtm,
+    ARRAY_AGG(STRUCT(score_name, score_category, score, rank)) AS score_data,
+    FARM_FINGERPRINT(
+      ARRAY_TO_STRING(
+        ARRAY_AGG(CONCAT(score_name, '-', score_category, '-', CAST(score AS STRING), '-', CAST(rank AS STRING))), ','
+      )
+    ) AS hash_value
+  FROM `dev-gold-core.it_autoship.scores_b`
+  GROUP BY gtm
+)
+
+-- Compare Historical vs Current Data
+SELECT
+  b.gtm,
+  a.hash_value AS old_hash_value,
+  b.hash_value AS new_hash_value,
+  b.score_data AS new_score_data,
+  a.score_data AS old_score_data
+FROM table_b b
+LEFT JOIN table_a a
+  ON a.gtm = b.gtm
+WHERE a.hash_value IS NULL     -- New gtm (not in historical data)
+   OR a.hash_value != b.hash_value;  -- Changes detected in gtm's data
+
+
+INSERT INTO `your_project.your_dataset.history_table` (gtm, score_data, update_timestamp)
+SELECT 
+  b.gtm,
+  b.score_data,
+  CURRENT_TIMESTAMP() AS update_timestamp
+FROM table_b b
+LEFT JOIN table_a a
+  ON a.gtm = b.gtm
+WHERE a.hash_value IS NULL    -- New gtm (not in historical data)
+   OR a.hash_value != b.hash_value;   -- Changes detected in gtm's data
+
+   CREATE OR REPLACE TABLE `dev-gold-core.it_autoship.base_scores` (
+  gtm INT64,
+  score_name STRING,
+  score_category STRING,
+  score FLOAT64,
+  rank INT64,
+  hash_value STRING -- Optional: for detecting changes efficiently
+);
+
+
+MERGE INTO `your_project.your_dataset.base_table` T
+USING (
+  SELECT
+    gtm,
+    score_name,
+    score_category,
+    score,
+    rank,
+    FARM_FINGERPRINT(CONCAT(CAST(gtm AS STRING), score_name, score_category, CAST(score AS STRING), CAST(rank AS STRING))) AS hash_value
+  FROM `your_project.your_dataset.table_b`
+) S
+ON T.gtm = S.gtm AND T.score_name = S.score_name AND T.score_category = S.score_category
+WHEN MATCHED AND T.hash_value != S.hash_value THEN
+  UPDATE SET T.score = S.score, T.rank = S.rank, T.hash_value = S.hash_value
+WHEN NOT MATCHED THEN
+  INSERT (gtm, score_name, score_category, score, rank, hash_value)
+  VALUES (S.gtm, S.score_name, S.score_category, S.score, S.rank, S.hash_value);
+
+  SELECT
+  b.gtm,
+  b.score_name,
+  b.score_category,
+  b.score,
+  b.rank
+FROM `your_project.your_dataset.table_b` b
+LEFT JOIN `your_project.your_dataset.base_table` a
+  ON a.gtm = b.gtm AND a.score_name = b.score_name AND a.score_category = b.score_category
+WHERE a.hash_value IS NULL  -- New record
+   OR a.hash_value != FARM_FINGERPRINT(CONCAT(CAST(b.gtm AS STRING), b.score_name, b.score_category, CAST(b.score AS STRING), CAST(b.rank AS STRING)));
+
+
+CREATE OR REPLACE TABLE `your_project.your_dataset.history_table` (
+  gtm INT64,
+  score_name STRING,
+  score_category STRING,
+  score FLOAT64,
+  rank INT64,
+  update_timestamp TIMESTAMP,
+  hash_value STRING
+);
+
+-- Insert changes into history table
+INSERT INTO `your_project.your_dataset.history_table` (gtm, score_name, score_category, score, rank, update_timestamp, hash_value)
+SELECT 
+  b.gtm,
+  b.score_name,
+  b.score_category,
+  b.score,
+  b.rank,
+  CURRENT_TIMESTAMP() AS update_timestamp,
+  FARM_FINGERPRINT(CONCAT(CAST(b.gtm AS STRING), b.score_name, b.score_category, CAST(b.score AS STRING), CAST(b.rank AS STRING))) AS hash_value
+FROM `your_project.your_dataset.table_b` b
+LEFT JOIN `your_project.your_dataset.base_table` a
+  ON a.gtm = b.gtm AND a.score_name = b.score_name AND a.score_category = b.score_category
+WHERE a.hash_value IS NULL  -- New record
+   OR a.hash_value != FARM_FINGERPRINT(CONCAT(CAST(b.gtm AS STRING), b.score_name, b.score_category, CAST(b.score AS STRING), CAST(b.rank AS STRING)));
+

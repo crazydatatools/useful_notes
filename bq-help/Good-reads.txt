@@ -1,0 +1,55 @@
+Very strong experience with Google Composer and Apache Airflow; ability to set up, monitor, and debug a complex environment running a large number of concurrent tasks
+
+understanding a complex customer s existing software workloads and the ability to define a technical migration roadmap to the Cloud.
+
+Exposure to Spark, Hive, Google Cloud Platform Data Fusion, Google Cloud Platform Astronomer, Pub/Sub Messaging, Vertex, and the Python Programming Language
+
+Modify data extraction pipelines into standardized approaches that can be repeatable and reusable with minimal supervision from senior engineers. Automation of manual processes, optimize data delivery, re-designing infrastructure for greater scalability, etc. Work closely with senior engineers to optimize query and data access techniques
+
+Apply modern software development practices (serverless computing, microservices architecture, CI/CD, infrastructure-as-code, etc.)
+
+
+FinOps is a relatively new concept, and it’s gaining popularity as organizations innovate, increasing their reliance on cloud computing and outsourced cloud services. The word FinOps unites the term “Finance” and “DevOps,” signifying the importance in how these two functions must work together to govern cloud costs and utilization. When these teams enjoy closer relationships, they’re more likely to align IT resources, costs, and budgets with business and financial goals. FinOps success also requires technology solutions and services, streamlining cloud financial management operations and improving financial visibility, accuracy, and control.
+
+Financial controls are essential to FinOps because they reflect organizational efforts to monitor and reduce cloud costs. Examples of such controls include forecasting, budgeting, cost allocation methods and usage limits. For example, you might set your cloud budget based on historical and projected usage, as well as business goals. Cost allocation activities identify optimization opportunities on multiple levels, including within projects, departments or business units. Usage limits, meanwhile, are a type of threshold for unauthorized or unexpected usage levels, including storage or compute resources.
+
+cost and budget overruns are an issue as financial leaders want predictable monthly costs and constant monitoring between budgeted costs and actual costs
+
+Ensuring that the IT tech stack and services are efficiently managed within a portfolio, minimizing unused or wasted resources, and only paying for utilized services.
+
+Based on BigQuery storage pricing, the unit price of physical storage billing is twice that of logical storage billing.
+If the compression ratio is less than 2, customers will not benefit from PBSB for their datasets.
+In LBSB, customers are not billed for bytes used for time travel storage, but in PBSB, you are billed for that and the same is true when using the fail-safe.
+To ensure accurate assessment, it is advisable to conduct an evaluation of time travel storage utilization once BigQuery workload has reached a stable state and established a predictable pattern. This is important because the bytes utilized for time travel storage can vary over time.
+
+helping organizations better identify opportunities for savings and efficiencies.
+Achieve visibility into all cloud spending with a FinOps approach.
+Sponsored content
+
+Retire. Some workloads may be at end of life and better retired than migrated.
+} Repurchase. In some cases, it may be more cost effective to use a software-
+as-a-service (SaaS) alternative to an on-premises application.
+} Rehost. Also known as “lift and shift,” this strategy involves moving a workload
+as is to a cloud-based infrastructure-as-a-service (IaaS) platform.
+} Replatform. This approach involves making a few modifications to a workload
+to move it to a platform-as-a-service (PaaS) solution.
+} Rearchitect. Some workloads are worth rebuilding to optimize them for peak
+performance on cloud platforms.
+} Retain. Other workloads may have to remain on premises, such as to meet
+regulatory requirements for data location or ownership of data infrastructu
+Financially, considerations include the shift from a model focused on capital
+expenses (CapEx) to one based on operational expenses (OpEx). This change
+affects not just how expenses are reported but also financial forecasting for service
+costs that may fluctuate. This model shift drives the need for a FinOps approach to
+financial management.
+
+Involved in developing user segments based on needs, wants, and demand characteristics to optimize targeted marketing efforts. Applied effective segmentation strategies including behavioral, demographic, psychographic, and geographical differences to design tailored marketing mixes
+
+Analyzed and integrated data from disparate sources to inform data modeling and ETL design decisions for large-scale integration projects, preparing diverse datasets for analysis.
+
+Conducted ad hoc analyses and data extractions using SQL, MySQL, BigQuery, and HDFS, ensuring data accuracy and availability for reporting purposes.
+
+Implemented data cleansing operations on HDFS using scripting techniques to enhance data quality and accuracy for forecasting and analysis.
+
+
+The point is that the business term may have different (or encompass multiple) data elements depending on the context and the only reasonable way for a technical oriented stakeholder to execute the business requirements is to have the capability to look it up in a catalogue, trace its lineage, extract/process the data, and ultimately provision it back to the ‘Business View’. 

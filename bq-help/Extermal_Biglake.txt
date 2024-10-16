@@ -1,0 +1,184 @@
+gcloud services enable cloudfunctions.googleapis.com --async
+gcloud services enable cloudbuild.googleapis.com --async
+gcloud services enable bigqueryconnection.googleapis.com --async
+bq mk --connection --location=us-east1 --project_id=bq-object-tables --connection_type=CLOUD_RESOURCE biglake-connection
+bq show --connection bq-object-tables.us-east1.biglake-connection
+gsutil iam ch serviceAccount:bqcx-012345678901-abcd@gcp-sa-bigquery-condel.iam.gserviceaccount.com:objectViewer gs://bq-object-tables-sports-bucket
+bq mk -d --data_location=us-east1 bq_ot_dataset
+https://cloud.google.com/bigquery/docs/create-cloud-storage-table-biglake#bq_2
+CREATE OR REPLACE EXTERNAL TABLE 
+  `bq-object-tables.bq_ot_dataset.bq_object_tables_external_table` 
+WITH CONNECTION `bq-object-tables.us-east1.biglake-connection` OPTIONS ( 
+    object_metadata="DIRECTORY", 
+    uris = ['gs://bq-object-tables-sports-bucket/*' ], 
+    max_staleness=INTERVAL 30 MINUTE, 
+    metadata_cache_mode="AUTOMATIC");
+
+
+
+bq mk --connection --location=us-east1 --project_id=dev-analytics-datasci --connection_type=CLOUD_RESOURCE  bl-dad-bkt-dev-onb-inbound
+
+bq mk --connection --location=us-central1 --project_id=uat-gold-core --connection_type=CLOUD_RESOURCE  bl_ugc_bkt_bkt_uat_fq_goldcore
+
+bq mk --connection --location=us-central1 --project_id=dev-gold-core --connection_type=CLOUD_RESOURCE  bl_dgc_bkt_bkt_dev_fq_goldcore
+
+bq mk --connection --location=us-east1 --project_id=prod-ds-outbound --connection_type=CLOUD_RESOURCE  bl-dad-bkt-dev-onb-inbound
+
+bq mk --connection --location=us-central1 --project_id=uat-gold-core  --connection_type=CLOUD_RESOURCE  bl_ugc_bkt_uat_cm_goldcore
+
+bq mk --connection --location=us --project_id=uat-gold-core  --connection_type=CLOUD_RESOURCE  bl_ugc_bkt_uat_cm_goldcore
+
+
+bq mk --connection --location=us --project_id=dev-gold-external-user-lld  --connection_type=CLOUD_RESOURCE  bl_dgc_bkt_dev_moengage_events
+
+
+CREATE OR REPLACE EXTERNAL TABLE `dev-gold-external-user-lld.it_moengage_lld.bl_moengage_pchwordmania_all_event_data`
+(
+  event_data JSON
+)
+WITH PARTITION COLUMNS
+(
+  export_day STRING
+ , export_hour INT64
+)
+WITH CONNECTION `us.bl_dgc_bkt_dev_moengage_events`
+OPTIONS(
+  URIS        = ['gs://bkt_dev_moengage_events/event-exports/PCH_WordmaniaMoeTest/654bca2f578d9a9a20307024/*'],
+  field_delimiter = Chr(1),
+  FORMAT        = CSV
+  , HIVE_PARTITION_URI_PREFIX = "gs://bkt_dev_moengage_events/event-exports/PCH_WordmaniaMoeTest/654bca2f578d9a9a20307024"
+);
+
+
+
+
+
+  CREATE EXTERNAL TABLE dev-analytics-datasci.oltp_scoring.ptp_pto_onb_scores 
+WITH PARTITION COLUMNS
+(
+  score_dt STRING,
+)
+WITH CONNECTION `us-east1.bl-dad-bkt-dev-onb-inbound`
+OPTIONS(
+  hive_partition_uri_prefix = "gs://bkt_dev_onb_inbound/DIS_DEV",
+  uris = ['gs://bkt_dev_onb_inbound/DIS_DEV/*'],
+  format= CSV,
+  max_staleness = INTERVAL 1 DAY,
+  metadata_cache_mode = 'AUTOMATIC'
+);
+
+CREATE EXTERNAL TABLE `my_dataset.my_table`
+WITH PARTITION COLUMNS
+(
+  sku STRING,
+)
+WITH CONNECTION `us.my-connection`
+OPTIONS(
+  hive_partition_uri_prefix = "gs://mybucket/products",
+  uris = ['gs://mybucket/products/*'],
+  max_staleness = INTERVAL 1 DAY,
+  metadata_cache_mode = 'AUTOMATIC'
+);
+
+CREATE EXTERNAL TABLE `uat-gold-core.it_cm_onl_elt_ing_recon.staging_gmtsegmentdailyforbq_ext_1`
+WITH CONNECTION `us.bl_ugc_bkt_uat_cm_goldcore`
+OPTIONS(
+ uris = ['gs://bkt_uat_cm_goldcore/disservice/gmt_segment_daily/1121322/*'],
+  format= CSV,
+  max_staleness = INTERVAL 1 DAY,
+  metadata_cache_mode = 'AUTOMATIC'
+);
+
+CREATE EXTERNAL TABLE `my_dataset.my_table`
+(
+  ProductId INTEGER,
+  ProductName, STRING,
+  ProductType, STRING
+)
+WITH PARTITION COLUMNS
+(
+  sku STRING,
+)
+WITH CONNECTION `us.my-connection`
+OPTIONS(
+  hive_partition_uri_prefix = "gs://mybucket/products",
+  uris = ['gs://mybucket/products/*'],
+  max_staleness = INTERVAL 8 HOUR,
+  metadata_cache_mode = 'MANUAL'
+);
+
+bq mkdef --connection_id=PROJECT_ID.REGION.CONNECTION_ID \
+--source_format=TABLE_FORMAT \
+--max_staleness=STALENESS_INTERVAL \
+--metadata_cache_mode=CACHE_MODE \
+"BUCKET_PATH" > /tmp/DEFINITION_FILE
+
+bq update --project_id=myproject --external_table_definition=enable_metadata.json mydataset.mytable
+
+
+===================External Tables;
+
+export PROJECT_ID=$(gcloud config get-value project)
+bq mkdef \
+--autodetect \
+--connection_id=$PROJECT_ID.US.my-connection \
+--source_format=CSV \
+"gs://$PROJECT_ID/invoice.csv" > /tmp/tabledef.json
+
+cat /tmp/tabledef.json
+
+bq show --schema --format=prettyjson  demo_dataset.external_table > /tmp/schema
+
+bq update --external_table_definition=/tmp/tabledef.json --schema=/tmp/schema demo_dataset.external_table
+
+
+gcloud dataproc clusters create biglake-demo-cluster \
+    --optional-components=ZEPPELIN \
+    --region=REGION \
+    --enable-component-gateway \
+    --single-node \
+    --initialization-actions gs://goog-dataproc-initialization-actions-us-central1/connectors/connectors.sh \
+    --metadata bigquery-connector-url=gs://spark-lib/bigquery/spark-bigquery-latest_2.12.jar \
+    --metadata spark-bigquery-connector-url=gs://spark-lib/bigquery/spark-bigquery-latest_2.12.jar
+
+
+
+CREATE OR REPLACE EXTERNAL TABLE `dev-ds-outbound.oltp_scoring.ext_moengage_email_clicked_part1`
+(
+  event_data JSON
+)
+WITH PARTITION COLUMNS
+(
+  export_day STRING
+ , export_hour INT64
+)
+
+OPTIONS(
+  URIS        = ['gs://bkt_dev_dis_staging/moengage_test/event-exports/PCH_Wordmania/651580b3afa883206de1aa90/*'],
+  field_delimiter = Chr(1),
+  FORMAT        = CSV
+  , HIVE_PARTITION_URI_PREFIX = "gs://bkt_dev_dis_staging/moengage_test/event-exports/PCH_Wordmania/651580b3afa883206de1aa90"
+  , METADATA_CACHE_MODE = 'MANUAL'
+);
+
+
+CREATE OR REPLACE EXTERNAL TABLE `dev-ds-outbound.oltp_scoring.ext_moengage_pchwordmania_all_event_data`
+(
+  event_data JSON
+)
+
+WITH PARTITION COLUMNS
+(
+  export_day STRING
+ , export_hour INT64
+)
+
+OPTIONS(
+  URIS        = ['gs://bkt_dev_dis_staging/moengage_test/event-exports/PCH_Wordmania/651580b3afa883206de1aa90/*'],
+  field_delimiter = Chr(1),
+  FORMAT        = CSV
+  , HIVE_PARTITION_URI_PREFIX = "gs://bkt_dev_dis_staging/moengage_test/event-exports/PCH_Wordmania/651580b3afa883206de1aa90"
+  , METADATA_CACHE_MODE = 'MANUAL'
+);
+
+ 

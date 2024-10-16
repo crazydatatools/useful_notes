@@ -1,0 +1,71 @@
+https://cloud.google.com/bigquery/docs/best-practices-performance-overview
+https://cloud.google.com/bigquery/docs/query-plan-explanation
+https://cloud.google.com/bigquery/docs/best-practices-performance-compute
+
+To improve the accuracy of data analysis. Duplicate rows can skew the results of certain types of queries.
+
+--SELECT 
+  (SELECT COUNT(1) FROM `bigquery-public-data.austin_waste.waste_and_diversion`)  AS `n_rows`,
+  (SELECT COUNT(1) FROM (SELECT DISTINCT * FROM `bigquery-public-data.austin_waste.waste_and_diversion`)) AS `n_distinct_rows`
+;
+
+Technical deduplication identifies duplicate records (rows) as those with exactly the same values in all columns.
+Functional deduplication identifies duplicate records (rows) as those with the same primary keys.
+A technical deduplication will compare every single value (ID number, names, address, creation date, etc.). The address is different, so the two rows are considered as different.
+A functional deduplication will only compare the ID numbers and will considered the two rows as the same. It is an update and the up-to-date row is the most recent creation time.
+------------------
+WITH ordered_row AS (
+  SELECT 
+    *,
+    ROW_NUMBER() OVER(
+      PARTITION BY 
+        load_id
+      ORDER BY 
+        report_date DESC,
+        load_time DESC
+    ) AS `rn`
+  FROM `bigquery-public-data.austin_waste.waste_and_diversion`
+)
+SELECT
+  * EXCEPT(rn)
+FROM ordered_row
+WHERE rn = 1
+;
+
+---The WINDOW clause in BigQuery is the process of performing calculations or aggregations 
+OVER a related group of rows without the need for a self-join. This can be useful for calculating things like running totals or moving averages.
+---Qualifying by row number
+The QUALIFY clause is a bit different from the WHERE and HAVING clauses.
+It filters the results of window (or analytic) functions. Your window function is required SELECT list or directly in the QUALIFY clause.
+SELECT
+  load_id,
+  report_date,
+  load_type,
+  load_time,
+  load_weight,
+  dropoff_site,
+  route_type,
+  route_number,
+FROM `bigquery-public-data.austin_waste.waste_and_diversion`
+QUALIFY ROW_NUMBER() OVER(
+  PARTITION BY 
+    load_id
+  ORDER BY 
+    report_date DESC,
+    load_time DESC
+) = 1
+;So, for an “On-demand” pricing model, the WINDOW function is the way to go. As it costs the same, the other point of comparison is the time elapsed
+
+=======================\Data Management Advisory--DAAP--Data as a Product-- Smart Data Platform
+Data platforms appear to be constrained by centralized thinking of data. It diminishes the value of data as it moves through its lifecycle. 
+Often there is lack of domain ownership of data posing a barrier to creativity and business insights. 
+As a result of the disparities in non-domain specific data, AI/ML initiatives are impeded by increased complications and inconsistencies. 
+There is disconnect between how centralized core teams and centralized data teams work together to enforce and control data operations
+including data governance, data quality, compliance, metadata cataloging, and so on. The centralized team’s operations and data teams’ operations 
+are often autonomous and decoupled, with no common interface or communication channel, 
+leading in a lot of friction between the teams and misalignment of business goals and expectations.
+
+DaaP and data domains: A domain is responsible for providing high quality data products to consumers, both internal or external to the organization. Each domain can consist of one or more data products.DaaP principles:discoverable¹, addressable¹, trustworthy¹, self-describable¹, interoperable¹, secured¹, privacy-centric, auditable, timely, version-able, and shareable--
+Consider this to be the federal government, whereas data domains are state governments. At a high level, responsibilities may include ensuring uniform adoption of principles, best practices, and standards across domains, conducting education and training sessions, defining and enforcing data governance policies and compliance(especially with external data sharing), creating & maintaining global knowledge graph, and providing domain agnostic reusable components such as CI/CD, provisioning tools, ingestion frameworks, data connectors, standard api interfaces and documentation templates among other things 
+
+This is a more logical, strategic, and forward-thinking approach to data management. There are futuristic use-cases that can benefit from DaaP such as open banking, data and analytics monetization and other prospective use-cases. Embrace this sooner rather than later to reap the rewards in near future.

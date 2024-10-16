@@ -1,0 +1,23 @@
+custom_policytag_setter
+custom_maskeddata_reader--bigquery.dataPolicies.maskedGet
+custom_finegrained_reader-datacatalog.categories.fineGrainedGet
+
+select * except( column name) from 
+
+Masked Reader: The principals can query the table, but will see masked data in the tagged columns. A common use case is when analysts are assigned the Masked Reader role. In this case, we recommend hashes as a data masking rule to allow analysts to demonstrate the change in the PII field without accessing the content of the field.
+Fine-Grained Reader: The principals can query the table and read the data. Referring back to the previous use case, this role is not supposed to be given to analysts, but to a group that needs the tagged information, i.e. calling the phone number, sending an email, creating an invoice for the given address, etc.
+
+
+
+
+gcp_grp_policytag_admin@pch.com 
+
+gcp_grp_maskeddata_reader@pch.com
+
+gcp_grp_finegrained_reader@pch.com
+
+
+Set billing limits
+You can cap the maximum bytes billed, which will reject queries that exceed the number you've set. It's a failsafe to catch mistakes or poorly written queries.
+
+https://shopify.engineering/reducing-bigquery-costs

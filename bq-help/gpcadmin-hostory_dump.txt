@@ -1,0 +1,504 @@
+rjannu@cloudshell:~ (gpcadmin)$ history
+    1  gsutil ls -ltrh gs://bkt_uat_experian_inbound/from_experian
+    2  gsutil ls -sh gs://bkt_uat_experian_inbound/from_experian
+    3  gsutil ls -lt gs://bkt_uat_experian_inbound/from_experian
+    4  gsutil ls  gs://bkt_uat_experian_inbound/from_experian/
+    5  gsutil ls  -ltr gs://bkt_uat_experian_inbound/from_experian/
+    6  gsutil ls -tr gs://bkt_uat_experian_inbound/from_experian/
+    7  gsutil ls -d gs://bkt_uat_experian_inbound/from_experian/
+    8  gsutil ls gs://bkt_uat_experian_inbound/from_experian/
+    9  wc -l gs://bkt_uat_experian_inbound/from_experian/PCH_DATA_APPEND_NOV22_FILE1.CSV
+   10  gsutil ls -r gs://bkt_uat_experian_inbound/from_experian/
+   11  gsutil ls -r gs://bkt_uat_experian_inbound/from_experian
+   12  gsutil ls -l gs://bkt_uat_experian_inbound/from_experian
+   13  gsutil tail -2  gs://bkt_uat_experian_inbound/from_experian/PCH_DATA_APPEND_NOV22_FILE1.CSV
+   14  gsutil ls -l gs://bkt_uat_experian_inbound/from_experian
+   15  bq mkdef --autodetect --source_format=PARQUET "gs://bkt_dev_fq_goldcore/test_64/cc/TBSABAL/*" > /tmp/TBSABAL.txt
+   16  bq mkdef --autodetect --source_format=PARQUET "gs://bkt_dev_fq_goldcore/test_64/cc/TBSPYDT/*" > /tmp/TBSPYDT.txt
+   17  bq mk --external_table_definition=/tmp/TBSABAL.txt  dev-gold-core:it_adhoc_creditcoll_sept21.tbsabal
+   18  bq mk --external_table_definition=/tmp/TBSPYDT.txt  dev-gold-core:it_adhoc_creditcoll_sept21.tbspydt
+   19  [ "$FROM" ]   ||  FROM=120
+   20  [ "$TO" ]   ||  TO=2
+   21  echo $FROM
+   22  echo $to
+   23  echo $To
+   24  [ "$TO" ]   ||  TO=2
+   25  echo $To
+   26  echo $TO
+   27  FROMDATE=$(TZ=":America/New_York" date -d "${FROM} mins ago" +"%Y-%m-%d %H:%M:%S")
+   28  TODATE=$(TZ=":America/New_York" date -d "${TO} mins ago" +"%Y-%m-%d %H:%M:%S")
+   29  echo $FROMDATE
+   30  echo $TODATE
+   31  ld
+   32  ls
+   33  cd gcp_scripts/
+   34  ls
+   35  gcloud config set project prod-gold-core
+   36  cd ..
+   37  bq update --require_partition_filter prod-gold-core:it_dms_flat_variables.dmsm10_dmdo002_2023
+   38  curl -m 70 -X POST https://cf-sasfile-read-util-saj6kpxloa-uc.a.run.app -H "Authorization: bearer $(gcloud auth print-identity-token)" -H "Content-Type: application/json" -d '{  "name": "Hello World" }'
+   39  gcloud bete interactive
+   40  E_WRONG_ARGS=85
+   41  script_parameters="-a -h -m -z"
+   42  #                  -a = all, -h = help, etc.
+   43  if [ $# -ne $Number_of_expected_args ]; then   echo "Usage: `basename $0` $script_parameters"
+   44    exit $E_WRONG_ARGS; fi
+   45  E_WRONG_ARGS=85
+   46  script_parameters="-a -h -m -z"
+   47  #                  -a = all, -h = help, etc.
+   48  if [ $# -ne $Number_of_expected_args ]; then   echo "Usage: `basename $0` $script_parameters"
+   49    exit $E_WRONG_ARGS; fi
+   50  uptime
+   51  hostname
+   52  hostid
+   53  cat /etc/hosts
+   54  size /bin/bash
+   55  size -sh /bin/bash
+   56  size /bin/bash
+   57  top -b
+   58  bq update -d --storage_billing_model=PHYSICAL prod-gold-core:it_play_to_win
+   59  bq mkdef --autodetect --source_format=PARQUET "gs://bkt_dev_fq_goldcore/test_64/cc/TBSPRSC/*" > /tmp/TBSPRSC.txt
+   60  bq mk --external_table_definition=/tmp/TBSPRSC.txt  dev-gold-core:it_adhoc_creditcoll_sept21.tbsprsc
+   61  gcloud organizations list
+   62   gcloud container clusters get-credentials us-east1-clcomposer-dev-dat-436f74c9-gke --zone us-east1-b --project dev-analytics-datasci  && kubectl get node gke-us-east1-clcomposer-dev-custom-mm-e4ca4c0c-47dn -o yaml
+   63  gsutil hmac list
+   64  bq cp dev-gold-core.it_appsflyer_adhoc_28.pch_wordmania_inapp_events_final@-3600000 dev-gold-core.it_appsflyer_adhoc_28.pch_wordmania_inapp_events_final2
+   65  bq cp it_appsflyer_adhoc_28.pch_wordmania_inapp_events_final@-360000 it_appsflyer_adhoc_28.pch_wordmania_inapp_events_final2
+   66  bq cp it_appsflyer_adhoc_28.pch_wordmania_inapp_events_final@-3 it_appsflyer_adhoc_28.pch_wordmania_inapp_events_final2
+   67  bq cp it_appsflyer_adhoc_28.pch_wordmania_inapp_events_final it_appsflyer_adhoc_28.pch_wordmania_inapp_events_final2
+   68  bq cp it_appsflyer_adhoc_28.pch_wordmania_inapp_events_final@-3000 it_appsflyer_adhoc_28.pch_wordmania_inapp_events_final2
+   69  bq cp it_appsflyer_adhoc_28.pch_wordmania_inapp_events_final@-366000 it_appsflyer_adhoc_28.pch_wordmania_inapp_events_final2
+   70  bq cp it_appsflyer_adhoc_28.pch_wordmania_inapp_events_final@1675958400000 it_appsflyer_adhoc_28.pch_wordmania_inapp_events_final2
+   71  ls
+   72  history
+   73  history|grep signurl
+   74  gsutil signurl -d 30m sb-custdata-dataengineering-2-a77d2f50b2a4.json gs://https://storage.cloud.google.com/bkt_branch_exchange_temp/ap_pch_wordmania_branch_export_210.json
+   75  cat sb-custdata-dataengineering-2-a77d2f50b2a4.json
+   76  sudo apt-get install python3-openssl
+   77  gsutil signurl -d 30m sb-custdata-dataengineering-2-a77d2f50b2a4.json gs://https://storage.cloud.google.com/bkt_branch_exchange_temp/ap_pch_wordmania_branch_export_210.json
+   78  pip install pip --upgrade
+   79  pip install pyopenssl --upgrade
+   80  pip install pip --upgrade
+   81  pip install pyopenssl --upgrade
+   82  pip install pip --upgrade
+   83  pip install pyopenssl --upgrade
+   84  sudo apt-get install python3-openssl
+   85  gsutil signurl -d 30m sb-custdata-dataengineering-2-a77d2f50b2a4.json gs://https://storage.cloud.google.com/bkt_branch_exchange_temp/ap_pch_wordmania_branch_export_210.json
+   86  apt-get --reinstall install python-apt
+   87  apt-get --reinstall install apt-transport-https
+   88  apt-get install build-essential libssl-dev libffi-dev python-dev
+   89  gsutil signurl -d 30m sb-custdata-dataengineering-2-a77d2f50b2a4.json gs://https://storage.cloud.google.com/bkt_branch_exchange_temp/ap_pch_wordmania_branch_export_210.json
+   90  sudo pip3 install pyopenssl
+   91  gsutil signurl -d 30m sb-custdata-dataengineering-2-a77d2f50b2a4.json gs://https://storage.cloud.google.com/bkt_branch_exchange_temp/ap_pch_wordmania_branch_export_210.json
+   92  gsutil signurl -d 10m sb-custdata-dataengineering-2-a77d2f50b2a4.json gs://bkt_poc_tmp_flywheel_scd2/svc-dev-flywheel-pch-poc.json
+   93  pipenv update pyOpenSSL
+   94  sudo pip3 install cryptography --upgrade
+   95  sudo pip3 install pyOpenSSL --upgrade
+   96  pip3 install pyOpenSSL --upgrade
+   97  sudo apt remove python3-pip 
+   98  wget https://bootstrap.pypa.io/get-pip.py
+   99  sudo python3 get-pip.py
+  100  sudo apt-get install python3-openssl
+  101  gsutil signurl -d 10m sb-custdata-dataengineering-2-a77d2f50b2a4.json gs://https://storage.cloud.google.com/bkt_branch_exchange_temp/ap_pch_wordmania_branch_export_210.json
+  102  python3 -m easy_install pyOpenSSL-22.0.0-py2.py3-none-any.whl
+  103  pip install --upgrade cryptography==36.0.2
+  104  gsutil signurl -d 10m sb-custdata-dataengineering-2-a77d2f50b2a4.json gs://https://storage.cloud.google.com/bkt_branch_exchange_temp/ap_pch_wordmania_branch_export_210.json
+  105  sudo apt-get install python3-openssl
+  106  gsutil signurl -d 10m sb-custdata-dataengineering-2-a77d2f50b2a4.json gs://https://storage.cloud.google.com/bkt_branch_exchange_temp/ap_pch_wordmania_branch_export_210.json
+  107  ls
+  108  mkdir scores
+  109  cd scores/
+  110  cd ..
+  111  gsutil cp -r gs://bkt_dev_cmpgn_inbound/model_b_test/test/scorefiles /scores/
+  112  pwd
+  113  gsutil cp -r gs://bkt_dev_cmpgn_inbound/model_b_test/test/scorefiles home/rjannu//scores/
+  114  gsutil cp -r gs://bkt_dev_cmpgn_inbound/model_b_test/test/scorefiles/ /home/rjannu/scores/
+  115  cd scores/
+  116  ls
+  117  gsutil cp -r gs://bkt_dev_cmpgn_inbound/model_b_test/test/scorefiles/* /home/rjannu/scores/
+  118  ls
+  119  gsutil cp -mr gs://bkt_dev_cmpgn_inbound/model_b_test/test/scorefiles/* /home/rjannu/scores/
+  120  gsutil -m cp -r gs://bkt_dev_cmpgn_inbound/model_b_test/test/scorefiles/* /home/rjannu/scores/
+  121  history
+  122  ls
+  123  gcloud config set project dev-analytics-datasci
+  124  gcloud builds submit --region=us-east1 --config cloudbuild.yaml
+  125  gcloud artifacts repositories list
+  126  gcloud builds submit --region=us-east1 --config cloudbuild.yaml
+  127  gcloud config set project dev-analytics-datasci
+  128  gcloud builds submit --region=us-east1 --config cloudbuild.yaml
+  129  gcloud psuh submit --region=us-east1 --config cloudbuild.yaml
+  130  gcloud push submit --region=us-east1 --config cloudbuild.yaml
+  131  gcloud builds submit --region=us-east1 --config cloudbuild.yaml
+  132  gcloud config set project dev-gold-core
+  133  gcloud dataproc batches submit spark     --region=region     --jars=file:///usr/lib/spark/examples/jars/spark-examples.jar     --class=org.apache.spark.examples.SparkPi     -- 1000
+  134  gcloud dataproc batches submit spark     --region=us-east1     --jars=file:///usr/lib/spark/examples/jars/spark-examples.jar     --class=org.apache.spark.examples.SparkPi     -- 1000
+  135  gcloud dataproc batches submit spark  --region=us-east1  --no-address --subnet gcp-subnet-it-dev-dt-use1-2 --jars=file:///usr/lib/spark/examples/jars/spark-examples.jar     --class=org.apache.spark.examples.SparkPi     -- 1000
+  136  gcloud dataproc batches submit spark  --region=us-east1  --subnet gcp-subnet-it-dev-dt-use1-2 --jars=file:///usr/lib/spark/examples/jars/spark-examples.jar     --class=org.apache.spark.examples.SparkPi     -- 1000
+  137  gcloud dataproc batches submit spark  --region=us-east1  --subnet projects/prod-pch-it-networking/regions/us-east1/subnetworks/gcp-subnet-it-dev-dt-use1-2 --jars=file:///usr/lib/spark/examples/jars/spark-examples.jar     --class=org.apache.spark.examples.SparkPi     -- 1000
+  138  gcloud config set project dev-gold-core
+  139  gcloud dataproc batches submit spark  --region=us-east1  --subnet projects/prod-pch-it-networking/regions/us-east1/subnetworks/gcp-subnet-it-dev-dt-use1-2 --jars=file:///usr/lib/spark/examples/jars/spark-examples.jar     --class=org.apache.spark.examples.SparkPi     -- 1000
+  140  gsutil cp gs://dataproc-staging-us-east1-625789322766-ajjnr5jp/google-cloud-dataproc-metainfo/72487966-318e-4a72-9062-06138a516481/gdpic-srvls-batch-1f2da3e5-09ee-4b5a-9128-edd6c761e9dd-m/dataproc-startup-script_output
+  141  gsutil -cp gs://dataproc-staging-us-east1-625789322766-ajjnr5jp/google-cloud-dataproc-metainfo/72487966-318e-4a72-9062-06138a516481/gdpic-srvls-batch-1f2da3e5-09ee-4b5a-9128-edd6c761e9dd-m/dataproc-startup-script_output
+  142  gsutil cp gs://dataproc-staging-us-east1-625789322766-ajjnr5jp/google-cloud-dataproc-metainfo/72487966-318e-4a72-9062-06138a516481/gdpic-srvls-batch-1f2da3e5-09ee-4b5a-9128-edd6c761e9dd-m/dataproc-startup-script_output
+  143  gsutil cp gs://dataproc-staging-us-east1-625789322766-ajjnr5jp/google-cloud-dataproc-metainfo/72487966-318e-4a72-9062-06138a516481/gdpic-srvls-batch-1f2da3e5-09ee-4b5a-9128-edd6c761e9dd-m/dataproc-startup-script_output .
+  144  gcloud dataproc batches submit spark  — project=dev-gold-core --region=us-east1 --no-address  --subnet projects/prod-pch-it-networking/regions/us-east1/subnetworks/gcp-subnet-it-dev-dt-use1-2 --jars=file:///usr/lib/spark/examples/jars/spark-examples.jar     --class=org.apache.spark.examples.SparkPi     -- 1000
+  145  gcloud dataproc batches submit spark  --project=dev-gold-core --region=us-east1 --no-address  --subnet projects/prod-pch-it-networking/regions/us-east1/subnetworks/gcp-subnet-it-dev-dt-use1-2 --jars=file:///usr/lib/spark/examples/jars/spark-examples.jar     --class=org.apache.spark.examples.SparkPi     -- 1000
+  146  gcloud dataproc batches submit spark  --project=dev-gold-core --region=us-east1 --no-address --subnet projects/prod-pch-it-networking/regions/us-east1/subnetworks/gcp-subnet-it-dev-dt-use1-2 --jars=file:///usr/lib/spark/examples/jars/spark-examples.jar     --class=org.apache.spark.examples.SparkPi     -- 1000
+  147  gcloud config set project dev-gold-core
+  148  gcloud beta dataproc clusters create demo-cluster --region us-east1  --zone us-east1-b --master-machine-type n1-standard-2 --master-boot-disk-size 500 --num-workers 2 --worker-machine-type n1-standard-2 --worker-boot-disk-size 100 --image-version 1.3-ubuntu18 --no-address  --subnet projects/prod-pch-it-networking/regions/us-east1/subnetworks/gcp-subnet-it-dev-dt-use1-2 --properties spark:spark.eventLog.enabled=true,spark:spark.eventLog.dir=gs://bkt_dev_ar_goldcore/spark-events/,spark:spark.eventLog.rolling.enabled=true,spark:spark.eventLog.rolling.maxFileSize=128m --scopes 'https://www.googleapis.com/auth/cloud-platform' --project dev-gold-core
+  149  gsutil cp gs://dataproc-staging-us-east1-625789322766-ajjnr5jp/google-cloud-dataproc-metainfo/5a862268-c73d-44fb-b3e8-eb836c986cd7/demo-cluster-m/dataproc-startup-script_output. .
+  150  gsutil cp gs://dataproc-staging-us-east1-625789322766-ajjnr5jp/google-cloud-dataproc-metainfo/5a862268-c73d-44fb-b3e8-eb836c986cd7/demo-cluster-m/dataproc-startup-script_output .
+  151  gcloud beta dataproc clusters create demo-cluster --region us-east1  --zone us-east1-b --master-machine-type n1-standard-2 --master-boot-disk-size 500 --num-workers 2 --worker-machine-type n1-standard-2 --worker-boot-disk-size 100 --image-version 1.3-ubuntu18 --no-address  --subnet projects/prod-pch-it-networking/regions/us-east1/subnetworks/gcp-subnet-it-dev-dt-use1-2 --properties spark:spark.eventLog.enabled=true,spark:spark.eventLog.rolling.enabled=true,spark:spark.eventLog.rolling.maxFileSize=128m --scopes 'https://www.googleapis.com/auth/cloud-platform' --project dev-gold-core
+  152  gcloud beta dataproc clusters create demo-cluster --region us-east1  --zone us-east1-b --master-machine-type n1-standard-2 --master-boot-disk-size 500 --num-workers 2 --worker-machine-type n1-standard-2 --worker-boot-disk-size 100 --image-version 1.3-ubuntu18 --no-address  --subnet projects/prod-pch-it-networking/regions/us-east1/subnetworks/gcp-subnet-it-dev-dt-use1-2 --properties spark:spark.eventLog.enabled=true,spark:spark.eventLog.dir=gs://bkt_dev_ar_goldcore/spark-events/,spark:spark.eventLog.rolling.enabled=true,spark:spark.eventLog.rolling.maxFileSize=128m --scopes 'https://www.googleapis.com/auth/cloud-platform' --project dev-gold-core
+  153  --metadata=block-project-ssh-keys=true
+  154  gcloud beta dataproc clusters create demo-cluster --region us-east1  --zone us-east1-b --master-machine-type n1-standard-2 --master-boot-disk-size 500 --num-workers 2 --worker-machine-type n1-standard-2 --worker-boot-disk-size 100 --image-version 1.3-ubuntu18 --no-address  --subnet projects/prod-pch-it-networking/regions/us-east1/subnetworks/gcp-subnet-it-dev-dt-use1-2 --properties spark:spark.eventLog.enabled=true,spark:spark.eventLog.dir=gs://bkt_dev_ar_goldcore/spark-events/,spark:spark.eventLog.rolling.enabled=true,spark:spark.eventLog.rolling.maxFileSize=128m --scopes 'https://www.googleapis.com/auth/cloud-platform' --project dev-gold-core --metadata=block-project-ssh-keys=true
+  155  gsutil cp gs://dataproc-staging-us-east1-625789322766-ajjnr5jp/google-cloud-dataproc-metainfo/e62769ee-958c-479f-997b-e358044eb14b/demo-cluster-m/dataproc-startup-script_output .
+  156  gcloud config set project dev-cd-shared-infr
+  157  gcloud config set project dev-cd-shared-infra
+  158  gcloud beta container --project "dev-cd-shared-infra" clusters create "gke-dev-shared-clu1" --zone "us-east1-b" --no-enable-basic-auth --cluster-version "1.21.10-gke.2000" --release-channel "regular" --machine-type "e2-medium" --image-type "COS_CONTAINERD" --disk-type "pd-standard" --disk-size "100" --metadata disable-legacy-endpoints=true --service-account "svc-dev-gke-cmp-cd-shrd-infra@dev-cd-shared-infra.iam.gserviceaccount.com" --max-pods-per-node "10" --num-nodes "3" --logging=SYSTEM,WORKLOAD --monitoring=SYSTEM --enable-private-nodes --master-ipv4-cidr "10.80.158.128/28" --enable-master-global-access --enable-ip-alias --network "projects/prod-pch-it-networking/global/networks/gcp-vpc-it-shared-primary" --subnetwork "projects/prod-pch-it-networking/regions/us-east1/subnetworks/gcp-subnet-it-dev-gkebknd-use1-1" --cluster-secondary-range-name "gkebknd-secondary-dpic-podip" --services-secondary-range-name "gkebknd-secondary-dpic-svcsip-1" --no-enable-intra-node-visibility --default-max-pods-per-node "20" --enable-autoscaling --min-nodes "0" --max-nodes "3" --enable-master-authorized-networks --master-authorized-networks 10.80.158.0/25 --addons HorizontalPodAutoscaling,HttpLoadBalancing,GcePersistentDiskCsiDriver --enable-autoupgrade --enable-autorepair --max-surge-upgrade 1 --max-unavailable-upgrade 0 --enable-shielded-nodes --node-locations "us-east1-b"
+  159  gcloud config set project dev-analytics-datasci
+  160  history
+  161  gcloud builds submit --region=us-east1 --config cloudbuild.yaml
+  162  gcloud config set project prod-cd-shared-infra
+  163  gcloud alpha composer environments describe cld-composer-prod-pipelines
+  164  gcloud alpha composer environments describe cld-composer-prod-pipelines --location us-eat1
+  165  gcloud alpha composer environments describe cld-composer-prod-pipelines --location us-east1
+  166  gcloud composer environments describe cld-composer-prod-pipelines --location us-east1
+  167  gcloud composer environments describe cld-composer-prod-pipelines --location us-east1 --format yaml >>composer_prod.yaml
+  168  ls
+  169  pwd
+  170  cat >>composer_prod.yaml
+  171  cat composer_prod.yaml
+  172  history
+  173  gcloud config set project sb-analytics-modeling-1
+  174  gcloud config set project prod-cd-shared-infra
+  175  gcloud dataproc clusters create cluster-9f0d --enable-component-gateway --bucket bkt-pcsi-source-code-repo  --region us-east1 --subnet projects/prod-pch-it-networking/regions/us-east1/subnetworks/gcp-subnet-it-prod-gkebknd-use1-5  \ 
+  176  --no-address  --zone us-east1-b  --master-machine-type n1-standard-4  --master-boot-disk-size 500  --num-workers 2  --worker-machine-type n1-standard-4  --worker-boot-disk-size 200  --num-secondary-workers 2  --secondary-worker-boot-disk-size 200  --num-secondary-worker-local-ssds 0  --image-version 2.0-debian10  --optional-components JUPYTER,DOCKER  --max-idle 3600s  --service-account=svc-prod-nexus-elt-compsr-shrd@prod-cd-shared-infra.iam.gserviceaccount.com  --scopes 'https://www.googleapis.com/auth/cloud-platform'  --labels org=pch,purpose=etl,team=bigdata  --initialization-actions 'gs://goog-dataproc-initialization-actions-us-east1/connectors/connectors.sh','gs://bkt_tigeranalytics_source_code_repository/dataproc-startup/startup_dp.sh' 
+  177  --project prod-cd-shared-infra
+  178  gcloud dataproc clusters create cluster-9f0d --enable-component-gateway --bucket bkt-pcsi-source-code-repo  --region us-east1 --subnet projects/prod-pch-it-networking/regions/us-east1/subnetworks/gcp-subnet-it-prod-gkebknd-use1-5  --no-address --zone us-east1-b --master-machine-type n1-standard-4 --master-boot-disk-size 500 --num-workers 2 --worker-machine-type n1-standard-4 --worker-boot-disk-size 200 --num-secondary-workers 2 --secondary-worker-boot-disk-size 200 --num-secondary-worker-local-ssds 0 --image-version 2.0-debian10 --optional-components JUPYTER,DOCKER --max-idle 3600s  --service-account=svc-prod-nexus-elt-compsr-shrd@prod-cd-shared-infra.iam.gserviceaccount.com --scopes 'https://www.googleapis.com/auth/cloud-platform' --labels org=pch,purpose=etl,team=bigdata --initialization-actions 'gs://goog-dataproc-initialization-actions-us-east1/connectors/connectors.sh','gs://bkt_tigeranalytics_source_code_repository/dataproc-startup/startup_dp.sh'  --project prod-cd-shared-infra \
+  179  ;
+  180  gcloud dataproc clusters create cluster-9f0d --enable-component-gateway --bucket bkt-pcsi-source-code-repo  --region us-east1 --subnet projects/prod-pch-it-networking/regions/us-east1/subnetworks/gcp-subnet-it-prod-gkebknd-use1-5  --no-address --zone us-east1-b --master-machine-type n1-standard-4 --master-boot-disk-size 500 --num-workers 2 --worker-machine-type n1-standard-4 --worker-boot-disk-size 200 --num-secondary-workers 2 --secondary-worker-boot-disk-size 200 --num-secondary-worker-local-ssds 0 --image-version 2.0-debian10 --optional-components JUPYTER,DOCKER --max-idle 3600s  --service-account=svc-prod-nexus-elt-compsr-shrd@prod-cd-shared-infra.iam.gserviceaccount.com --scopes 'https://www.googleapis.com/auth/cloud-platform' --labels org=pch,purpose=etl,team=bigdata --initialization-actions 'gs://goog-dataproc-initialization-actions-us-east1/connectors/connectors.sh','gs://bkt_tigeranalytics_source_code_repository/dataproc-startup/startup_dp.sh'  --project prod-cd-shared-infra 
+  181  gcloud dataproc clusters create cluster-spark-poc --enable-component-gateway --bucket bkt-pcsi-source-code-repo  --region us-east1 --subnet projects/prod-pch-it-networking/regions/us-east1/subnetworks/gcp-subnet-it-prod-gkebknd-use1-5  --no-address --zone us-east1-b --master-machine-type n1-standard-4 --master-boot-disk-size 500 --num-workers 2 --worker-machine-type n1-standard-4 --worker-boot-disk-size 200 --num-secondary-workers 2 --secondary-worker-boot-disk-size 200 --num-secondary-worker-local-ssds 0 --image-version 2.0-debian10 --optional-components JUPYTER,DOCKER --max-idle 3600s  --service-account=svc-prod-nexus-elt-compsr-shrd@prod-cd-shared-infra.iam.gserviceaccount.com --scopes 'https://www.googleapis.com/auth/cloud-platform' --labels org=pch,purpose=etl,team=bigdata --initialization-actions 'gs://goog-dataproc-initialization-actions-us-east1/connectors/connectors.sh','gs://bkt_tigeranalytics_source_code_repository/dataproc-startup/startup_dp.sh'  --project prod-cd-shared-infra 
+  182  gcloud dataproc clusters create cluster-spark-poc --enable-component-gateway --bucket bkt-pcsi-source-code-repo  --region us-east1 --subnet projects/prod-pch-it-networking/regions/us-east1/subnetworks/gcp-subnet-it-prod-gkebknd-use1-5  --no-address --zone us-east1-b --master-machine-type n1-standard-4 --master-boot-disk-size 500 --num-workers 2 --worker-machine-type n1-standard-4 --worker-boot-disk-size 200 --num-secondary-workers 2 --secondary-worker-boot-disk-size 200 --num-secondary-worker-local-ssds 0 --image-version 2.0-debian10 --optional-components JUPYTER,DOCKER --max-idle 3600s  --service-account=svc-prod-nexus-elt-compsr-shrd@prod-cd-shared-infra.iam.gserviceaccount.com --scopes 'https://www.googleapis.com/auth/cloud-platform' --labels org=pch,purpose=etl,team=bigdata --initialization-actions 'gs://goog-dataproc-initialization-actions-us-east1/connectors/connectors.sh'  --project prod-cd-shared-infra 
+  183  gsutil cp gs://goog-dataproc-initialization-actions-us-east1/connectors/connectors.sh .
+  184  cat connectors.sh
+  185  gcloud dataproc clusters create cluster-spark-poc --enable-component-gateway --bucket bkt-pcsi-source-code-repo  --region us-east1 --subnet projects/prod-pch-it-networking/regions/us-east1/subnetworks/gcp-subnet-it-prod-gkebknd-use1-5  --no-address --zone us-east1-b --master-machine-type n1-standard-4 --master-boot-disk-size 500 --num-workers 2 --worker-machine-type n1-standard-4 --worker-boot-disk-size 200 --num-secondary-workers 2 --secondary-worker-boot-disk-size 200 --num-secondary-worker-local-ssds 0 --image-version 2.0-debian10 --optional-components JUPYTER,DOCKER --max-idle 3600s  --service-account=svc-prod-nexus-elt-compsr-shrd@prod-cd-shared-infra.iam.gserviceaccount.com --scopes 'https://www.googleapis.com/auth/cloud-platform' --labels org=pch,purpose=etl,team=bigdata --initialization-actions 'gs://goog-dataproc-initialization-actions-us-east1/connectors/connectors.sh'  --metadata 'spark-bigquery-connector-version=0.18.0','gcs-connector-version=2.1.6','bigquery-connector-version=1.1.6' --project prod-cd-shared-infra 
+  186  gcloud dataproc clusters create cluster-spark-poc --enable-component-gateway --bucket bkt-pcsi-source-code-repo  --region us-east1 --subnet projects/prod-pch-it-networking/regions/us-east1/subnetworks/gcp-subnet-it-prod-sb-use1-1  --no-address --zone us-east1-b --master-machine-type n1-standard-4 --master-boot-disk-size 500 --num-workers 2 --worker-machine-type n1-standard-4 --worker-boot-disk-size 200 --image-version 2.0-debian10 --optional-components JUPYTER,DOCKER --max-idle 3600s  --service-account=svc-prod-nexus-elt-compsr-shrd@prod-cd-shared-infra.iam.gserviceaccount.com --scopes 'https://www.googleapis.com/auth/cloud-platform' --labels org=pch,purpose=etl,team=bigdata --initialization-actions 'gs://goog-dataproc-initialization-actions-us-east1/connectors/connectors.sh'  --metadata 'spark-bigquery-connector-version=0.18.0','gcs-connector-version=2.1.6','bigquery-connector-version=1.1.6' --project prod-cd-shared-infra 
+  187  gcloud config set project prod-cd-shared-infra
+  188  gcloud dataproc clusters create cluster-spark-poc --enable-component-gateway --bucket bkt-pcsi-source-code-repo  --region us-east1 --subnet projects/prod-pch-it-networking/regions/us-east1/subnetworks/gcp-subnet-it-prod-sb-use1-1  --no-address --zone us-east1-b --master-machine-type n1-standard-4 --master-boot-disk-size 500 --num-workers 2 --worker-machine-type n1-standard-4 --worker-boot-disk-size 200 --image-version 2.0-debian10 --optional-components JUPYTER,DOCKER --max-idle 3600s  --service-account=svc-prod-nexus-elt-compsr-shrd@prod-cd-shared-infra.iam.gserviceaccount.com --scopes 'https://www.googleapis.com/auth/cloud-platform' --labels org=pch,purpose=etl,team=bigdata --initialization-actions 'gs://goog-dataproc-initialization-actions-us-east1/connectors/connectors.sh'  --metadata 'spark-bigquery-connector-version=0.18.0','gcs-connector-version=2.1.6','bigquery-connector-version=1.1.6' --project prod-cd-shared-infra 
+  189  gcloud dataproc jobs submit spark --cluster cluster-spark-poc     --region=us-east1     --class org.apache.spark.examples.SparkPi     --jars file:///usr/lib/spark/examples/jars/spark-examples.jar -- 1000
+  190  gcloud config set project prod-cd-shared-infra 
+  191  gcloud dataproc clusters export cluster-spark-poc --destination cluster-spark-poc.yaml
+  192  gcloud dataproc clusters export cluster-spark-poc --region us-east1 --destination cluster-spark-poc.yaml
+  193  gcloud config set project prod-cd-shared-infra 
+  194  gcloud dataproc jobs submit spark --cluster cluster-spark-poc   --region=us-east1   --class com.pch.ingestion.core.VyomMain   --master yarn   --deploy-mode client   --driver-memory 1g   --executor-memory 1g   --num-executors 2   --executor-cores 1   --queue default   --jars gs://bkt-pcsi-source-code-repo/spark3_code/libs/config-1.2.1.jar,gs://bkt-pcsi-source-code-repo/spark3_code/libs/mysql-connector-java-8.0.19.jar,gs://bkt-pcsi-source-code-repo/spark3_code/libs/sqljdbc42.jar    --conf "spark.sql.parquet.writeLegacyFormat=true"      gs://bkt-pcsi-source-code-repo/spark3_code/libs/sparkingestionhub.jar gs://bkt-pcsi-source-code-repo/spark3_code/configs/test1.conf
+  195  gcloud dataproc jobs submit spark --cluster cluster-spark-poc   --region=us-east1   --class com.pch.ingestion.core.VyomMain   --jars gs://bkt-pcsi-source-code-repo/spark3_code/libs/config-1.2.1.jar,gs://bkt-pcsi-source-code-repo/spark3_code/libs/mysql-connector-java-8.0.19.jar,gs://bkt-pcsi-source-code-repo/spark3_code/libs/sqljdbc42.jar    --conf "spark.sql.parquet.writeLegacyFormat=true"      gs://bkt-pcsi-source-code-repo/spark3_code/libs/sparkingestionhub.jar gs://bkt-pcsi-source-code-repo/spark3_code/configs/test1.conf
+  196  gcloud dataproc jobs submit spark --cluster cluster-spark-poc   --region=us-east1   --class com.pch.ingestion.core.VyomMain   --jars gs://bkt-pcsi-source-code-repo/spark3_code/libs/config-1.2.1.jar,gs://bkt-pcsi-source-code-repo/spark3_code/libs/mysql-connector-java-8.0.19.jar,gs://bkt-pcsi-source-code-repo/spark3_code/libs/sqljdbc42.jar       gs://bkt-pcsi-source-code-repo/spark3_code/libs/sparkingestionhub.jar gs://bkt-pcsi-source-code-repo/spark3_code/configs/test1.conf
+  197  gcloud dataproc jobs submit spark --cluster cluster-spark-poc  --region=us-east1   --class com.pch.ingestion.core.VyomMain   --jars gs://bkt-pcsi-source-code-repo/spark3_code/libs/config-1.2.1.jar,gs://bkt-pcsi-source-code-repo/spark3_code/libs/mysql-connector-java-8.0.19.jar,gs://bkt-pcsi-source-code-repo/spark3_code/libs/sqljdbc42.jar  gs://bkt-pcsi-source-code-repo/spark3_code/libs/sparkingestionhub.jar gs://bkt-pcsi-source-code-repo/spark3_code/configs/test1.conf
+  198  gcloud dataproc jobs submit spark --cluster cluster-spark-poc  --region=us-east1   --class com.pch.ingestion.core.VyomMain   
+  199  gcloud dataproc jobs submit spark --cluster cluster-spark-poc  --region=us-east1   --class com.pch.ingestion.core.VyomMain   --jars /home/rjannu/spark3_poc/spark3_code/libs/config-1.2.1.jar,/home/rjannu/spark3_poc/spark3_code/libs/mysql-connector-java-8.0.19.jar,/home/rjannu/spark3_poc/spark3_code/libs/sqljdbc42.jar  /home/rjannu/spark3_poc/spark3_code/libs/sparkingestionhub.jar /home/rjannu/spark3_poc/spark3_code/configs/test1.conf
+  200  ls
+  201  mkdir spark3_poc
+  202  cd spark3_poc/
+  203  gsutil cp gs://bkt-pcsi-source-code-repo/spark3_code/libs/ .
+  204  gsutil cp gs://bkt-pcsi-source-code-repo/spark3_code/libs/* .
+  205  ls
+  206  gsutil cp gs://bkt-pcsi-source-code-repo/spark3_code/configs/* .
+  207  ls
+  208  chmod 777 .
+  209  ls -ltr
+  210  chmod 777 *.*
+  211  ls -ltr
+  212  gcloud dataproc jobs submit spark --cluster cluster-spark-poc  --region=us-east1   --class com.pch.ingestion.core.VyomMain   --jars config-1.2.1.jar,mysql-connector-java-8.0.19.jar,sqljdbc42.jar  sparkingestionhub.jar test1.conf
+  213  gcloud dataproc jobs submit spark --cluster cluster-spark-poc --region=us-east1 --class com.pch.ingestion.core.VyomMain --jars config-1.2.1.jar,mysql-connector-java-8.0.19.jar,sqljdbc42.jar sparkingestionhub.jar test1.conf
+  214  gcloud dataproc jobs submit spark --cluster cluster-spark-poc --region=us-east1 --class com.pch.ingestion.core.VyomMain --jars config-1.2.1.jar,mysql-connector-java-8.0.19.jar,sqljdbc42.jar,sparkingestionhub.jar -- test1.conf
+  215  gcloud config set project prod-cd-shared-infra 
+  216  gcloud dataproc jobs submit spark --cluster cluster-spark-poc --region=us-east1 --class com.pch.ingestion.core.VyomMain --jars config-1.2.1.jar,mysql-connector-java-8.0.19.jar,sqljdbc42.jar,sparkingestionhub.jar -- test1.conf
+  217  ls
+  218  gsutil cp gs://bkt-pcsi-source-code-repo/spark3_code/configs/* .
+  219  ls
+  220  gcloud dataproc jobs submit spark --cluster cluster-spark-poc --region=us-east1 --class com.pch.ingestion.core.VyomMain --jars config-1.2.1.jar,mysql-connector-java-8.0.19.jar,sqljdbc42.jar,sparkingestionhub.jar -- test1.conf
+  221  gcloud dataproc jobs submit spark --cluster cluster-spark-poc --region=us-east1 --class com.pch.ingestion.core.VyomMain --jars config-1.2.1.jar,mysql-connector-java-8.0.19.jar,sqljdbc42.jar,sparkingestionhub.jar -- gs://bkt-pcsi-source-code-repo/spark3_code/configs/
+  222  gcloud dataproc jobs submit spark --cluster cluster-spark-poc --region=us-east1 --class com.pch.ingestion.core.VyomMain --jars config-1.2.1.jar,mysql-connector-java-8.0.19.jar,sqljdbc42.jar,sparkingestionhub.jar -- gs://bkt-pcsi-source-code-repo/spark3_code/configs/test1.conf
+  223  ls
+  224  ls -ltr
+  225  chmod 777 *.*
+  226  gcloud dataproc jobs submit spark --cluster cluster-spark-poc --region=us-east1 --class com.pch.ingestion.core.VyomMain --jars config-1.2.1.jar,mysql-connector-java-8.0.19.jar,sqljdbc42.jar,sparkingestionhub.jar -- test1.conf
+  227  ls -ltr
+  228  gcloud dataproc jobs submit spark --cluster cluster-spark-poc --region=us-east1 --class com.pch.ingestion.core.VyomMain --jars config-1.2.1.jar,mysql-connector-java-8.0.19.jar,sqljdbc42.jar,sparkingestionhub.jar --properties-file test1.conf
+  229  gcloud dataproc jobs submit spark --cluster cluster-spark-poc --region=us-east1 --class com.pch.ingestion.core.VyomMain --jars config-1.2.1.jar,mysql-connector-java-8.0.19.jar,sqljdbc42.jar,sparkingestionhub.jar -- test1.conf
+  230  pwd
+  231  gcloud dataproc jobs submit spark --cluster cluster-spark-poc --region=us-east1 --class com.pch.ingestion.core.VyomMain --jars config-1.2.1.jar,mysql-connector-java-8.0.19.jar,sqljdbc42.jar,sparkingestionhub.jar -- /home/rjannu/spark3_poc/test1.conf
+  232  gcloud dataproc jobs submit spark --cluster cluster-spark-poc --region=us-east1 --class com.pch.ingestion.core.VyomMain --jars config-1.2.1.jar,mysql-connector-java-8.0.19.jar,sqljdbc42.jar,sparkingestionhub.jar --files /home/rjannu/spark3_poc/test1.conf
+  233  gcloud dataproc jobs submit spark --cluster cluster-spark-poc --region=us-east1 --class com.pch.ingestion.core.VyomMain --files test1.conf --jars config-1.2.1.jar,mysql-connector-java-8.0.19.jar,sqljdbc42.jar,sparkingestionhub.jar
+  234  gcloud dataproc jobs submit spark --cluster cluster-spark-poc --region=us-east1 --class com.pch.ingestion.core.VyomMain --properties=spark:spark.executor.extraJavaOptions=test1.conf --jars config-1.2.1.jar,mysql-connector-java-8.0.19.jar,sqljdbc42.jar,sparkingestionhub.jar
+  235  gcloud dataproc jobs submit spark --cluster cluster-spark-poc --region=us-east1 --class com.pch.ingestion.core.VyomMain --jars config-1.2.1.jar,mysql-connector-java-8.0.19.jar,sqljdbc42.jar,sparkingestionhub.jar -- /home/rjannu/spark3_poc/spark3_code/configs/test1.conf
+  236  gcloud config set project prod-cd-shared-infra 
+  237  ls
+  238  gcloud dataproc clusters import cluster-spark-poc --source cluster-spark-poc1.yaml --region=us-east1
+  239  gcloud dataproc clusters import cluster-spark-poc --source cluster-spark-poc1.yaml --region=us-east1 --project prod-cd-shared-infra
+  240  gcloud config set project prod-cd-shared-infra 
+  241  gcloud composer environments export cld-composer-prod-pipelines cld-composer-prod-pipelines.yaml
+  242  gcloud config list compute/ --all
+  243  gcloud config set project dev-analytics-datasci
+  244  gcloud services enable bigqueryconnection.googleapis.com --async
+  245  bq mk --connection --location=us-east1 --project_id=dev-analytics-datasci --connection_type=CLOUD_RESOURCE  bl-dad-bkt-dev-onb-inbound
+  246  gcloud config set project uat-gold-core
+  247  gcloud services enable bigqueryconnection.googleapis.com --async
+  248  bq mk --connection --location=us-central1 --project_id=uat-gold-core --connection_type=CLOUD_RESOURCE  bl-ugc-bkt-bkt_uat_fq_goldcore
+  249  bq mk --connection --location=us-central1 --project_id=uat-gold-core --connection_type=CLOUD_RESOURCE  bl_ugc_bkt_bkt_uat_fq_goldcore
+  250  bq mk --connection --location=us-central1 --project_id=dev-gold-core --connection_type=CLOUD_RESOURCE  bl_dgc_bkt_bkt_dev_fq_goldcore
+  251  bq mk --connection --location=us-central1 --project_id=prod-gold-core --connection_type=CLOUD_RESOURCE  bl_dgc_bkt_bkt_prod_fq_goldcore
+  252  bq mk --connection --location=us-central1 --project_id=prod-gold-core --connection_type=CLOUD_RESOURCE  bl_pgc_bkt_bkt_prod_fq_goldcore
+  253  prod-ds-outbound
+  254  bq mk --connection --location=us-east1 --project_id=prod-ds-outbound --connection_type=CLOUD_RESOURCE  bl-dad-bkt-dev-onb-inbound
+  255  gcloud config set project prod-ds-outbound
+  256  bq mk --connection --location=us-east1 --project_id=prod-ds-outbound --connection_type=CLOUD_RESOURCE  bl-dad-bkt-dev-onb-inbound
+  257  gcloud config set account rjannu@pch.com
+  258  bq mk --connection --location=us-east1 --project_id=prod-ds-outbound --connection_type=CLOUD_RESOURCE  bl-dad-bkt-dev-onb-inbound
+  259  gcloud services enable bigqueryconnection.googleapis.com --async
+  260  gcloud config set project prod-ds-outbound
+  261  bq mk --connection --location=us-east1 --project_id=prod-ds-outbound --connection_type=CLOUD_RESOURCE  bl-dad-bkt-dev-onb-inbound
+  262  gcloud services enable bigqueryconnection.googleapis.com --async
+  263  bq mk --connection --location=us-east1 --project_id=prod-ds-outbound --connection_type=CLOUD_RESOURCE  bl-dad-bkt-dev-onb-inbound
+  264  bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230402 sb-analytics-infotrust.infotrust_team_workpsace.snap_events_20230402
+  265  bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230402 sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230402
+  266  bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230326  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230326;
+  267  bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230327  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230327;
+  268  bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230328  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230328;
+  269  bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230329  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230329;
+  270  bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230330  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230330;
+  271  bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230331  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230331;
+  272  bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230401  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230401;
+  273  bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230402  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230402;
+  274  bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230334  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230334;
+  275  bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230335  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230335;
+  276  bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230336  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230336;
+  277  bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230337  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230337;
+  278  bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230338  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230338;
+  279  bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230339  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230339;
+  280  bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230340  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230340;
+  281  bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230341  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230341;
+  282  gcloud config set project prod-ds-outbound
+  283  bq mk --connection --location=us-- -project_id=prod-ds-outbound --connection_type=CLOUD_RESOURCE  bl-dad-bkt-dev-onb-inbound
+  284  bq mk --connection --location=us- -project_id=prod-ds-outbound --connection_type=CLOUD_RESOURCE?  bl-dad-bkt-dev-onb-inbound
+  285  bq mk --connection --location=us --project_id=prod-ds-outbound --connection_type=CLOUD_RESOURCE  bl-dad-bkt-dev-onb-inbound
+  286  bq mk --connection --location=us --project_id=prod-ds-outbound --connection_type=CLOUD_RESOURCE  bl-dad-bkt-dev-onb-inbound1
+  287  bq mk --connection --location=US --project_id=prod-ds-outbound --connection_type=CLOUD_RESOURCE  bl-dad-bkt-dev-onb-inbound1
+  288  bq mk --connection --location=US --project_id=prod-ds-outbound --connection_type=CLOUD_RESOURCE bl-dad-bkt-dev-onb-inbound1
+  289  bq mk --connection --location=US --project_id=prod-ds-outbound --connection_type=CLOUD_RESOURCE? bl-dad-bkt-dev-onb-inbound
+  290  bq mk --connection --location=US --project_id=prod-ds-outbound --connection_type=CLOUD_RESOURCE bl-dad-bkt-dev-onb-inbound
+  291  history
+  292  bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230338  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230338;
+  293  gcloud config set project dev-analytics-datasci
+  294  ls
+  295  cd model_dm_redesign/
+  296  ls
+  297  gcloud builds submit --region=us-east1 --config cloudbuild.yaml
+  298  gcloud projects list
+  299  clear
+  300  gcloud projects list  --format="table(projectId)"
+  301  gcloud config set project dev-analytics-datasci
+  302  gcloud builds submit --region=us-east1 --config cloudbuild.yaml
+  303  history |grep synch*
+  304  python3 synch_groups.py --admin_email rjannu --domain test --dataset gpcadmin.gcp_iam_dtls
+  305  pwd
+  306  cd GCP-Admin/
+  307  cd gcp_groups_sync/
+  308  ls
+  309  python3 synch_groups.py --admin_email rjannu --domain test --dataset gpcadmin.gcp_iam_dtls
+  310  python3 synch_groups.py --admin_email rjannu --domain test --dataset gcp_iam_dtls
+  311  cd GCP-Admin/
+  312  cd gcp_groups_sync/
+  313  python3 synch_groups.py --admin_email rjannu --domain test --dataset gcp_iam_dtls
+  314  ls -ltr
+  315  cd ..
+  316  ls
+  317  cd metadata_scripts/
+  318  ls
+  319  sh get_buckets_info.sh "014161-F9CD83-314E17"
+  320  ls
+  321  OUTPUt_FILE=get_buckets_size-info_all.csv
+  322  ls
+  323  OUTPUt_FILE=    bq load     --source_format=CSV     gpcadmin:GCSMetaInfo.all_projects_buckets_size_info1     $OUTPUt_FILE     load_date:date,project_name:string,bucket_name:string,bucket_size:INTEGER
+  324  OUTPUt_FILE=get_buckets_info_all.csv
+  325  echo $OUTPUt_FILE
+  326  OUTPUt_FILE=    bq load     --source_format=CSV     gpcadmin:GCSMetaInfo.all_projects_buckets_info1     $OUTPUt_FILE     load_date:date,project_name:string,bucket_name:string,bucket_size:INTEGER
+  327  OUTPUt_FILE=    bq load     --source_format=CSV     gpcadmin:GCSMetaInfo.all_projects_buckets_info1     $OUTPUt_FILE     load_date:date,project_name:string,bucket_name:string
+  328  cd ..
+  329  cd gcp_groups_sync/
+  330  ls
+  331  python3 synch_groups.py --admin_email rjannu --domain test --dataset gcp_iam_dtls
+  332  pip install pandas
+  333  python3 synch_groups.py --admin_email rjannu --domain test --dataset gcp_iam_dtls
+  334  pip install pyarrow
+  335  python3 synch_groups.py --admin_email rjannu --domain test --dataset gcp_iam_dtls
+  336  pip install -r /model_dm_redesign/requirements.txt
+  337  pip install -r /home/rjannu/model_dm_redesign/requirements.txt
+  338  python3 synch_groups.py --admin_email rjannu --domain test --dataset gcp_iam_dtls
+  339  ls
+  340  python3 synch_groups.py --admin_email rjannu --domain test --dataset gcp_iam_dtls
+  341  ls
+  342  python3 synch_groups.py --admin_email rjannu --domain test --dataset gcp_iam_dtls
+  343  gcloud identity groups describe grp_analytics_modeling_pchraw_bq_reader@pch.com
+  344  python3 synch_groups.py --admin_email rjannu --domain test --dataset gcp_iam_dtls
+  345  gcloud config set project gcloud config set project gpcadmin
+  346  PROJECT_ID=$(gcloud config get-value project)
+  347  gcloud services enable run.googleapis.com
+  348  gcloud services enable eventarc.googleapis.com
+  349  gcloud services enable cloudbuild.googleapis.com
+  350  gcloud config set project gpcadmin
+  351  PROJECT_ID=$(gcloud config get-value project)
+  352  gcloud services enable run.googleapis.com
+  353  gcloud services enable eventarc.googleapis.com
+  354  gcloud services enable cloudbuild.googleapis.com
+  355  gcloud services enable run.googleapis.com
+  356  gcloud services enable eventarc.googleapis.com
+  357  gcloud services enable cloudbuild.googleapis.com
+  358  REGION=us-central1
+  359  gcloud config set run/platform managed
+  360  gcloud config set run/region $REGION
+  361  gcloud config set eventarc/location $REGION
+  362  PROJECT_NUMBER="$(gcloud projects describe $(gcloud config get-value project) --format='value(projectNumber)')"
+  363  gcloud projects add-iam-policy-binding $(gcloud config get-value project)     --member=serviceAccount:$PROJECT_NUMBER-compute@developer.gserviceaccount.com     --role='roles/eventarc.eventReceiver'
+  364  gcloud config set project gpcadmin
+  365  SERVICE_NAME=bigquery-usage-notifier
+  366  gcloud builds submit --tag gcr.io/$PROJECT_ID/$SERVICE_NAME
+  367  PROJECT_ID=$(gcloud config get-value project)
+  368  gcloud builds submit --tag gcr.io/$PROJECT_ID/$SERVICE_NAME
+  369  TO_EMAILS=rjannu@pch.com
+  370  gcloud run deploy $SERVICE_NAME   --image gcr.io/$PROJECT_ID/$SERVICE_NAME   --allow-unauthenticated   --update-env-vars TO_EMAILS=$TO_EMAILS
+  371  PROJECT_NUMBER="$(gcloud projects describe $(gcloud config get-value project) --format='value(projectNumber)')"
+  372  REGION=us-central1
+  373  gcloud eventarc triggers create $SERVICE_NAME-trigger   --destination-run-service=$SERVICE_NAME   --destination-run-region=$REGION   --event-filters="type=google.cloud.audit.log.v1.written"   --event-filters="serviceName=bigquery.googleapis.com"   --event-filters="methodName=jobservice.jobcompleted"   --service-account=$PROJECT_NUMBER-compute@developer.gserviceaccount.com
+  374  SERVICE_NAME=bigquery-usage-notifier
+  375  PROJECT_NUMBER="$(gcloud projects describe $(gcloud config get-value project) --format='value(projectNumber)')"
+  376  gcloud eventarc triggers create $SERVICE_NAME-trigger   --destination-run-service=$SERVICE_NAME   --destination-run-region=$REGION   --event-filters="type=google.cloud.audit.log.v1.written"   --event-filters="serviceName=bigquery.googleapis.com"   --event-filters="methodName=jobservice.jobcompleted"   --service-account=$PROJECT_NUMBER-compute@developer.gserviceaccount.com
+  377  gcloud eventarc triggers create $SERVICE_NAME-trigger   --destination-run-service=$SERVICE_NAME   --destination-run-region=$REGION   --event-filters="type=google.cloud.audit.log.v1.written"   --event-filters="serviceName=bigquery.googleapis.com"   --event-filters="methodName=jobservice.jobcompleted"   --service-account=$PROJECT_NUMBER-compute@developer.gserviceaccount.com --location=us-central1
+  378  gcloud eventarc triggers list
+  379  gcloud builds submit --tag gcr.io/$PROJECT_ID/$SERVICE_NAME
+  380  gcloud run deploy $SERVICE_NAME   --image gcr.io/$PROJECT_ID/$SERVICE_NAME   --allow-unauthenticated   --update-env-vars TO_EMAILS=$TO_EMAILS
+  381  gcloud eventarc triggers create $SERVICE_NAME-trigger   --destination-run-service=$SERVICE_NAME   --destination-run-region=$REGION   --event-filters="type=google.cloud.audit.log.v1.written"   --event-filters="serviceName=bigquery.googleapis.com"   --event-filters="methodName=jobservice.jobcompleted"   --service-account=svc-prod-finops@gpcadmin.iam.gserviceaccount.com
+  382  gcloud eventarc triggers create $SERVICE_NAME-trigger   --destination-run-service=$SERVICE_NAME   --destination-run-region=$REGION   --event-filters="type=google.cloud.audit.log.v1.written"   --event-filters="serviceName=bigquery.googleapis.com"   --event-filters="methodName=jobservice.jobcompleted"   --service-account=svc-prod-finops@gpcadmin.iam.gserviceaccount.com --location=us-central1
+  383  gcloud run deploy $SERVICE_NAME   --image gcr.io/$PROJECT_ID/$SERVICE_NAME   --allow-unauthenticated   --update-env-vars TO_EMAILS=$TO_EMAILS
+  384  gcloud run deploy $SERVICE_NAME   --image gcr.io/$PROJECT_ID/$SERVICE_NAME   --allow-unauthenticated   --update-env-vars TO_EMAILS=$TO_EMAILS   --service-account=svc-prod-finops@gpcadmin.iam.gserviceaccount.com --location=us-central1
+  385  gcloud run deploy $SERVICE_NAME   --image gcr.io/$PROJECT_ID/$SERVICE_NAME   --allow-unauthenticated   --update-env-vars TO_EMAILS=$TO_EMAILS   --service-account=svc-prod-finops@gpcadmin.iam.gserviceaccount.com 
+  386  gcloud eventarc triggers create $SERVICE_NAME-trigger   --destination-run-service=$SERVICE_NAME   --destination-run-region=$REGION   --event-filters="type=google.cloud.audit.log.v1.written"   --event-filters="serviceName=bigquery.googleapis.com"   --event-filters="methodName=jobservice.jobcompleted"   --service-account=svc-prod-finops@gpcadmin.iam.gserviceaccount.com
+  387  gcloud eventarc triggers create $SERVICE_NAME-trigger   --destination-run-service=$SERVICE_NAME   --destination-run-region=$REGION   --event-filters="type=google.cloud.audit.log.v1.written"   --event-filters="serviceName=bigquery.googleapis.com"   --event-filters="methodName=jobservice.jobcompleted"   --service-account=svc-prod-finops@gpcadmin.iam.gserviceaccount.com --location=us-central1
+  388  gcloud eventarc triggers delete  $SERVICE_NAME-trigger 
+  389  gcloud eventarc triggers delete  $SERVICE_NAME-trigger --location=us-central1
+  390  gcloud eventarc triggers list
+  391  curl -X POST     -H "content-type: application/json"      -H "ce-specversion: 1.0"      -H "ce-source: curl-command"      -H "ce-type: curl.demo"      -H "ce-id: 123-abc"      -d @event_data.json   http://https://bigquery-usage-notifier-t4nfi65pvq-uc.a.run.app:8080/ -v
+  392  curl -X POST     -H "content-type: application/json"      -H "ce-specversion: 1.0"      -H "ce-source: curl-command"      -H "ce-type: curl.demo"      -H "ce-id: 123-abc"      -d @event_data.json  https://bigquery-usage-notifier-t4nfi65pvq-uc.a.run.app:8080/ -v
+  393  curl -X POST     -H "content-type: application/json"      -H "ce-specversion: 1.0"      -H "ce-source: curl-command"      -H "ce-type: curl.demo"      -H "ce-id: 123-abc"      -d @event_data.json  https://localhost:8080/ -v
+  394  ls
+  395  curl -X POST     -H "content-type: application/json"      -H "ce-specversion: 1.0"      -H "ce-source: curl-command"      -H "ce-type: curl.demo"      -H "ce-id: 123-abc"      -d @event_data.json  https://localhost:8080/ -v
+  396  curl -X POST     -H "content-type: application/json"      -H "ce-specversion: 1.0"      -H "ce-source: curl-command"      -H "ce-type: curl.demo"      -H "ce-id: 123-abc"      -d @event_data.json  https://bigquery-usage-notifier-t4nfi65pvq-uc.a.run.app:8080/ -v
+  397  curl -X POST     -H "content-type: application/json"      -H "ce-specversion: 1.0"      -H "ce-source: curl-command"      -H "ce-type: curl.demo"      -H "ce-id: 123-abc"      -d @event_data.json  https://bigquery-usage-notifier-t4nfi65pvq-uc.a.run.app/ -v
+  398  PROJECT_NUMBER="$(gcloud projects describe $(gcloud config get-value project) --format='value(projectNumber)')"
+  399  gcloud projects add-iam-policy-binding $(gcloud config get-value project)     --member=svc-prod-finops@gpcadmin.iam.gserviceaccount.com     --role='roles/eventarc.eventReceiver'
+  400  PROJECT_ID=$(gcloud config get-value project)
+  401  gcloud projects add-iam-policy-binding $(gcloud config get-value project)     --member=svc-prod-finops@gpcadmin.iam.gserviceaccount.com     --role='roles/eventarc.eventReceiver'
+  402  gcloud projects add-iam-policy-binding $(gcloud config get-value project)     --member=serviceAccount:svc-prod-finops@gpcadmin.iam.gserviceaccount.com     --role='roles/eventarc.eventReceiver'
+  403  curl -X POST     -H "content-type: application/json"      -H "ce-specversion: 1.0"      -H "ce-source: curl-command"      -H "ce-type: curl.demo"      -H "ce-id: 123-abc"      -d @event_data.json  https://bigquery-usage-notifier-t4nfi65pvq-uc.a.run.app/ -v
+  404  gcloud beta eventarc attributes types list
+  405  curl -X POST     -H "content-type: application/json"      -H "ce-specversion: 1.0"      -H "ce-source: curl-command"      -H "ce-type: curl.demo"      -H "ce-id: 123-abc"      -d @event_data copy.json  https://bigquery-usage-notifier-t4nfi65pvq-uc.a.run.app/ -v
+  406  curl -X POST     -H "content-type: application/json"      -H "ce-specversion: 1.0"      -H "ce-source: curl-command"      -H "ce-type: curl.demo"      -H "ce-id: 123-abc"      -d @event_dat1.json  https://bigquery-usage-notifier-t4nfi65pvq-uc.a.run.app/ -v
+  407  gcloud eventarc triggers describe $SERVICE_NAME-trigger --location $REGION --format='value(transport.pubsub.topic)'
+  408  gcloud eventarc triggers list
+  409  curl -X POST     -H "content-type: application/json"      -H "ce-specversion: 1.0"      -H "ce-source: curl-command"      -H "ce-type: curl.demo"      -H "ce-id: 123-abc"      -d @event_data.json  https://bigquery-usage-notifier-t4nfi65pvq-uc.a.run.app/ -v
+  410  gcloud beta eventarc attributes method-names list --type=google.cloud.audit.log.v1.written --service-name=bigquery.googleapis.com
+  411  gcloud eventarc providers describe cloudaudit.googleapis.com --location=us-central1
+  412  gcloud eventarc providers describe bigquery.googleapis.com --location=us-central1
+  413  gcloud eventarc providers list
+  414  gcloud eventarc providers list --location=us-central1
+  415  gcloud eventarc providers list --name=bigquery.googleapis.com
+  416  gcloud eventarc providers list 
+  417  gcloud services enable eventarc.googleapis.com
+  418  gcloud eventarc providers list --name=bigquery.googleapis.com
+  419  gcloud services enable bigquery.googleapis.com
+  420  gcloud eventarc providers list --name=bigquery.googleapis.com
+  421  gcloud eventarc providers list
+  422  gcloud eventarc providers list>>test.txt
+  423  gcloud eventarc providers list --name=storage.googleapis.com
+  424  gcloud config set project prod-gold-core
+  425  gsutil du -sh gs://bkt_prod_fq_goldcore/
+  426  gsutil du -sh gs://bkt_prod_cold_goldcore/
+  427  gsutil du -sh gs://bkt_prod_archive_goldcore/
+  428  bq cp AppsFlyer.AppsFlyer@-3600 AppsFlyer.AppsFlyer_*
+  429  bq cp AppsFlyer.AppsFlyer@-3600 AppsFlyer.AppsFlyer
+  430  bq cp AppsFlyer.AppsFlyer*@-3600 AppsFlyer.AppsFlyer
+  431  bq cp `pch-sw-2014`.AppsFlyer_Stg.AppsFlyer_Stg_20160725@-3600 `pch-sw-2014`.AppsFlyer_Stg.AppsFlyer_Stg_20160725
+  432  bq cp `pch-sw-2014`.AppsFlyer_Stg.AppsFlyer_Stg_20160725@-3600 `pch-sw-2014`.AppsFlyer.AppsFlyer_Stg_20160725_test
+  433  bq cp `pch-sw-2014`.AppsFlyer_Stg.AppsFlyer_Stg_20160725@-36000000 `pch-sw-2014`.AppsFlyer.AppsFlyer_Stg_20160725_test
+  434  bq cp `pch-sw-2014`.`AppsFlyer_Stg`.AppsFlyer_Stg_20160725@-36000000 `pch-sw-2014`.AppsFlyer.AppsFlyer_Stg_20160725_test
+  435  bq cp `pch-sw-2014`.`AppsFlyer_Stg`.AppsFlyer_Stg_20160725@-36000000 `pch-sw-2014`.`AppsFlyer`.AppsFlyer_Stg_20160725_test
+  436  bq cp `pch-sw-2014`.`AppsFlyer_Stg`.AppsFlyer_Stg_20160725@-360000000 `pch-sw-2014`.`AppsFlyer`.AppsFlyer_Stg_20160725_test
+  437  bq cp `alert-impulse-704`.Adhoc.max_temp_2@-360000000 `alert-impulse-704`.Adhoc.max_temp_2
+  438  bq cp `alert-impulse-704`.`Adhoc`.max_temp_2@-360000000 `alert-impulse-704`.`Adhoc`.max_temp_2
+  439  bq cp `alert-impulse-704`:`Adhoc`.max_temp_2@-360000000 `alert-impulse-704`:`Adhoc`.max_temp_2
+  440  bq cp `alert-impulse-704`:`Adhoc`.max_temp_2@-360000 `alert-impulse-704`:`Adhoc`.max_temp_2
+  441  bq cp `alert-impulse-704`:`Adhoc`.max_temp_2 `alert-impulse-704`:`Adhoc`.max_temp_2
+  442  bq cp `alert-impulse-704`:`Adhoc`.max_temp_2@1683836541 `alert-impulse-704`:`Adhoc`.max_temp_2
+  443  bq cp `alert-impulse-704`:`Adhoc`.max_temp_2@1683822141 `alert-impulse-704`:`Adhoc`.max_temp_2
+  444  bq cp `alert-impulse-704`:Adhoc.max_temp_2@1683822141 `alert-impulse-704`:`Adhoc`.max_temp_2
+  445  bq cp `alert-impulse-704`:Adhoc.max_temp_2@1683822141 `alert-impulse-704`:Adhoc.max_temp_2
+  446  gcloud config set project alert-impulse-704
+  447  bq cp `alert-impulse-704`:Adhoc.max_temp_2@1683822141 `alert-impulse-704`:Adhoc.max_temp_2
+  448  bq cp `alert-impulse-704`:Adhoc.max_temp_2@1683228297868 `alert-impulse-704`:Adhoc.max_temp_2
+  449  bq cp `alert-impulse-704`:Adhoc.max_temp_2@1683228322335 `alert-impulse-704`:Adhoc.max_temp_2
+  450  bq cp `alert-impulse-704`:Adhoc.max_temp_2@1683811341 `alert-impulse-704`:Adhoc.max_temp_2
+  451  bq cp `alert-impulse-704`:Adhoc.max_temp_2@-35000 `alert-impulse-704`:Adhoc.max_temp_2
+  452  bq cp `alert-impulse-704`:Adhoc.max_temp_2@1683813297 `alert-impulse-704`:Adhoc.max_temp_2
+  453  bq cp `alert-impulse-704`:Adhoc.max_temp_2@1683829341 `alert-impulse-704`:Adhoc.max_temp_2
+  454  bq cp `alert-impulse-704`:Adhoc.max_temp_2@-35000 `alert-impulse-704`:Adhoc.max_temp_2
+  455  bq cp `alert-impulse-704`:Adhoc.max_temp_2@0 `alert-impulse-704`:Adhoc.max_temp_2
+  456  gcloud cinfig set project favorable-bison-88614;
+  457  gcloud config set project favorable-bison-88614;
+  458  bq cp `favorable-bison-88614`.JohnAlberda.pch_weekly_report_20200105@0 `favorable-bison-88614`.JohnAlberda.pch_weekly_report_20200105
+  459  bq cp `favorable-bison-88614`.JohnAlberda.pch_weekly_report_20200105@0  `favorable-bison-88614`.JohnAlberda.pch_weekly_report_20200105
+  460  bq cp JohnAlberda.pch_weekly_report_20200105@0  JohnAlberda.pch_weekly_report_20200105
+  461  bq cp JohnAlberda.pch_weekly_report_20200105@-360000  JohnAlberda.pch_weekly_report_20200105
+  462  bq cp JohnAlberda.JulyTVOTTResults@-360000  JohnAlberda.JulyTVOTTResults
+  463  history
+  464  gcloud config set project dev-analytics-datasci
+  465  gcloud builds submit --region=us-east1 --config cloudbuild.yaml
+  466  gcloud config set project        uat-gold-core
+  467  gcloud config set project uat-gold-core
+  468  bq mk --connection --location=us-central1 --project_id=uat-gold-core  --connection_type=CLOUD_RESOURCE  bl_ugc_bkt_uat_cm_goldcore
+  469  bq mk --connection --location=us --project_id=uat-gold-core  --connection_type=CLOUD_RESOURCE  bl_ugc_bkt_uat_cm_goldcore
+  470  gcloud config set project sb-analytics-modeling-1 
+  471  gcloud dataproc clusters export gke-dev-kubeflow-datasci-clu1 --destination gke-dev-kubeflow-datasci-clu1.yaml
+  472  gcloud dataproc clusters export gke-dev-kubeflow-datasci-clu1 --region us-east1 --destination gke-dev-kubeflow-datasci-clu1.yaml
+  473  gcloud container clusters export gke-dev-kubeflow-datasci-clu1 --destination gke-dev-kubeflow-datasci-clu1.yaml
+  474  gcloud container clusters describe gke-dev-kubeflow-datasci-clu1 
+  475  gcloud container clusters describe gke-dev-kubeflow-datasci-clu1 --region us-east1
+  476  gcloud container clusters describe gke-dev-kubeflow-datasci-clu1 --region us-east1-b
+  477  gcloud container clusters describe gke-dev-kubeflow-datasci-clu1 --region us-east1-b>gke-dev-kubeflow-datasci-clu1.yaml
+  478  history
+  479  gcloud config set project gpcadmin
+  480  gcloud eventarc providers list --location=us-central1
+  481  gcloud eventarc providers list --location=us-east1
+  482  gcloud eventarc providers list --location=us-east1|grep bigquery
+  483  gcloud eventarc providers list |grep bigquery
+  484  gcloud eventarc providers list |grep bigquery.googleapis.com
+  485  gcloud eventarc providers list 
+  486  gcloud eventarc providers list |grep dataflow
+  487  gcloud eventarc providers list |grep bigquery
+  488  gcloud eventarc providers list --name=bigquery.googleapis.com
+  489  gsutil lifecycle get gs://oject.
+  490  rjannu@cloudshell:~ (prod-cd-shared-infra)$ gsutil lifecycle get gs://bkt-pcsi-source-code-repo
+  491  rjannu@cloudshell:~ (prod-cd-shared-infra)$ gsutil lifecycle get gs://bkt-pcsi-source-code-repo/
+  492  gsutil lifecycle get gs://bkt-pcsi-source-code-repo/
+  493  gcloud config gcloud config set project gpcadmin
+  494  gcloud config set project gpcadmin
+  495  history|bq cp
+  496  history|grep "cp"
+  497  bq cp `sb-analytics-modeling-1`.tiger_analytics_modeling_staging_data.20030_ovrallcnt@0  `sb-analytics-modeling-1`.tiger_analytics_modeling_staging_data.20030_ovrallcnt
+  498  gcloud config set project sb-analytics-modeling-1
+  499  bq cp `sb-analytics-modeling-1`.tiger_analytics_modeling_staging_data.20030_ovrallcnt@0  `sb-analytics-modeling-1`.tiger_analytics_modeling_staging_data.20030_ovrallcnt
+  500  bq cp tiger_analytics_modeling_staging_data.20030_ovrallcnt@0  tiger_analytics_modeling_staging_data.20030_ovrallcnt
+  501  gcloud config set project gpcadmin
+  502  gcloud eventarc triggers list
+  503  history

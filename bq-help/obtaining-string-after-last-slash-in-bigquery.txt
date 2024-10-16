@@ -1,0 +1,41 @@
+WITH data AS(
+  SELECT 'https://youtube.com/user/HaraldSchmidtShow' AS url UNION ALL
+  SELECT 'https://youtube.com/user/applesofficial' UNION ALL
+  SELECT 'https://youtube.com/user/GrahamColton'
+)
+
+SELECT
+  SPLIT(url, '/')[SAFE_OFFSET(ARRAY_LENGTH(SPLIT(url, '/')) - 1)] AS name
+FROM `data`
+
+
+WITH data AS(
+  SELECT 'https://youtube.com/user/HaraldSchmidtShow' AS url UNION ALL
+  SELECT 'https://youtube.com/user/applesofficial' UNION ALL
+  SELECT 'https://youtube.com/user/GrahamColton' UNION ALL
+  SELECT 'https://youtube.com/user/GrahamColton/'
+)
+
+SELECT REGEXP_EXTRACT(url, r'/([^/]+)/?$') name
+FROM `data`
+
+#standardSQL
+WITH data AS(
+  SELECT 'https://youtube.com/user/HaraldSchmidtShow' AS url UNION ALL
+  SELECT 'https://youtube.com/user/applesofficial' UNION ALL
+  SELECT 'https://youtube.com/user/GrahamColton/' UNION ALL
+  SELECT 'youtube.com/channel/UCEDBbJXgUqRQXCOsluJJ0FQ'
+)
+SELECT url, 
+  (SELECT v FROM UNNEST(SPLIT(url, '/')) v WITH OFFSET o 
+    WHERE v != '' ORDER BY o DESC LIMIT 1
+  ) last_string
+FROM `data`
+
+
+select * from `dev-gold-core`.`region-us`.INFORMATION_SCHEMA.ROUTINES where  (REGEXP_CONTAINS(LOWER(ddl), r'(?i)user_entry.gmt_entry_activity'))
+
+SELECT  distinct REGEXP_EXTRACT(analysisResult.
+attachedResourceFullName, r'/([^/]+)/?$') name
+ FROM `gpcadmin.ds_usage.buckets_with_delete_permission_analysis_result`  where analysisResult.iamBinding.role<>'roles/owner' or 	
+analysisResult.iamBinding.role<>'roles/editor'

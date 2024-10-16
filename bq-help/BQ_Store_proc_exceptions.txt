@@ -1,0 +1,350 @@
+
+  DECLARE id STRING;
+  SET id = GENERATE_UUID();
+
+CREATE OR REPLACE PROCEDURE `gcp-sandbox-3-393305.df_ecom_bz.sp_distribution_centre`()
+
+  BEGIN
+
+  DECLARE errorcount int64;
+  DECLARE rec_count int64;
+
+-- below are  multi sqls running inside stored procs , these are randomly written sqls and has no releveance of any result .
+-- The idea is to show exception handling 
+SELECT * FROM `gcp-sandbox-3-393305.df_ecom_bz.stg_distribution_centre` ;
+
+
+SET rec_count = (SELECT count(1) FROM `gcp-sandbox-3-393305.df_ecom_bz.stg_distribution_centre` )
+;
+
+ IF rec_count > 0 THEN
+      RAISE USING MESSAGE = 'empty_table_error';  -- raising exception with a message 
+    END IF;
+
+INSERT INTO `gcp-sandbox-3-393305.df_ecom_bz.stg_distribution_centre` (id,name,latitude,longitude) VALUES
+(
+    100  ,
+    'test_dc',
+    20.3 ,
+    100.9
+);
+
+    SET errorcount = (
+      SELECT
+          count(1)
+        FROM
+          `gcp-sandbox-3-393305.df_ecom_bz.stg_distribution_centre`
+    );
+    IF errorcount > 0 THEN
+      RAISE USING MESSAGE = 'dm_content_error';  -- raising exception with a message 
+    END IF;
+
+-- there might be more complex sqls as well  
+
+     EXCEPTION WHEN ERROR THEN
+    BEGIN
+      DECLARE procedurename STRING;
+      DECLARE UndefinedNumber FLOAT64;
+      SET procedurename = 'revenue_allocate';
+
+      IF (@@error.message="empty_table_error")
+      THEN
+        INSERT INTO `gcp-sandbox-3-393305.df_ecom_bz.stg_distribution_centre` (id,name,latitude,longitude) VALUES
+      (
+
+        100  ,
+        'test_dc',
+        20.3 ,
+        100.9
+      );
+      END IF;
+            IF (@@error.message="dm_content_error")
+      THEN
+        INSERT INTO `gcp-sandbox-3-393305.df_ecom_bz.error_log` (entrytime, procedurename, error_statement, error_msg)
+        VALUES (timestamp_trunc(current_timestamp(), SECOND), procedurename, @@error.statement_text, errmessage)
+      ;
+      END IF;
+      SET unknownnumber = div(1, 0);  -- this is to fail the job at the end
+    END;
+  END;
+
+
+https://cloud.google.com/bigquery/docs/reference/standard-sql/procedural-language#beginexceptionend
+
+BEGIN
+  SELECT 1/0;
+EXCEPTION WHEN ERROR THEN
+  SELECT @@error.message, @@error.statement_text;
+END;
+
+
+-- there might be more complex sqls as well  
+
+    EXCEPTION WHEN ERROR THEN
+  BEGIN
+      DECLARE procedurename STRING;
+      DECLARE errmessage STRING;
+      DECLARE unknownnumber INT64;
+
+      SET procedurename = 'revenue_allocate';
+      SET errmessage = @@error.message;
+      INSERT INTO `gcp-sandbox-3-393305.df_ecom_bz.error_log` (entrytime, procedurename, error_statement, error_msg)
+        VALUES (timestamp_trunc(current_timestamp(), SECOND), procedurename, @@error.statement_text, errmessage)
+      ;
+      select concat(@@error.statement_text , '\n\n',@@error.message);  -- this is to print the error in the stdout
+      SET unknownnumber = div(1, 0);   -- this is to fail the job at the end
+      END;
+
+
+      label_1: LOOP
+  WHILE x < 1 DO
+    IF y < 1 THEN
+      CONTINUE label_1;
+    ELSE
+      BREAK label_1;
+  END WHILE;
+END LOOP label_1
+
+
+
+BEGIN
+DECLARE
+  projectname STRING;
+DECLARE
+  datasets_to_create_list ARRAY<STRING>;
+DECLARE
+  iter INT64 DEFAULT 0; 
+  DECLARE
+  outiter INT64 DEFAULT 0;
+SET
+  datasets_to_create_list = (SELECT  ARRAY_AGG(ddfd) from (  select concat("ALTER SCHEMA   ","`", project_name,"`.", bq_schema," SET OPTIONS( description= '",description,"',", add_options2,");")  ddfd from(
+select distinct 'prod-gold-core' as project_name,  bq_schema ,concat("All objects under this dataset will be loaded using QR task- ",IFNULL(qr_taskname,' na ') , "  at  ",IFNULL(qr_taskschedule,'  na  ')) description,
+CONCAT("labels = [('org' ,'pch')  ,('source','db2'),('target','gcs'),('subject-area','",replace(lower(bq_schema),'_','-') ,"'),('loadtype','",replace(lower(loadtype_category),'_','-'),"'),('stage','full-load'),('objecttype','biglake'),('tool','qlikreplicate'),('active','true')]") add_options2 from prod-gold-core.sa_dms_master_controlplane.qr_metadata_master where load_dt='2024-01-25' and loadtype_category like 'full%') ));
+
+  label_1: LOOP
+    WHILE  outiter < ARRAY_LENGTH(datasets_to_create_list) DO
+    SET  projectname= datasets_to_create_list[OFFSET(outiter)];
+                              # Get the list OF COLUMNS IN the TABLE TO profile.
+                              EXECUTE IMMEDIATE
+                                FORMAT("""
+                                        %s """,  projectname)
+                                        USING
+                                          projectname AS projectname;
+
+                SET   outiter = outiter + 1;
+      END WHILE;
+     END LOOP label_1;
+END;
+
+Template--
+
+BEGIN
+DECLARE
+  projectname STRING;
+DECLARE
+  datasets_to_create_list ARRAY<STRING>;
+DECLARE
+  iter INT64 DEFAULT 0;
+DECLARE
+  outiter INT64 DEFAULT 0;
+DECLARE
+  procedurename STRING;
+DECLARE
+  errmessage STRING;
+DECLARE
+  unknownnumber INT64;
+SET
+  datasets_to_create_list = (
+  SELECT
+    ARRAY_AGG(ddfd)
+  FROM (
+    SELECT
+      DISTINCT bq_schema ddfd
+    FROM
+      prod-gold-core.sa_dms_master_controlplane.qr_metadata_master
+    WHERE
+      load_dt='2024-01-25'
+      AND loadtype_category LIKE 'full%' limit 10) ); 
+label_1: LOOP
+      WHILE   outiter < ARRAY_LENGTH(datasets_to_create_list) DO
+      BEGIN
+        SET   projectname= datasets_to_create_list[OFFSET(outiter)]; # Get the list OF COLUMNS IN the TABLE TO profile.
+          
+              EXECUTE IMMEDIATE
+                FORMAT(""" %s """, projectname)
+              USING
+                projectname AS projectname; EXCEPTION
+                  WHEN ERROR THEN SET procedurename = 'revenue_allocate'; SET errmessage = @@error.message; SELECT CONCAT(@@error.statement_text, '\n\n',@@error.message); 
+                  SET   outiter = outiter + 1;
+            IF outiter < ARRAY_LENGTH(datasets_to_create_list)   THEN
+              CONTINUE label_1;
+            ELSE
+            BREAK label_1;
+            END IF;
+
+          END
+        ;
+      
+      END WHILE ;
+END LOOP  label_1;
+END
+  ;
+
+
+
+  ============
+  	 ====================
+	 BEGIN
+DECLARE
+  projectname STRING;
+DECLARE
+  datasets_to_create_list ARRAY<STRING>;
+DECLARE
+  iter INT64 DEFAULT 0;
+DECLARE
+  outiter INT64 DEFAULT 0;
+DECLARE
+  procedurename STRING;
+DECLARE
+  errmessage STRING;
+DECLARE
+  unknownnumber INT64;
+
+DECLARE object_name STRING;
+DECLARE qry_to_run STRING;
+
+SET  datasets_to_create_list= (
+  SELECT
+     ARRAY_AGG(objectname)
+  FROM (
+    SELECT
+       concat("`prod-gold-core`.",bq_schema,".",table_name,"##Select GENERATE_UUID();" ) objectname
+    FROM
+      prod-gold-core.sa_dms_master_controlplane.qr_metadata_master
+    WHERE
+      load_dt='2024-01-25'
+      AND loadtype_category LIKE 'full%' limit 2) ); 
+label_1: LOOP
+      WHILE   outiter < ARRAY_LENGTH(datasets_to_create_list) DO
+      BEGIN
+        SET   projectname= datasets_to_create_list[OFFSET(outiter)]; 
+              SET object_name = SPLIT(TRIM(projectname, '`'), '##')[OFFSET(0)];
+              SET qry_to_run = SPLIT(TRIM(projectname, '`'), '##')[OFFSET(1)];
+              EXECUTE IMMEDIATE
+                FORMAT(""" %s """, qry_to_run)
+              USING
+                qry_to_run AS qry_to_run;
+
+                IF outiter < ARRAY_LENGTH(datasets_to_create_list)   THEN
+                  SET  outiter = outiter + 1;
+                  select '1';
+                ELSE
+                  BREAK label_1;
+                  select 'b';
+                END IF;
+              
+                EXCEPTION WHEN ERROR THEN SET procedurename = 'revenue_allocate'; 
+                  SET errmessage = @@error.message; 
+                  insert into `prod-gold-core`.sa_dms_master_controlplane.qr_cr_bl_tables_errlogging(id,entrytime,object_name,procedure_name,err_message) 
+                  VALUES (GENERATE_UUID(),datetime(current_timestamp, 'America/New_York'),object_name, procedurename, errmessage);
+                  SET   outiter = outiter + 1;
+                IF outiter < ARRAY_LENGTH(datasets_to_create_list)   THEN
+                  CONTINUE label_1;
+                ELSE                 
+                  BREAK label_1;
+                END IF;
+          END;
+      END WHILE ;
+      IF outiter >= ARRAY_LENGTH(datasets_to_create_list)   THEN
+          BREAK label_1;
+      END IF;
+END LOOP  label_1;
+END
+  ;
+  =======================
+
+
+  select tablename, concat(prefix, column_info," from ",tablename ,";") cr_stmt from(
+select tablename, prefix, STRING_AGG(alt2,",") column_info  from (
+  select concat("`",table_catalog,"`.",table_schema,".",table_name) tablename,
+concat("CREATE Or REPLACE VIEW `",table_catalog,"`.",table_schema,".vw_",table_name," as Select  ") prefix,
+  case data_type  when 'STRING' THEN concat("`prod-gold-core.it_etl_metadata_us.bqutils_fn_txt_ukn`(",column_name,") as " ,column_name) 
+    when 'NUMERIC' THEN concat("`prod-gold-core.it_etl_metadata_us.bqutils_fn_numeric_zero`(SAFE_CAST(",column_name," as INT64)) as " ,column_name) 
+    when 'INTEGER' THEN concat("`prod-gold-core.it_etl_metadata_us.bqutils_fn_numeric_zero`(SAFE_CAST(",column_name," as INT64)) as " ,column_name)     
+    when 'TIMESTAMP' THEN concat("DATETIME(",column_name,",'America/New_York') as " ,column_name)   
+   else column_name end alt2
+  FROM
+  prod-gold-core.sa_dms_customer_core.INFORMATION_SCHEMA.COLUMNS where table_name not like "vw_%"
+order by ordinal_position ) group by 1,2) 
+
+============================================
+BEGIN
+DECLARE
+  projectname STRING;
+DECLARE
+  scores_to_load ARRAY<STRING>;
+DECLARE
+  iter INT64 DEFAULT 0;
+DECLARE
+  outiter INT64 DEFAULT 0;
+DECLARE
+  based_vol INT64 DEFAULT 0;
+DECLARE
+  final_vol INT64 DEFAULT 0;
+DECLARE
+  procedurename STRING;
+DECLARE
+  errmessage STRING;
+DECLARE
+  unknownnumber INT64;
+
+DECLARE model_name STRING;
+DECLARE ctrl_run_dt STRING;
+DECLARE model_run_dt STRING;
+
+SET  scores_to_load= (
+  SELECT
+     ARRAY_AGG(data_avail)
+  FROM (
+    select concat(model_name,'##',date(datetime_modified) ,'##',(date(datetime_modified)-1)) data_avail   from prod-analytics-modeling.analytics_model_scores.score_xchange_ctrl_tbl 
+where 	signal_value='ReadyToExport' and datetime_created >= (select max(datetime_modified) from prod-analytics-modeling.analytics_model_scores.score_xchange_ctrl_tbl) )  ); 
+label_1: LOOP
+      WHILE   outiter < ARRAY_LENGTH(scores_to_load) DO
+      BEGIN
+        SET   projectname= scores_to_load[OFFSET(outiter)]; 
+              SET model_name = SPLIT(TRIM(projectname, '`'), '##')[OFFSET(0)];
+              SET ctrl_run_dt = SPLIT(TRIM(projectname, '`'), '##')[OFFSET(1)];
+              SET model_run_dt = SPLIT(TRIM(projectname, '`'), '##')[OFFSET(2)];
+              EXECUTE IMMEDIATE
+                FORMAT(""" select count(1) ctn  from `prod-analytics-modeling`.analytics_model_scores.%s_model where model_score_date='%s'""",model_name, model_run_dt)   into based_vol USING  model_name as model_name, model_run_dt AS model_run_dt;
+              
+              EXECUTE IMMEDIATE
+                FORMAT(""" select count(1) ctn  from `prod-gold-core.it_model_scores.analytics_model_scores` where model_name ='%s' and model_score_dt='%s'""",model_name, model_run_dt)   into final_vol USING  model_name as model_name, model_run_dt AS model_run_dt;
+
+                IF outiter < ARRAY_LENGTH(scores_to_load)   THEN
+                  SET  outiter = outiter + 1;
+                    IF based_vol>0 and final_vol<=0  THEN
+                      select rec_vol;
+                    END IF;
+                ELSE
+                  BREAK label_1;
+                  select 'b';
+                END IF;
+              
+                EXCEPTION WHEN ERROR THEN SET procedurename = 'analytics_models_scores'; 
+                  SET errmessage = @@error.message; 
+                 select GENERATE_UUID(),datetime(current_timestamp, 'America/New_York'),model_name, procedurename, errmessage;
+                  SET   outiter = outiter + 1;
+                IF outiter < ARRAY_LENGTH(scores_to_load)   THEN
+                  CONTINUE label_1;
+                ELSE                 
+                  BREAK label_1;
+                END IF;
+          END;
+      END WHILE ;
+      IF outiter >= ARRAY_LENGTH(scores_to_load)   THEN
+          BREAK label_1;
+      END IF;
+END LOOP  label_1;
+END
+  ;

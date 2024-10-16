@@ -1,0 +1,84 @@
+16 Jul 2024 03:30 PM - 04:00 PM America/New_York (EDT)-Ericsson
+Wed Jul 17, 2024 8pm – 8:30pm (UTC) 4 pm est geico
+Thu Jul 18, 2024 (7:00AM (EDT) - 8:00AM (EDT))--lyft
+	Thu Jul 18, 2024 11am – 12pm (UTC)--lyft
+Date: Fri, Jul 19, 2024--Time: 3:00pm - 4:00pm (EDT) Amazon
+
+
+Date: Tuesday, 7/23 Time: 1:00 PM ET Duration: Approx 60 minutes --bloomberg
+25 Jul 2024 | 12:30 PM - 01:15 PM America/New_York (EDT) --eric
+
+svc-prod-dataform-cnstmgmt@favorable-bison-88614.iam.gserviceaccount.com
+
+https://www.linkedin.com/jobs/view/principle-data-engineer-at-ericsson-3956302861/
+Ericsson, a global leader in providing innovative technologies and communications services, is seeking a competent and agile ICT Architect to join our dynamic technology team. As an ICT architect, your role involves developing principles, models, and guidelines from strategic inputs and translating them into practical and cost-effective solution architecture. You'll work closely with a diverse group of internal stakeholders and external customers, providing solutions that amplify their competitive stance. This role demands an individual capable of serving as an internal consultant across various IT areas, offering expertise, guidance, and innovative techniques to meet the growing demand.
+
+What You Bring
+
+Extensive experience with dimensional modeling, data architecture, and database design.
+Proficiency in at least one major programming language (e.g., Java, Scala, Python) and strong command of SQL.
+Skilled in building modern data stacks, utilizing tools such as dbt, Informatica, Airflow, Snowflake, among others.
+Solid grasp of the data processing requirements for both real-time and batch systems, catering to transactional and analytical processing.
+Proven track record in developing ETL/ELT jobs and data pipelines, along with proficiency in job scheduling systems.
+Over 12 years of professional expertise as a Data Engineer, specializing in building scalable data solutions.
+Familiarity with RDBMS, NoSQL databases, and real-time streaming systems like Kafka, Spark, Flink, etc.
+Exceptional communication and presentation skills, capable of conveying technical concepts to diverse audiences and effectively managing stakeholders at all levels.
+
+What You Will Do
+
+Lead the design and development of data architecture and pipelines to facilitate advanced AI and analytics solutions.
+Provide technical leadership across various data engineering projects by offering design guidance, overseeing development, and conducting code reviews.
+Contribute to defining and communicating the long-term strategy and priorities for the data office.
+Collaborate with data platform and infrastructure teams to architect and integrate high-quality, resilient data feeds from across the organization.
+Engage with current and emerging data platforms, advising teams on delivery practices, adhering to best practices, and assuming accountability for data engineering and architecture. 
+Your extensive background in building large-scale data solutions, coupled with hands-on development experience, analytical acumen, innovative thinking, and problem-solving skills, will be essential for success.
+
+Applications accepted until 6/28/24
+
+Compensation And Benefits At Ericsson
+
+At Ericsson, we know that our people are the key to our success. We offer a competitive package to help with your individual needs and goals.
+
+Your Pay
+
+The salary range for this position is listed below. The actual salary offered is dependent on various factors including, but not limited to, location, the candidate’s combination of job-related knowledge, qualifications, skills, education, training, and experience
+
+ Washington, New York, and New Jersey: $144,300 - $216,500
+ California: $144,300 - $236,500
+ All other US locations: $133,600 - $200,400
+
+Your pay also includes the opportunity for an annual bonus. Actual bonus payouts are based on performance of the business against the unit’s objectives, individual performance, and the individual bonus target. Certain eligibility and pro-ration rules apply.
+
+Your Health
+
+Ericsson offers excellent health benefits including the choice of 3 medical plan options, 2 of which are PPO plans requiring employee contributions to the cost of premiums, and a High Deductible Health Plan (HDHP) with no premiums for employees and dependents. In addition, Ericsson offers free dental coverage, employee paid vision coverage, and other company paid physical wellness programs.
+
+Your Financial Security
+
+We invest in both your short and long-term financial wellbeing. Ericsson’s 401(k) plan offers an automatic 3% company contribution and up to a 4% company match, leading to a maximum company contribution of 7% annually. Employees will also receive company paid basic life and accidental death and dismemberment coverage and paid company short-term and long-term disability benefits. Employees also have the option to participate in Ericsson’s Stock Purchase Plan.
+
+Your Time
+
+Your work-life balance is important to us. New employees are provided up to 40 days of paid time off per year, including 15 days of accrued annual vacation, 3 personal days, 11 paid holidays, 10 sick days, and 1 volunteer day. Please note paid time off is pro-rated based on the employee’s start date. Those with additional vacation time at the end of the year may sell one week of vacation, equal to a week of pay. Furthermore, Ericsson provides up to 16 weeks of maternity/medical leave, 6 weeks of paternity or adoption leave at 100% of pay, and medical leave at 100% or 66 2/3% of pay, based on length of service.
+
+Additional Benefits
+
+Ericsson offers many other company-paid benefits such as financial wellness programs, educational assistance, adoption assistance, matching gifts, and recognition programs.
+
+Applications must be received by May 24, 2024
+
+ Why join Ericsson?
+
+At Ericsson, you´ll have an outstanding opportunity. The chance to use your skills and imagination to push the boundaries of what´s possible. To build solutions never seen before to some of the world’s toughest problems. You´ll be challenged, but you won’t be alone. You´ll be joining a team of diverse innovators, all driven to go beyond the status quo to craft what comes next.
+
+What happens once you apply?
+
+Click Here to find all you need to know about what our typical hiring process looks like.
+
+Encouraging a diverse and inclusive organization is core to our values at Ericsson, that's why we nurture it in everything we do. We truly believe that by collaborating with people with different experiences we drive innovation, which is essential for our future growth. We encourage people from all backgrounds to apply and realize their full potential as part of our Ericsson team. Ericsson is proud to be an Equal Opportunity and Affirmative Action employer, learn more.
+
+If you need assistance or to request an accommodation due to a disability, please contact Ericsson at hr.direct.mana@ericsson.com
+
+DISCLAIMER: The above statements are intended to describe the general nature and level of work being performed by employees in this position. They are not an exhaustive list of all responsibilities, duties and skills required for this position, and you may be required to perform additional job tasks as assigned.
+
+ Primary country and city: United States (US) || New York Remote

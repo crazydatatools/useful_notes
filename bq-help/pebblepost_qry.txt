@@ -1,0 +1,442 @@
+SELECT global_member_token,is_email_purged_ind 
+FROM `prod-gold-usersummary.user_profile.gmt_profile`
+where gmt_direct_marketing_remove_reason_cd in
+('00','05','10','24','25','30','35','40','47')
+and snapshotdate = current_date()
+and last_access_ts > date_sub(current_date(), interval 5 year)
+union all
+select distinct se.global_member_token,gp.is_email_purged_ind from
+`prod-gold-core.analytics_reg_sub_activity.sub_mailability_event` se
+join `prod-gold-usersummary.user_profile.gmt_profile` gp
+on se.global_member_token = gp.global_member_token
+and gp.snapshotdate = current_date()
+where sub_event_type_cd = 'unsublock'
+and event_dt > date_sub(current_date(), interval 5 year)
+
+select * from (
+select distinct rs1.global_member_token,gp.last_access_ts,gp.gmt_create_dt,
+case
+when sd.global_member_token is not null then 1
+else 0
+end vcust_ind
+from
+(
+SELECT distinct global_member_token FROM `prod-gold-core.analytics_email_activity.vw_email_activity_complete`
+where event_dt >= date_sub(current_date('America/New_York'), INTERVAL 60 day) ---- make it in 60 days window
+and lower(event_type) = 'click' and sub_cd = 'pchcom'
+union all
+select distinct global_member_token from
+`prod-gold-core.analytics_reg_sub_activity.sub_mailability_event`
+where event_dt >=date_sub(current_date('America/New_York'), INTERVAL 30 day) ---- make it 30 days
+and sub_cd = 'pchcom' and sub_event_type_cd = 'sub'
+and sub_event_status_cd in
+('newopt',
+'reopt',
+'firstopt',
+'reactopt'
+)
+) rs1
+left join `prod-gold-usersummary.user_profile.gmt_profile` gp
+on rs1.global_member_token = gp.global_member_token and gp.is_test_account_ind=0 and gp.is_email_purged_ind=0
+and gp.snapshotdate = current_date('America/New_York') --- current date if we are running after 11 am ---
+left join `prod-gold-core.analytics_online_auxiliary.gmt_segment_daily` sd
+on sd.global_member_token = rs1.global_member_token
+and sd.snapshotdate= date_sub(current_date('America/New_York'), INTERVAL 1 day) --- minus one day from run date
+and search(segment_cd_list,'`vcust`') ) where last_access_ts is not null and gmt_create_dt is not null
+
+
+select distinct lower(global_member_token) global_member_token
+FROM
+`prod-gold-external-user-lld.it_survey_recco_engine_lld.user_vendor_survey_activity_outcome`
+where event_date >  date_sub (current_date(), interval 6 month)
+and is_paid_survey_ind is true and survey_status = 'complete'
+
+
+---old--
+select * from (
+select distinct rs1.global_member_token,gp.last_access_ts,gp.gmt_create_dt,
+case
+when sd.global_member_token is not null then 1
+else 0
+end vcust_ind
+from
+(
+SELECT distinct global_member_token FROM `prod-gold-core.analytics_email_activity.vw_email_activity_complete`
+where event_dt >= date_sub(current_date('America/New_York'), INTERVAL 60 day) ---- make it in 60 days window
+and lower(event_type) = 'click' and sub_cd = 'pchcom'
+union all
+select distinct global_member_token from
+`prod-gold-core.analytics_reg_sub_activity.sub_mailability_event`
+where event_dt >=date_sub(current_date('America/New_York'), INTERVAL 30 day) ---- make it 30 days
+and sub_cd = 'pchcom' and sub_event_type_cd = 'sub'
+and sub_event_status_cd in
+('newopt',
+'reopt',
+'firstopt',
+'reactopt'
+)
+) rs1
+left join `prod-gold-usersummary.user_profile.gmt_profile` gp
+on rs1.global_member_token = gp.global_member_token and gp.is_test_account_ind=0 and gp.is_email_purged_ind=0
+and gp.snapshotdate = current_date('America/New_York') --- current date if we are running after 11 am ---
+left join `prod-gold-core.analytics_online_auxiliary.gmt_segment_daily` sd
+on sd.global_member_token = rs1.global_member_token
+and sd.snapshotdate= date_sub(current_date('America/New_York'), INTERVAL 1 day) --- minus one day from run date
+and search(segment_cd_list,'`vcust`') ) where last_access_ts is not null and gmt_create_dt is not null
+----
+====
+with drv_email_activity as (
+  SELECT distinct global_member_token FROM `prod-gold-core.analytics_email_activity.vw_email_activity_complete`
+where event_dt >= date_sub(current_date('America/New_York'), INTERVAL 60 day) ---- make it in 60 days window
+and lower(event_type) = 'click' and sub_cd = 'pchcom'
+union all
+select distinct global_member_token from
+`prod-gold-core.analytics_reg_sub_activity.sub_mailability_event`
+where event_dt >=date_sub(current_date('America/New_York'), INTERVAL 30 day) ---- make it 30 days
+and sub_cd = 'pchcom' and sub_event_type_cd = 'sub'
+and sub_event_status_cd in
+('newopt','reopt','firstopt','reactopt')
+),
+ gmt_profile as (
+ select gp.global_member_token,gp.last_access_ts,gp.gmt_create_dt from `prod-gold-usersummary.user_profile.gmt_profile` gp
+where gp.snapshotdate = current_date('America/New_York') --- current date if we are running after 11 am ---
+and gp.is_test_account_ind=0 and gp.is_email_purged_ind=0
+ ),
+ segement_vip as(
+  select  global_member_token from  `prod-gold-core.analytics_online_auxiliary.gmt_segment_daily` sd
+  where  sd.snapshotdate= date_sub(current_date('America/New_York'), INTERVAL 1 day) --- minus one day from run date
+and search(segment_cd_list,'`vcust`')
+ )
+select  distinct drv.global_member_token,gp.last_access_ts,gp.gmt_create_dt,
+case
+when vigs.global_member_token is not null then 1
+else 0
+end vcust_ind from drv_email_activity drv left join gmt_profile gp
+on  drv.global_member_token = gp.global_member_token
+left join segement_vip vigs on vigs.global_member_token = drv.global_member_token
+where  gp.last_access_ts is not null and gp.gmt_create_dt is not null
+==
+
+==transaction===
+
+create or replace table `prod-ds-outbound`.it_pebble_post.stg_entries_incr as
+with prep_omni_sweepstake_user_entry as (
+    SELECT
+        entry_dt,
+        sweepstake_entry_id,
+        giveaway_no,
+        contest_key,
+        STRUCT(
+            entry_dt,
+            sweepstake_entry_id,
+            giveaway_no,
+            contest_key,
+            global_member_token,
+            centralized_business_location,
+            device_type
+        ) AS entry_details
+    FROM `prod-gold-usersummary.it_sources.analytics_online_entries_sweepstake_user_entry`
+    WHERE entry_dt BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) AND DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
+),
+prep_omni_token_transaction as (
+    SELECT
+        transaction_dt,
+        token_transaction_id,
+        STRUCT(
+            transaction_dt,
+            token_transaction_id,
+            global_member_token,
+            centralized_business_location,
+            device_type
+        ) AS token_details
+    FROM `prod-gold-usersummary.it_sources.analytics_online_auxiliary_token_transaction`
+    WHERE transaction_dt BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) AND DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
+),
+prep_omni_pchworldapp_events as (
+    SELECT
+        event_edt_ts,
+        mp_event_id,
+        event_name,
+        mp_user_identifier,
+        name,
+        STRUCT(
+            event_edt_ts,
+            mp_event_id,
+            event_name,
+            mp_user_identifier,
+            name,
+            mp_resolved_distinct_id
+        ) AS event_details
+    FROM `prod-gold-usersummary.it_sources.mixpanel_pchworldapp_events`
+    WHERE DATE(event_edt_ts) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) AND DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
+
+),
+prep_omni_stg_pchworld_users as (
+    SELECT
+        load_date,
+        mp_distinct_id,
+        ugmt,
+        STRUCT(
+            load_date,
+            mp_distinct_id,
+            ugmt
+        ) AS user_details
+    FROM `prod-gold-usersummary.it_sources.mixpanel_stg_pchworld_users`
+    WHERE load_date = DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
+
+),
+engagement_sesssion_info  as (
+select
+'session_Sweeps' as source,
+entry_dt as RecordDate,
+CASE WHEN lower(entry_details.centralized_business_location) in  ('pchworldapp', 'pchworld') THEN 'App'
+else entry_details.device_type end as DeviceType,
+entry_details.global_member_token as GMT,
+from  prep_omni_sweepstake_user_entry
+where entry_dt between DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) AND DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
+UNION DISTINCT
+select
+'session_Token Transaction' as source,
+transaction_dt,
+CASE WHEN lower(token_details.centralized_business_location) in  ('pchworldapp', 'pchworld') THEN 'App'
+else token_details.device_type end as device_type,
+token_details.global_member_token,
+from  `prod-gold-usersummary.it_common_prep.prep_omni_token_transaction`
+where transaction_dt between DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) AND DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
+),
+mixpanel_session_info as (
+SELECT
+  'session_mixpanel_PCH World/ PCH Plus' AS Source,
+    DATE(a.event_edt_ts) AS RecordDate,
+    'App' AS DeviceType,
+CASE WHEN B.ugmt is NULL THEN a.event_details.mp_resolved_distinct_id
+WHEN a.event_details.mp_resolved_distinct_id is NULL and B.ugmt is NULL THEN a.event_details.mp_user_identifier
+ELSE B.ugmt END as GMT,
+FROM
+  prep_omni_pchworldapp_events as A
+
+left join (select distinct user_details.mp_distinct_id, user_details.ugmt from
+  prep_omni_stg_pchworld_users
+  WHERE DATE(load_date) = DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)) as B
+  on lower(A.event_details.mp_resolved_distinct_id) = lower(B.mp_distinct_id)
+WHERE
+  DATE(a.event_edt_ts) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) AND DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
+  AND UPPER(a.event_details.event_name) in  ('GAME_COMPLETE', 'GAME_START')  
+),
+session_info as (
+select
+Source,
+RecordDate,
+DeviceType,
+GMT
+from engagement_sesssion_info
+UNION ALL
+select
+Source,
+RecordDate,
+DeviceType,
+GMT
+from mixpanel_session_info
+)
+select current_date()+1 as load_dt,
+lower(GMT) as global_member_token
+from session_info
+group by 1,2
+
+====
+create or replace table `prod-ds-outbound`.it_pebble_post.stg_entries_incr as
+with prep_omni_sweepstake_user_entry as (
+    SELECT
+        entry_dt,
+        sweepstake_entry_id,
+        giveaway_no,
+        contest_key,
+        STRUCT(
+            entry_dt,
+            sweepstake_entry_id,
+            giveaway_no,
+            contest_key,
+            global_member_token,
+            centralized_business_location,
+            device_type
+        ) AS entry_details
+    FROM `prod-gold-usersummary.it_sources.analytics_online_entries_sweepstake_user_entry`
+    WHERE entry_dt BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) AND DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
+),
+prep_omni_token_transaction as (
+    SELECT
+        transaction_dt,
+        token_transaction_id,
+        STRUCT(
+            transaction_dt,
+            token_transaction_id,
+            global_member_token,
+            centralized_business_location,
+            device_type
+        ) AS token_details
+    FROM `prod-gold-usersummary.it_sources.analytics_online_auxiliary_token_transaction`
+    WHERE transaction_dt BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) AND DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
+),
+prep_omni_pchworldapp_events as (
+    SELECT
+        event_edt_ts,
+        mp_event_id,
+        event_name,
+        mp_user_identifier,
+        name,
+        STRUCT(
+            event_edt_ts,
+            mp_event_id,
+            event_name,
+            mp_user_identifier,
+            name,
+            mp_resolved_distinct_id
+        ) AS event_details
+    FROM `prod-gold-usersummary.it_sources.mixpanel_pchworldapp_events`
+    WHERE DATE(event_edt_ts) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) AND DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
+),
+prep_omni_stg_pchworld_users as (
+    SELECT
+        load_date,
+        mp_distinct_id,
+        ugmt,
+        STRUCT(
+            load_date,
+            mp_distinct_id,
+            ugmt
+        ) AS user_details
+    FROM `prod-gold-usersummary.it_sources.mixpanel_stg_pchworld_users`
+    WHERE load_date = DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
+
+),
+engagement_sesssion_info  as (
+select
+'session_Sweeps' as source,
+entry_dt as RecordDate,
+CASE WHEN lower(entry_details.centralized_business_location) in  ('pchworldapp', 'pchworld') THEN 'App'
+else entry_details.device_type end as DeviceType,
+entry_details.global_member_token as GMT,
+from  prep_omni_sweepstake_user_entry
+where entry_dt between DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) AND DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
+UNION DISTINCT
+select
+'session_Token Transaction' as source,
+transaction_dt,
+CASE WHEN lower(token_details.centralized_business_location) in  ('pchworldapp', 'pchworld') THEN 'App'
+else token_details.device_type end as device_type,
+token_details.global_member_token,
+from  `prod-gold-usersummary.it_common_prep.prep_omni_token_transaction`
+where transaction_dt between DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) AND DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
+),
+mixpanel_session_info as (
+SELECT
+  'session_mixpanel_PCH World/ PCH Plus' AS Source,
+    DATE(a.event_edt_ts) AS RecordDate,
+    'App' AS DeviceType,
+CASE WHEN B.ugmt is NULL THEN a.event_details.mp_resolved_distinct_id
+WHEN a.event_details.mp_resolved_distinct_id is NULL and B.ugmt is NULL THEN a.event_details.mp_user_identifier
+ELSE B.ugmt END as GMT,
+FROM
+  prep_omni_pchworldapp_events as A
+
+left join (select distinct user_details.mp_distinct_id, user_details.ugmt from
+  prep_omni_stg_pchworld_users
+  WHERE DATE(load_date) = DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)) as B
+  on lower(A.event_details.mp_resolved_distinct_id) = lower(B.mp_distinct_id)
+WHERE
+  DATE(a.event_edt_ts) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) AND DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY)
+  AND UPPER(a.event_details.event_name) in  ('GAME_COMPLETE', 'GAME_START')  
+),
+session_info as (
+select
+Source,
+RecordDate,
+DeviceType,
+GMT
+from engagement_sesssion_info
+UNION ALL
+select
+Source,
+RecordDate,
+DeviceType,
+GMT
+from mixpanel_session_info
+)
+select i.load_dt, i.global_member_token from (select current_date() as load_dt,
+lower(GMT) as global_member_token
+from session_info 
+group by 1,2 ) i
+left join `prod-ds-outbound`.it_pebble_post.stg_entries_base b 
+on i.global_member_token=b.global_member_token
+where b.global_member_token is null
+
+
+
+create or replace table `prod-ds-outbound`.it_pebble_post.stg_suppression_upd as
+select distinct global_member_token,last_access_ts last_access_ts,date(gmt_create_dt) gmt_create_dt,is_email_purged_ind from(
+SELECT global_member_token,last_access_ts,gmt_create_dt,is_email_purged_ind 
+FROM `prod-gold-usersummary.user_profile.gmt_profile`
+where gmt_direct_marketing_remove_reason_cd in('00','05','10','24','25','30','35','40','47')
+and snapshotdate = current_date() and  is_test_account_ind=0
+and last_access_ts >= date_sub(current_date(), interval 3 day)
+union all
+select distinct se.global_member_token,gp.last_access_ts,gp.gmt_create_dt, gp.is_email_purged_ind from
+`prod-gold-core.analytics_reg_sub_activity.sub_mailability_event` se
+join `prod-gold-usersummary.user_profile.gmt_profile` gp
+on se.global_member_token = gp.global_member_token and gp.is_test_account_ind=0
+and gp.snapshotdate = current_date()
+where sub_event_type_cd = 'unsublock'
+and event_dt >= date_sub(current_date(), interval 3 day))
+;
+MERGE `prod-ds-outbound`.it_pebble_post.stg_suppression_base T
+USING `prod-ds-outbound`.it_pebble_post.stg_suppression_upd U ON
+  T.global_member_token = U.global_member_token 
+WHEN MATCHED THEN UPDATE SET last_access_ts = U.last_access_ts,gmt_create_dt=U.gmt_create_dt,is_email_purged_ind=U.is_email_purged_ind
+WHEN NOT MATCHED THEN INSERT (global_member_token, last_access_ts, gmt_create_dt, is_email_purged_ind)
+                      VALUES (global_member_token, last_access_ts, gmt_create_dt, is_email_purged_ind);
+
+
+create or replace table `prod-ds-outbound`.it_pebble_post.stg_suppression_upd as
+select distinct drv.global_member_token,drv.last_access_ts last_access_ts,date(drv.gmt_create_dt) gmt_create_dt,drv.is_email_purged_ind,gm.is_do_not_sell_ind from(
+SELECT global_member_token,last_access_ts,gmt_create_dt,is_email_purged_ind 
+FROM `prod-gold-usersummary.user_profile.gmt_profile`
+where gmt_direct_marketing_remove_reason_cd in('00','05','10','24','25','30','35','40','47')
+and snapshotdate = current_date() and  is_test_account_ind=0
+and last_access_ts >= date_sub(current_date(), interval 3 day)
+union all
+select distinct se.global_member_token,gp.last_access_ts,gp.gmt_create_dt, gp.is_email_purged_ind from
+`prod-gold-core.analytics_reg_sub_activity.sub_mailability_event` se
+join `prod-gold-usersummary.user_profile.gmt_profile` gp
+on se.global_member_token = gp.global_member_token and gp.is_test_account_ind=0
+and gp.snapshotdate = current_date()
+where sub_event_type_cd = 'unsublock'
+and event_dt >= date_sub(current_date(), interval 3 day)) drv
+left join `prod-gold-usersummary`.user_profile.gmt_profile gm
+on gm.snapshotdate = current_date('America/New_York')  and drv.global_member_token=gm.global_member_token;
+
+MERGE `prod-ds-outbound`.it_pebble_post.stg_suppression_base T
+USING `prod-ds-outbound`.it_pebble_post.stg_suppression_upd U ON
+  T.global_member_token = U.global_member_token 
+WHEN MATCHED THEN UPDATE SET last_access_ts = U.last_access_ts,gmt_create_dt=U.gmt_create_dt,is_email_purged_ind=U.is_email_purged_ind,is_do_not_sell_ind=U.is_do_not_sell_ind
+WHEN NOT MATCHED THEN INSERT (global_member_token, last_access_ts, gmt_create_dt, is_email_purged_ind,is_do_not_sell_ind)
+                      VALUES (global_member_token, last_access_ts, gmt_create_dt, is_email_purged_ind,is_do_not_sell_ind);
+
+
+
+create or replace table `prod-ds-outbound`.it_pebble_post.stg_suppression_base as
+select distinct drv.global_member_token,drv.last_access_ts last_access_ts,date(drv.gmt_create_dt) gmt_create_dt,drv.is_email_purged_ind,gm.is_do_not_sell_ind from(
+SELECT global_member_token,last_access_ts,gmt_create_dt,is_email_purged_ind 
+FROM `prod-gold-usersummary.user_profile.gmt_profile`
+where gmt_direct_marketing_remove_reason_cd in('00','05','10','24','25','30','35','40','47')
+and snapshotdate = current_date() and  is_test_account_ind=0
+and last_access_ts >= date_sub(current_date(), interval 5 YEAR)
+union all
+select distinct se.global_member_token,gp.last_access_ts,gp.gmt_create_dt, gp.is_email_purged_ind from
+`prod-gold-core.analytics_reg_sub_activity.sub_mailability_event` se
+join `prod-gold-usersummary.user_profile.gmt_profile` gp
+on se.global_member_token = gp.global_member_token and gp.is_test_account_ind=0
+and gp.snapshotdate = current_date()
+where sub_event_type_cd = 'unsublock'
+and event_dt >= date_sub(current_date(), interval 5 YEAR)) drv
+left join `prod-gold-usersummary`.user_profile.gmt_profile gm
+on gm.snapshotdate = current_date('America/New_York')  and drv.global_member_token=gm.global_member_token 

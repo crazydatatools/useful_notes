@@ -1,0 +1,80 @@
+Experience of in-depth data engineering experience with execution of data pipelines, data operations, scripting, and SQL queries.
+Proven data modeling skills, with demonstrable experience designing models for data warehousing and modern analytics use-cases (e.g., from operational data store to semantic models).
+Experience in modern data architecture that supports advanced analytics, including Snowflake, Azure, etc. Experience with Snowflake and other Cloud Data Warehousing / Data Lake technologies is preferred.
+Expertise in engineering data pipelines using various data technologies, such as ETL/ELT and big data technologies (Hive, Spark) on large-scale data sets, demonstrated through years of experience.
+Hands-on experience with data warehouse design, development, and data modeling best practices for modern data architectures.
+High proficiency in at least one programming language: Java or Python.
+Experience with modern data modeling tools and data preparation tools.
+Experience with adding data lineage and technical glossary from data pipelines to data catalog tools.
+High proficiency in data analysis, including analyzing SQL, Python scripts, and ETL/ELT transformation scripts.
+Highly skilled in data orchestration with experience in tools like Ctrl-M and Apache Airflow. Hands-on DevOps/Data Ops experience is required.
+Knowledge and working experience in reporting tools such as MicroStrategy and Power BI are a plus.
+A self-driven individual with the ability to work independently or as part of a project team.
+Experience working in an Agile Environment is preferred. Familiarity with the Retail domain is preferred.
+Experience with Streamsets and dbt is preferred.
+Strong communication skills, with the ability to give and receive information, explain complex information in simple terms, and maintain a strong customer service approach to all users.
+
+
+Experience in developing proof of concepts and prototypes with Generative AI capabilities and innovative virtual agent solutions, utilizing large language model capabilities to facilitate digital transformation for customers and partners.
+
+ Segmentation of customers based on differing usage patterns of our customer service 
+
+Attitude 
+  Curious, proactive, practical and solution-oriented with “Get it done!” attitude 
+ Data savvy and love crunching numbers: love the idea of working in an international and multicultural company, analyzing billions of actions from millions of travelers choosing from thousands of hotels 
+ Interested in telling an impactful story with analysis and smart data visualization, not just number crunch 
+ Able and willing to share your opinion and propose ideas to improve operations based on data and have an impact on the customer experience 
+ Able to work in a highly multi-cultural team 
+ Attentive to detail and committed to data integrity 
+ Aware of the importance of discretion, confidentiality, and ethical behavior 
+Improve scalability, stability, accuracy, speed and efficiency of our existing data systems
+Work with experienced engineers and product owners to identify and build tools to automate many large-scale data management / analysis tasks 
+ united by a passion to make an impact. 
+ Design, build, test and deploy new libraries, frameworks or full systems for our core systems while keeping to the highest standards of testing and code quality
+ Lead the team technically in improving scalability, stability, accuracy, speed and efficiency of our existing Data systems
+ Build, administer and scale data processing pipelines
+ Improve scalability, stability, accuracy, speed and efficiency of our existing data systems
+ Displays eminence in modern data architectures across the organization.
+ Lead architecture design, define and implement end-to-end modern data platforms in support of AI and analytics use cases.
+ Development of design standards, design patterns, CI/CD and test procedures.
+Collaborate with data architects, ETL developers, engineers, BI developers/data scientists, and information designers to identify and define required data structures, formats, pipelines, metadata, and workload orchestration capabilities.
+
+2+ years of experience in architecting solutions for optimal extraction, transformation and loading of data from a wide variety of traditional and non-traditional sources such as structured, unstructured, and semi-structured using SQL, NoSQL and data pipelines for real-time, streaming, batch and on-demand workloads.
+Experience in developing proof of concepts and prototypes with Generative AI capabilities and innovative virtual agent solutions, utilizing large language model capabilities to facilitate digital transformation for customers and partners.
+Proven ability to generate reports from existing databases, data lakes, data marts, and non-relational data sources, reconciling data across multiple source systems.
+
+
+architecture and development of a scalable data platform and capabilities that can handle the volume and complexity of data while ensuring data accuracy, availability, observability, security, and optimum performance. You’ll be developing and maintaining our centralized, governed, and certified data models and source of truths (DW) for consistent reporting internally and externally. You’ll also be instrumental in building out a scalable data sharing architecture for our partners to power our data licensing product.
+Lead the development of data platform, building out data pipelines, and data warehouse layers. Ensure the platform can handle the scale and complexity of data efficiently.
+Knowledge of data modeling techniques (3NF, Dimensional, Vault), data lake, data warehouse, data mart, design patterns (lambda, kappa, medallion, etc.), and agile development.
+
+7+ years’ professional working experience building high-performance, large-scale, and scalable 
+
+
+wants to see everyone on the team succeed and is willing to go the extra mile to help a teammate in need.
+
+landscape; Lead POC’s and drive technical decisions for new AI capabilities stack
+· Hands on work with requirements, application architecture, design, code, code-reviews, CI/CD, deployment, and trouble-shooting prod issues
+· Drive new best practices and look for continuous improvements in the delivery process
+· Provides estimates for work efforts on new use cases, projects and work with teams on sizing features and user stories
+
+8 years of deep data engineering experience focusing on Spark and SQL application development.
+expertise in big data technologies, including Apache Spark, Scala, Python, SQL, and MapReduce.
+Revamping orchestration and execution to reduce critical data delivery times by 70%
+Design and implement data ETL frameworks for secured Data Lake, creating and maintaining an optimal pipeline architecture.
+Examine complex data to optimize the efficiency and quality of the data being collected, resolve data quality problems, and collaborate with database developers to improve systems and database designs
+Architect and build end-to-end data pipelines and data services leveraging tools like BigQuery, Cloud Functions, Cloud Run, Dataform, Dataflow, Dataproc, and Pub/Sub.
+Champion best practices for data management including data modeling, data governance, data quality, and data observability for big data workloads.
+Implement robust metadata management solutions encompassing data catalogs, data lineage, and data quality monitoring.
+Integrate seamlessly with the GCP ecosystem and design a scalable data lakehouse architecture.
+Design and build Semantic layers to provide a unified view of data for our platform.
+
+
+Data Engineer to develop, build and manage large-scale data structures, pipelines and efficient Extract/Load/Transform (ETL) workflows to address complex problems and support business applications. Duties include: develop large scale data structures and pipelines to organize, collect and standardize data to generate insights and addresses reporting needs; write ETL (Extract/Transform/Load) processes, design database systems, and develop tools for real-time and offline analytic processing that improve existing systems and expand capabilities; collaborate with Data Science team to transform data and integrate algorithms and models into automated processes; test and maintain systems and troubleshoot malfunctions; leverage knowledge of Hadoop architecture, HDFS commands, and designing and optimizing queries to build data pipelines; utilize programming skills in Python, Java, or similar languages to build robust data pipelines and dynamic systems; build data marts and data models to support Data Science and other internal customers; integrate data from a variety of sources and ensure adherence to data quality and accessibility standards; analyze current information technology environments to identify and assess critical capabilities and recommend solutions to complex business problems; and experiment with available tools and advise on new tools to provide optimal solutions that meet the requirements dictated by the model/use case; 
+
+CALL BQ.REFRESH_MATERIALIZED_VIEW('prod-gold-core.it_rpt_common.eh_pre_agg_vars_nonperformance_mv')
+
+• Leveraging Infrastructure-as-Code (“IaC”) tools like Terraform to provision projects/accounts, enable cloud services, implement Identity & Access Management (“IAM”), and configure Subnets & VPC.
+• Designing and developing logging, monitoring, and alerting. capabilities/dashboards for Predictive Analytics & Machine Learning Application.
+• Designing and implementing Disaster Recovery (“DR”) solution in an alternate cloud region.
+• Leveraging Google Cloud Platform services to perform day to day tasks.

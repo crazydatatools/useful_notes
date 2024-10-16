@@ -1,0 +1,258 @@
+MERGE
+  `cdc_demo.session_main` m
+USING
+  (
+  SELECT
+    * EXCEPT(row_num)
+  FROM (
+    SELECT
+      *,
+      ROW_NUMBER() OVER(PARTITION BY delta.session_id ORDER BY delta.di_sequence_number DESC) AS row_num
+    FROM
+      `cdc_demo.session_delta` delta )
+  WHERE
+    row_num = 1) d
+ON
+  m.session_id = d.session_id
+  WHEN NOT MATCHED AND di_operation_type IN ('I', 'U') THEN INSERT (session_id, status, customer_key, start_ts, end_ts, last_di_sequence_number) VALUES (d.session_id, d.status, d.customer_key, d.start_ts, d.end_ts, d.di_sequence_number)
+  WHEN MATCHED
+  AND d.di_operation_type = 'D' THEN
+DELETE
+  WHEN MATCHED
+  AND d.di_operation_type = 'U'
+  AND (m.last_di_sequence_number < d.di_sequence_number) THEN
+UPDATE
+SET
+  status = d.status,
+  customer_key = d.customer_key,
+  start_ts = d.start_ts,
+  end_ts = d.end_ts,
+  last_di_sequence_number = d.di_sequence_number
+
+https://github.com/GoogleCloudPlatform/bq-mirroring-cdc/blob/main/setup/bigquery/merge-session-status.sql
+
+SELECT *, CURRENT_TIMESTAMP() as measured_ts FROM
+(SELECT
+  'Records not in destination' AS description,
+  COUNT(*) AS count
+FROM
+  cdc_demo.session_source_v src
+WHERE
+  NOT EXISTS(
+  SELECT
+    session_id
+  FROM
+    cdc_demo.session_main dest
+  WHERE
+    dest.session_id = src.session_id)
+UNION ALL
+SELECT
+  'Records not in source' AS description,
+  COUNT(*) AS count
+FROM
+  cdc_demo.session_main dest
+WHERE
+  NOT EXISTS(
+  SELECT
+    session_id
+  FROM
+    cdc_demo.session_source_v src
+  WHERE
+    dest.session_id = src.session_id)
+UNION ALL
+SELECT
+  'Records with data mismatch' AS description,
+  COUNT(*) AS count
+FROM
+  cdc_demo.session_source_v src
+INNER JOIN
+  cdc_demo.session_main dest
+ON
+  dest.session_id = src.session_id
+  WHERE dest.status <> src.status
+  UNION ALL
+  SELECT
+    'Total records in the source' AS description,
+    COUNT(*) AS count
+  FROM
+    cdc_demo.session_source_v src ) ORDER BY 1
+
+https://github.com/GoogleCloudPlatform/bq-mirroring-cdc
+
+    from google.cloud import bigquery
+
+def remove_partitions():
+  client = bigquery.Client()
+
+  query_file = open('get-session-delta-partitions-safe-to-delete.sql', "r")
+  query = query_file.read()
+  query_job = client.query(query)
+
+  results = query_job.result()
+
+  for row in results:
+    partition_id = row.partition_id
+    table_ref = client.dataset('cdc_demo').table("{}${}".format('session_delta', partition_id))
+    print("Partition to be deleted: {}".format(table_ref))
+    client.delete_table(table_ref)
+
+if __name__ == '__main__':
+  remove_partitions()
+
+python remove-processed-session-delta-partitions.py
+
+  set -e
+
+while true; do
+  cat merge-session-status.sql | bq query --use_legacy_sql=false
+  sleep 15
+done
+
+https://towardsdatascience.com/slowly-changing-dimension-type-2-with-google-bigquery-749e0f9107fb
+We will use two tables, HR_INPUT, as the input that it is changing over time and EmployeeDim for Dimension Type 2:
+
+CREATE OR REPLACE TABLE SCD.HR_INPUT (
+   ID         STRING NOT NULL
+  ,EMPLOYEE   STRING NOT NULL
+  ,JOB_TITLE  STRING NOT NULL
+  ,COMPANY    STRING NOT NULL
+  ,START_YEAR INTEGER NOT NULL
+);
+CREATE OR REPLACE TABLE SCD.EmployeeDim (
+   SKEY       STRING NOT NULL
+  ,ID         STRING NOT NULL
+  ,EMPLOYEE   STRING NOT NULL
+  ,JOB_TITLE  STRING NOT NULL
+  ,COMPANY    STRING NOT NULL
+  ,START_YEAR INTEGER NOT NULL
+  ,END_YEAR   INTEGER NOT NULL
+  ,ACTIVE     STRING NOT NULL
+  ,CREATED    TIMESTAMP NOT NULL
+  ,UPDATED    TIMESTAMP NOT NULL
+);
+
+CREATE OR REPLACE PROCEDURE SCD.SP_EmployeeDim_SCD2()
+BEGIN
+  MERGE SCD.EmployeeDim AS output
+  USING (
+    SELECT src.ID as PSEUDO_ID, src.*
+      FROM SCD.HR_INPUT AS src
+    UNION ALL
+    SELECT NULL as PSEUDO_ID, dup.*
+      FROM SCD.HR_INPUT AS dup
+     INNER JOIN SCD.EmployeeDim AS trget ON dup.ID = trget.ID
+     WHERE trget.END_YEAR = 9999 
+       AND trget.START_YEAR <> dup.START_YEAR
+  ) AS input
+  ON input.PSEUDO_ID = output.ID
+  WHEN NOT MATCHED THEN
+  INSERT (SKEY,ID,EMPLOYEE,JOB_TITLE,COMPANY,START_YEAR
+          ,END_YEAR,ACTIVE,CREATED,UPDATED)
+  VALUES ( GENERATE_UUID()
+          ,input.ID
+          ,input.EMPLOYEE
+          ,input.JOB_TITLE
+          ,input.COMPANY
+          ,input.START_YEAR
+          ,9999
+          ,'Y'
+          ,CURRENT_TIMESTAMP()
+          ,CURRENT_TIMESTAMP()
+  )
+  WHEN MATCHED 
+   AND output.END_YEAR = 9999
+   AND output.START_YEAR <> input.START_YEAR THEN
+  UPDATE  SET ACTIVE = 'N'
+         ,END_YEAR = input.START_YEAR
+         ,UPDATED = CURRENT_TIMESTAMP()
+  ;
+END;
+
+As you can see, there is a MERGE statement that says:
+
+Try to MERGE the Dimension with the Data Source and If the pseudo ID doesn’t match then Insert a New row else Update as inactive and add the end of the year
+
+MERGE SCD.EmployeeDim AS output 
+USING (<... subquery ...>) AS input 
+ON input.PSEUDO_ID = output.ID
+WHEN NOT MATCHED THEN
+INSERT (<... columns ...>)
+VALUES (GENERATE_UUID(),<... all data ...>,9999,'Y'
+,CURRENT_TIMESTAMP(),CURRENT_TIMESTAMP())
+WHEN MATCHED AND output.END_YEAR = 9999
+     AND output.START_YEAR <> input.START_YEAR THEN
+UPDATE SET ACTIVE = 'N', END_YEAR = input.START_YEAR, UPDATED = CURRENT_TIMESTAMP()
+When It doesn’t match, we bring all the data from the HR Input Table, add a Surrogate Key using the GENERATE_UUID() function, add an infinity ending year, mark it as active, and set the timestamp.
+
+WHEN NOT MATCHED THEN
+INSERT(SKEY,ID,EMPLOYEE,JOB_TITLE,COMPANY,START_YEAR,END_YEAR,ACTIVE
+,CREATED,UPDATED) VALUES (GENERATE_UUID(),input.ID,input.EMPLOYEE
+,input.JOB_TITLE,input.COMPANY,input.START_YEAR,9999,'Y'
+,CURRENT_TIMESTAMP(),CURRENT_TIMESTAMP())
+When we found it, we updated the ones that were still open for the future and had different starting years, and we set them as inactive, adding an ending year and updating the timestamp.
+
+WHEN MATCHED AND output.END_YEAR = 9999 
+             AND output.START_YEAR <> input.START_YEAR THEN
+UPDATE SET ACTIVE = 'N', END_YEAR = input.START_YEAR
+, UPDATED = CURRENT_TIMESTAMP()
+Initially, I was trying to implement the Kimball Design Tip #107 when I discovered that Google BigQuery hadn’t implemented OUTPUT as I saw it more than 14 years ago. Then I found It is possible changing the source:
+
+USING (
+SELECT src.ID as PSEUDO_ID, src.*
+FROM SCD.HR_INPUT AS src
+UNION ALL
+SELECT NULL as PSEUDO_ID, dup.*
+FROM SCD.HR_INPUT AS dup
+INNER JOIN SCD.EmployeeDim AS trget ON dup.ID = trget.ID
+WHERE trget.END_YEAR = 9999 AND trget.START_YEAR <> dup.START_YEAR
+) AS input
+I am bringing all the data, duplicating the ID column, and calling it Pseudo ID, where new records and the values that split existing IDs by year will come true.
+
+SELECT src.ID as PSEUDO_ID, src.*
+FROM SCD.HR_INPUT AS src
+And I add all the records from the Input table that will add it for the existing IDs as active, adding a NULL in the Pseudo ID to the MERGE statement categorized as the ones to Insert.
+
+SELECT NULL as PSEUDO_ID, dup.*
+FROM SCD.HR_INPUT AS dup
+INNER JOIN SCD.EmployeeDim AS trget ON dup.ID = trget.ID
+WHERE trget.END_YEAR = 9999 AND trget.START_YEAR <> dup.START_YEAR
+
+How to Segment Customers Using Recency, Frequency, and Monetary
+
+WITH rfm_customers AS (
+  SELECT
+    o.user_id AS customer_id,
+    DATE_DIFF(CURRENT_TIMESTAMP(), MAX(o.created_at), DAY) AS recency,
+    COUNT(o.order_id) AS frequency,
+    ROUND(SUM(oi.sale_price)) AS monetary
+  FROM `bigquery-public-data.thelook_ecommerce.orders` o
+  INNER JOIN `bigquery-public-data.thelook_ecommerce.order_items` oi
+  ON o.order_id = oi.order_id
+  GROUP BY customer_id
+)
+
+-- We will now only refers to this CTE
+SELECT * FROM rfm_customers
+
+SELECT
+  customer_id,
+  NTILE(5) OVER (ORDER BY recency) AS recency_quintile,
+  NTILE(5) OVER (ORDER BY frequency) AS frequency_quintile,
+  NTILE(5) OVER (ORDER BY monetary) AS monetary_quintile
+FROM
+  rfm_customers
+
+SELECT
+  customer_id,
+  CASE
+    WHEN monetary_quintile >= 4 AND frequency_quintile >= 4 THEN "High Value"
+    WHEN frequency_quintile >= 4 THEN "Loyal"
+    WHEN recency_quintile =< 1 THEN "At Risk"
+    WHEN recency_quintile >= 4 THEN "Promising"
+  END AS segment
+FROM quintiles_customers
+
+High Value: Customers in the top quartile for monetary value and frequency and any quartile for Recency.
+Loyal: Customers in the top quartile for frequency and any quartile for monetary value and Recency.
+At Risk: Customers in the bottom quartile for Recency and any quartile for frequency and monetary value.
+Promising: Customers in the top quartile for Recency and any quartile for frequency and monetary value.

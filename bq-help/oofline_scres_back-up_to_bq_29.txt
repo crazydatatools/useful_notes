@@ -1,0 +1,96 @@
+copy data from /mapr/JMAPRCLUP01.CLASSIC.PCHAD.COM/cm/bigdata/uat/hot/offlinescores/tdmcusc_partitioned
+to bucket--
+bkt_prod_archive_goldcore/mapr_clu_migration_bckup/cm/bigdata/uat/hot/offlinescores/tdmcusc_partitioned
+
+Back-up script--CM
+insert into uat_cm_dms_customer.customer_offline_scores_tdmcusc_partitioned partition(score_cd, year, month)
+select distinct
+a.cust_part_seq_no, a.cust_id, CASE   
+       WHEN b.score_ds is not null THEN b.score_ds
+       ELSE 'Missing'
+END  SCORE_CD_DESC, 
+a.score_date SCORE_DT, cust_score CUST_OFFLINE_SCORE_NO,
+CONCAT(${hiveconf:DataSetName},'D'),
+a.score_cd,
+date_format(a.score_date, 'yyyy') as year,
+date_format(a.score_date, 'MM') as month
+from  prod_sa_dms_customer.tdmcusc_cdc_tdmcusc_cdc_weekly a
+left join prod_sa_dms_customer.TDMSCDS b
+on a.score_cd=b.score_cd;
+
+
+
+Copy data from /mapr/JMAPRCLUP01.CLASSIC.PCHAD.COM/cm/bigdata/uat/hot/onlinescores/tdmscon_partitioned to below bucket--
+bkt_prod_archive_goldcore/mapr_clu_migration_bckup/cm/bigdata/uat/hot/onlinescores/tdmscon_partitioned
+
+Back-up script--CM
+insert into  uat_cm_dms_customer.customer_online_score_tdmscon_partitioned partition(score_cd, year, month)
+select distinct
+a.cust_part_seq_no, a.cust_id, CASE   
+       WHEN b.score_ds is not null THEN b.score_ds
+       ELSE 'Missing'
+END  SCORE_CD_DESC, 
+a.score_date SCORE_DT, cust_online_score  cust_online_score_no,
+CONCAT(${hiveconf:DataSetName},'W'),
+a.score_cd,
+date_format(a.score_date, 'yyyy') as year,
+date_format(a.score_date, 'MM') as month
+from prod_sa_dms_customer.tdmscon_cdc_weekly a
+left join prod_sa_dms_customer.TDMSCDS b
+on a.score_cd=b.score_cd;
+
+IM---
+COPY DATA from /mapr/JMAPRCLUP01.CLASSIC.PCHAD.COM/im/bigdata/uat/hot/dms_customer/core/tdmscon/
+to below bucket
+bkt_prod_archive_goldcore/mapr_clu_migration_bckup/im/bigdata/prod/hot/
+
+insert overwrite table ${hivevar:im_customer_db}.customer_online_score_tdmscon partition (score_cd, year, month)
+select distinct
+COALESCE(`b`.`curr_part_seq_no`, `a`.`cust_part_seq_no`),
+COALESCE(`b`.`curr_cust_id`, `a`.`cust_id`),
+`a`.`cust_part_seq_no`,
+`a`.`cust_id`,
+`a`.`score_dt`,
+case when a.cust_online_score_no IS NULL THEN c.cust_online_score_no ELSE a.cust_online_score_no END cust_online_score_no,
+case when `a`.`score_cd` = '11' then 'WIPTWK OR WIPCMB MODELS' else `a`.`score_cd_desc` end score_cd_desc,
+`b`.`cust_id_effective_dt`,
+case when `b`.`data_refresh_dt` is null then "${hivevar:CustIDRefreshDate}" else `b`.`data_refresh_dt` end `data_refresh_dt`,
+`a`.`datasetname`,
+`a`.`score_cd`,
+date_format(`a`.`score_dt`, 'yyyy') as `year`,
+date_format(`a`.`score_dt`, 'MM') as `month`
+ from ${hivevar:cm_customer_db}.`customer_online_score_tdmscon_partitioned` a
+ left join ${hivevar:cm_crossref_db}.`cust_id_current` b
+ on `a`.`cust_part_seq_no`=`b`.`cust_part_seq_no` and `a`.`cust_id`=`b`.`cust_id`
+ left join `uat_cm_dms_customer.tdmscon_score_recon_build` c
+ on (a.orig_cust_id = c.cust_id and a.score_cd = c.score_cd and a.score_dt = c.score_dt)
+where `a`.`score_cd` in ${hivevar:tdmscon_score_cd}
+;
+
+
+COPY DATA FROM /mapr/JMAPRCLUP01.CLASSIC.PCHAD.COM/im/bigdata/uat/hot/offlinescores/core/tdmcusc
+to below bkt_prod_archive_goldcore/mapr_clu_migration_bckup/im/bigdata/prod/hot/
+
+CREATE EXTERNAL TABLE `customer_offline_scores_tdmcusc`(
+  `cust_part_seq_no` decimal(3,0),
+  `cust_id` decimal(11,0),
+  `orig_cust_part_seq_no` decimal(3,0),
+  `orig_cust_id` decimal(11,0),
+  `score_dt` date,
+  `cust_offline_score_no` decimal(7,6),
+  `score_cd_desc` varchar(30),
+  `cust_id_effective_dt` date,
+  `data_refresh_dt` string,
+  `datasetname` varchar(9))
+PARTITIONED BY (
+  `score_cd` varchar(2),
+  `year` varchar(4),
+  `month` varchar(2))
+ROW FORMAT SERDE
+  'org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe'
+STORED AS INPUTFORMAT
+  'org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat'
+OUTPUTFORMAT
+  'org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat'
+LOCATION
+  'maprfs:/im/bigdata/uat/hot/offlinescores/core/tdmcusc'

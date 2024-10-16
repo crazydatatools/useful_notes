@@ -1,0 +1,15 @@
+bq mk --connection --location=us --project_id=prod-ds-outbound --connection_type=CLOUD_RESOURCE  bl-dad-bkt-dev-onb-inbound
+
+CREATE EXTERNAL TABLE prod-ds-outbound.oltp_scoring.ptp_pto_onb_scores 
+WITH PARTITION COLUMNS
+(
+  score_dt STRING,
+)
+WITH CONNECTION `us.bl-dad-bkt-dev-onb-inbound`
+OPTIONS(
+  hive_partition_uri_prefix = "gs://bkt_dev_onb_inbound",
+  uris = ['gs://bkt_dev_onb_inbound/*'],
+  format= CSV,
+  max_staleness = INTERVAL 1 DAY,
+  metadata_cache_mode = 'AUTOMATIC'
+);

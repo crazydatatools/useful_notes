@@ -1,0 +1,18 @@
+call `uat-gold-core.it_cm_onl_etl_rpt_com_recon.sp_agg_acq_new_mailables_day0to7_revenue_md_daily`--9am daily
+
+
+CALL
+`prod-ds-outbound.google_ad_services.usp_get_ga4_new_mailables_day0to7_revenue` -- 4 pm
+();
+
+service-649426590417@gcp-sa-dataform.iam.gserviceaccount.com
+
+service-649426590417@gcp-sa-dataform.iam.gserviceaccount.com cannot actAs svc-uat-nexus-elt-bigdata@uat-gold-core.iam.gserviceaccount.com, please grant Service Account Token Creator role: generic::permission_denied: IAM permission denied for service account svc-uat-nexus-elt-bigdata@uat-gold-core.iam.gserviceaccount.com.
+
+
+https://www.coursera.org/learn/introduction-to-generative-ai-studio/gradedLti/yykNv/lab-get-started-with-vertex-ai-studio
+
+https://www.cloudskillsboost.google/course_templates/323?utm_source=gcp_training&utm_medium=website&utm_campaign=cgc
+https://www.cloudskillsboost.google/course_templates/976/labs/489806
+https://github.com/ShawhinT/YouTube-Blog/tree/main/LLMs/openai-api
+https://cs50.harvard.edu/python/2022/weeks/8/

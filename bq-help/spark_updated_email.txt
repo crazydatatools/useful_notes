@@ -1,0 +1,42 @@
+src_id="140"
+file_id_list="20240416081135"
+database_property_file="/mnt/data/codebase/bigdata/prod/config/global_variables/database.txt"
+ 
+/opt/spark/bin/spark-submit \
+--master spark://10.27.18.62:7077 \
+--driver-memory 2g \
+--executor-memory 4g \
+--num-executors 3 \
+--executor-cores 5 \
+--jars /mnt/data/codebase/bigdata/prod/ingestion/online/lib/gcp_spark_ingestion/config-1.2.1.jar,/mnt/data/codebase/bigdata/prod/ingestion/online/lib/gcp_spark_ingestion/mysql-connector-java-8.0.26.jar,/mnt/data/codebase/bigdata/prod/ingestion/online/lib/gcp_spark_ingestion/sqljdbc42.jar,/mnt/data/codebase/bigdata/prod/ingestion/online/lib/gcp_spark_ingestion/gcs-connector-latest-hadoop2.jar,/mnt/data/codebase/bigdata/prod/ingestion/online/lib/gcp_sftp_spark_ingestion/spark-filetransfer_2.12-0.3.0.jar,/mnt/data/codebase/bigdata/prod/ingestion/online/lib/gcp_sftp_spark_ingestion/jsch-0.1.55.jar \
+--conf "spark.sql.parquet.writeLegacyFormat=true,spark.dynamicAllocation.minExecutors=10" \
+--conf "spark.hadoop.google.cloud.auth.service.account.json.keyfile=/mnt/keys/gcs_key.json" \
+--class com.pch.sparketl.main.gcp_sftp_ingestion_generic /mnt/data/codebase/bigdata/prod/ingestion/online/bin/gcp_sftp_spark_ingestion/gcp_sftp_ingestion_prototype.jar $src_id $file_id_list $database_property_file
+
+
+
+
+/opt/spark/bin/spark-shell \
+--master spark://10.27.18.62:7077 \
+--driver-memory 2g \
+--executor-memory 4g \
+--num-executors 3 \
+--executor-cores 5 \
+--jars /mnt/data/codebase/bigdata/prod/ingestion/online/lib/gcp_spark_ingestion/config-1.2.1.jar,/mnt/data/codebase/bigdata/prod/ingestion/online/lib/gcp_spark_ingestion/mysql-connector-java-8.0.26.jar,/mnt/data/codebase/bigdata/prod/ingestion/online/lib/gcp_spark_ingestion/sqljdbc42.jar,/mnt/data/codebase/bigdata/prod/ingestion/online/lib/gcp_spark_ingestion/gcs-connector-latest-hadoop2.jar,/mnt/data/codebase/bigdata/prod/ingestion/online/lib/gcp_sftp_spark_ingestion/spark-filetransfer_2.12-0.3.0.jar,/mnt/data/codebase/bigdata/prod/ingestion/online/lib/gcp_sftp_spark_ingestion/jsch-0.1.55.jar \
+--conf "spark.sql.parquet.writeLegacyFormat=true,spark.dynamicAllocation.minExecutors=10" \
+--conf "spark.hadoop.google.cloud.auth.service.account.json.keyfile=/mnt/keys/gcs_key.json" \
+--conf "spark.sql.parquet.writeLegacyFormat=true"
+
+
+import com.github.arcizon.spark.filetransfer._
+
+val df = spark.read.option("host", "PWSFTP01.classic.pchad.com").option("port", "22").option("username", "experianp").option("password", "$pring2015!").option("fileFormat", "csv").option("delimiter", "\t").option("header", "true").option("inferSchema", "true").sftp("/Experian_Prod/PostProcess/Experian/PCHDigital/Outbound/UserCampaignOutboundData_20240611073118.txt").cache()
+
+UPDATE `mapr_bigdata_uat_metahub`.`gcp_ingestion_controller` SET `tableloadinprocessflag` = 'NotInProcess' WHERE (`controller_id` = '140');
+
+[5/24 11:25 AM] Basa, Prashant
+mysql -h maprsqldb.prod.pch.com -u u_bd_ms_mysql_svc -p
+[5/24 11:25 AM] Basa, Prashant
+S3ntr@L-st@shnU
+[5/24 11:27 AM] Basa, Prashant
+mapr_bigdata_uat_metahub

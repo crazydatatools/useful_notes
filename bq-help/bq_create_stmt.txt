@@ -1,0 +1,176 @@
+SELECT ddl FROM `dev-pch-it-cnstmgmt.INFORMATION_SCHEMA.SCHEMATA`;
+
+CREATE   SCHEMA RaviDataset3
+OPTIONS(
+  location="us",
+  is_case_insensitive=TRUE,
+  default_table_expiration_days=3.75,
+  labels=[("org","pch"),("poc","is_case_insensitive")]
+  )
+
+CREATE   SCHEMA `prod-gold-external-user-lld`.it_salesforce_lld 
+OPTIONS(
+  location="us",
+  labels=[("org","pch"),("source","salesforce"),("active","true")]
+  )
+
+https://source.cloud.google.com/dev-cd-shared-infra/cld-composer-repo/+/master:
+CREATE   SCHEMA `dev-gold-core`.sa_dms_customer 
+OPTIONS(
+  location="us",
+  labels=[("org","pch"),("source","db2"),("target","bq"),("subject-area","dms-customer"),("stage","raw"),("tool","qlikreplicate"),("active","true")])
+ALTER SCHEMA `prod-gold-core`.sa_dms_ordertracking_core  SET OPTIONS(storage_billing_model = 'PHYSICAL',description = 'Enabled physical billing model on this dataset',max_time_travel_hours = 48);
+
+CREATE   SCHEMA `prod-gold-core`.sa_dms_ordertracking_core
+OPTIONS(
+  location="us",
+  labels=[("org","pch"),("source","db2"),("target","bq"),("subject-area","dms-ordertracking-core"),("stage","full-base-cdc-archive"),
+  ("initialload","01-18-2024"),("tool","qlikreplicate"),("active","true")])it_search_fp_lld 
+
+CREATE   SCHEMA `prod-gold-core`.it_dms_references 
+OPTIONS(
+  location="us",
+  labels=[("org","pch"),("source","db2"),("target","bq"),("subject-area","dms-references"),("stage","gold"),("tool","bq-tool"),("active","true")])
+
+CREATE   SCHEMA `prod-gold-external-user-lld`.it_kevel_lld 
+OPTIONS(
+  location="us",
+  labels=[("org","pch"),("source","kevel"),("active","true")]
+  )
+CREATE   SCHEMA `prod-pch-it-cnstmgmt.it_sources`
+OPTIONS(
+  location="us",max_time_travel_hours=48,
+  storage_billing_model=PHYSICAL,
+  labels=[("org","pch"),("source","pgc"),("target","bq"),("subject-area","fraud-analysis"),("stage","sources"),("tool","dataform"),("active","true")])
+
+
+
+CREATE   SCHEMA `prod-pch-it-cnstmgmt.it_common_mapping`
+OPTIONS(
+  location="us",  max_time_travel_hours=48,
+  storage_billing_model=PHYSICAL,
+  labels=[("org","pch"),("source","pgc"),("target","bq"),("subject-area","fraud-analysis"),("stage","common-mapping"),("tool","dataform"),("active","true")])
+
+
+CREATE   SCHEMA `prod-pch-it-cnstmgmt.it_extracts`
+OPTIONS(
+  location="us",  max_time_travel_hours=48,
+  storage_billing_model=PHYSICAL,
+  labels=[("org","pch"),("source","pgc"),("target","bq"),("subject-area","fraud-analysis"),("stage","extracts"),("tool","dataform"),("active","true")])
+
+CREATE   SCHEMA `prod-pch-it-cnstmgmt.it_staging`
+OPTIONS(
+  location="us",  max_time_travel_hours=48,
+  storage_billing_model=PHYSICAL,
+  labels=[("org","pch"),("source","pgc"),("target","bq"),("subject-area","fraud-analysis"),("stage","staging"),("tool","dataform"),("active","true")])
+
+CREATE   SCHEMA `prod-pch-it-cnstmgmt.it_common_prep`
+OPTIONS(
+  location="us",  max_time_travel_hours=48,
+  storage_billing_model=PHYSICAL,
+  labels=[("org","pch"),("source","pgc"),("target","bq"),("subject-area","fraud-analysis"),("stage","common-prep"),("tool","dataform"),("active","true")])
+
+
+CREATE   SCHEMA `prod-pch-it-cnstmgmt.contest_report_bi`
+OPTIONS(
+  location="us",  max_time_travel_hours=48,
+  storage_billing_model=PHYSICAL,
+  labels=[("org","pch"),("source","pgc"),("target","bq"),("subject-area","fraud-analysis"),("stage","contest_report_bi"),("tool","dataform"),("active","true")])
+
+
+
+CREATE   SCHEMA `prod-pch-it-cnstmgmt.it_assertions`
+OPTIONS(
+  location="us",  max_time_travel_hours=48,
+  storage_billing_model=PHYSICAL,
+  labels=[("org","pch"),("source","pgc"),("target","bq"),("subject-area","fraud-analysis"),("stage","assertions"),("tool","dataform"),("active","true")])
+
+CREATE   SCHEMA `prod-pch-it-cnstmgmt.it_common_mart`
+OPTIONS(
+  location="us",  max_time_travel_hours=48,
+  storage_billing_model=PHYSICAL,
+  labels=[("org","pch"),("source","pgc"),("target","bq"),("subject-area","fraud-analysis"),("stage","common_mart"),("tool","dataform"),("active","true")])
+
+
+
+CREATE   SCHEMA `prod-ds-outbound`.icm_reporting  
+OPTIONS(
+  location="us",
+  labels=[("org","pch"),("subject","identifi"),("active","true"),("applciation","icm"),("team","madtechadvisors")]
+  )
+resore tables
+bq cp it_appsflyer_adhoc_28.pch_wordmania_inapp_events_final@-360000 it_appsflyer_adhoc_28.pch_wordmania_inapp_events_final2
+
+bq cp it_appsflyer_adhoc_28.pch_wordmania_inapp_events_final@1675958400000 it_appsflyer_adhoc_28.pch_wordmania_inapp_events_final2
+
+CREATE TABLE dev-cd-shared-infra.ravidataset.ravitable
+(
+  name INT64 OPTIONS(description="An optional INTEGER field"),
+  address STRUCT<
+    st ARRAY<STRING> OPTIONS(description="A repeated STRING field"),
+    apt BOOL
+  >
+)
+PARTITION BY _PARTITIONDATE
+OPTIONS(
+  expiration_timestamp=TIMESTAMP "2025-01-01 00:00:00 UTC",
+  partition_expiration_days=1,
+  description="a table that expires in 2025, with each partition living for 24 hours",
+  labels=[("org", "pch")]
+)
+
+SELECT
+ test,
+ REGEXP_CONTAINS(test, r’^([\w.+-]+com|[\w.+-]+.org)$’) AS valid
+FROM
+(SELECT [‘abc.com’, ‘abc.net’, ‘abc.org’, ‘www.abs.org']
+ AS test),
+UNNEST(test) AS test;
+
+SELECT project_id, dataset_id ,table_id,  REGEXP_CONTAINS(table_id, r'(\d+)') wildcard_tables ,count(1) cnt FROM `gpcadmin.MetadataStore.all_projects_bq_tables_info` WHERE load_date = "2022-09-20" 
+group by project_id, dataset_id,table_id,REGEXP_CONTAINS(table_id, r'(\d+)')
+
+
+CREATE   SCHEMA `dev-gold-external-user-lld`.it_appsflyer_reporting_staging  
+OPTIONS(
+  location="us",
+  labels=[("org","pch"),("subject","appsflyer_agg_reporting"),("active","true"),("applciation","datapull_via_api"),("team","appsflyer")]
+  )
+
+CREATE TABLE `fh-bigquery.wikipedia_v2.pageviews_2016`
+ (datehour TIMESTAMP, wiki STRING, title STRING, views INT64)
+ PARTITION BY DATE(datehour) OPTIONS(
+   description = 'Wikipedia pageviews from http://dumps.wikimedia.your.org/other/pageviews/'
+   , require_partition_filter = true
+ )
+
+  CREATE   SCHEMA `dev-gold-external-user-lld`.it_appsflyer_reporting 
+OPTIONS(
+  location="us",
+  labels=[("org","pch"),("subject","appsflyer_agg_reporting"),("active","true"),("applciation","datapull_via_api"),("team","appsflyer")]
+  )
+CREATE   SCHEMA `prod-gold-core`.it_dms_customer_arc
+OPTIONS(
+  location="us",
+  labels=[("org","pch"),("source","db2"),("target","bq"),("subject-area","dms-customer-historical"),("stage","archive"),("frequency","ontime"),
+  ("loaddate","03-12-2024"),("tool","etl"),("active","true")])
+
+
+
+CREATE   SCHEMA `prod-gold-core`.it_dms_prospect_arc
+OPTIONS(
+  location="us",
+  labels=[("org","pch"),("source","db2"),("target","bq"),("subject-area","dms-prospect-historical"),("stage","archive"),("frequency","ontime"),
+  ("loaddate","03-12-2024"),("tool","etl"),("active","true")])
+
+CREATE   SCHEMA `prod-gold-external-user-lld`.it_cservices_lld  
+OPTIONS(
+  location="us",
+  labels=[("org","pch"),("subject","elevate_data"),("active","true"),("application","cs_rfapi"),("team","centralservices")]
+  )
+
+CREATE   SCHEMA `dev-ws-pch-app-team-cservices`.prod  
+OPTIONS(
+  location="us",
+  labels=[("org","pch"),("env","prod"),("active","true"),("application","rf_api"),("team","cs")]
+  )

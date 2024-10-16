@@ -1,0 +1,10 @@
+curl --request GET \
+     --url 'https://hq1.appsflyer.com/api/raw-data/export/app/app-id/organic_in_app_events_report/v5?from=2022-04-22%2021%3A45%3A23&event_name=&additional_fields=blocked_reason_rule,store_reinstall,impressions,contributor3_match_type,custom_dimension,conversion_type,gp_click_time,match_type,mediation_network,oaid,deeplink_url,blocked_reason,blocked_sub_reason,gp_broadcast_referrer,gp_install_begin,campaign_type,custom_data,rejected_reason,device_download_time,keyword_match_type,contributor1_match_type,contributor2_match_type,device_model,monetization_network,segment,gp_referrer,blocked_reason_value,device_category,app_type,rejected_reason_value,ad_unit,keyword_id,placement,network_account_id,install_app_store,amazon_aid,att,engagement_type,' \
+     --header 'accept: text/csv' \
+     --header 'authorization: Bearer sdr2324234'
+
+
+     https://github.com/Gurubagus/Appsflyer_to_BigQuery/blob/master/MSTR_Appsflyer_to_BQ.py
+
+
+     https://github.com/Reddoorz-Enterprise/tap-appsflyer/tree/main

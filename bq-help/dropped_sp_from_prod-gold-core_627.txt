@@ -1,0 +1,100 @@
+CREATE OR REPLACE PROCEDURE `prod-gold-core.im_web_analytics.usp_get_ga4_session_activity_current_purchase`(varDaysBack INT64)
+begin
+     select distinct
+      
+        'G-LKF1EKZHXE' as measurement_id, a.user_pseudo_id as client_id, a.event_name,
+      
+        a.tracking_token as tracking_token,
+      
+        b.TokenSetName as token_name,
+      
+        b.CampaignName as campaign_name,
+      
+        b.campaigntype as campaign_type,
+      
+        b.description as description,
+      
+        b.internallocation as internal_location
+      
+      from `prod-gold-core.im_web_analytics.vw_ga4_session_activity_current` a
+      
+      left outer join `pch-app-2014.TrackingTokens.TrackingTokens` b
+      
+        on upper(a.tracking_token) = upper(b.trackingtoken)
+      
+      where a.event_name = 'purchase' 
+      
+        and a.event_dt >= current_date()-varDaysBack
+      
+  and a.event_dt < current_date();
+  end;
+
+
+
+  CREATE OR REPLACE FUNCTION `prod-gold-core.analytics_online_auxiliary.get_gmt_online_ptp_score_run_time`(dt STRING, gmt STRING) AS (
+(
+    SELECT
+      STRUCT(final.global_member_token,
+        final.score_no,
+        final.ecomm_score_type_id,
+        scrgrpcrt.score_type_cd,
+        scrgrpcrt.score_type_nm,
+        scrgrpcrt.scrgrp_cd,
+        scrgrpcrt.scrgrp_cd_desc,
+        final.effective_ts,
+        final.last_modified_ts,
+        final.effective_dt) AS online_event_scores
+    FROM (
+      SELECT
+        final_inter.global_member_token,
+        final_inter.score_no,
+        final_inter.ecomm_score_type_id,
+        final_inter.effective_ts,
+        final_inter.last_modified_ts,
+        final_inter.effective_dt
+      FROM (
+        SELECT
+          online_score_modified.global_member_token,
+          online_score_modified.score_type_priority_no,
+          online_score_modified.score_no,
+          online_score_modified.effective_ts,
+          online_score_modified.effective_dt,
+          online_score_modified.last_modified_ts,
+          online_score_modified.ecomm_score_type_id,
+          RANK() OVER(PARTITION BY online_score_modified.global_member_token ORDER BY online_score_modified.score_type_priority_no DESC, online_score_modified.effective_ts DESC) AS RANK
+        FROM (
+          SELECT
+            DISTINCT online_event_scores.global_member_token,
+            online_event_scores.score_type_priority_no,
+            online_event_scores.score_no,
+            online_event_scores.effective_ts,
+            online_event_scores.effective_dt,
+            online_event_scores.last_modified_ts,
+            online_event_scores.ecomm_score_type_id
+          FROM
+            `uat-gold-core.it_online_auxiliary.online_event_scores` online_event_scores
+          WHERE
+            effective_dt <= dt
+            AND online_event_scores.global_member_token=gmt ) online_score_modified ) final_inter
+      WHERE
+        final_inter.RANK=1 ) final
+    LEFT JOIN
+      `uat-gold-core.it_online_auxiliary.vw_ptp_scrgrpmapping` scrgrpcrt
+    ON
+      (final.ecomm_score_type_id=scrgrpcrt.ecomm_score_type_id
+        AND SAFE_CAST(concat(dt,' 00:00:00.09') as timestamp) >= SAFE_CAST(scrgrpcrt.scrgrpcrtstartdate as timestamp)
+        AND SAFE_CAST(concat(dt,' 23:59:59.999') as timestamp)  < coalesce(SAFE_CAST(scrgrpcrt.scrgrpcrtenddate as timestamp),CURRENT_TIMESTAMP)   
+        AND final.score_no >= scrgrpcrt.scrgrpcrtscoremin
+        AND final.score_no <= scrgrpcrt.scrgrpcrtscoremax)
+    GROUP BY
+      final.global_member_token,
+      final.score_no,
+      final.ecomm_score_type_id,
+      scrgrpcrt.score_type_cd,
+      scrgrpcrt.score_type_nm,
+      scrgrpcrt.scrgrp_cd,
+      scrgrpcrt.scrgrp_cd_desc,
+      final.effective_ts,
+      final.last_modified_ts,
+      final.effective_dt)
+);

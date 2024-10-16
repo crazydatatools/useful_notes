@@ -1,0 +1,179 @@
+   SELECT
+  a.table_database,
+  a.table_schema,
+  a.table_name,
+  a.column_name,
+ a.column_index,
+  --a.is_nullable,
+  a.column_type,
+  a.stats__partitioning_type__value,
+  a.stats__clustering_fields__value,
+  DATE(a.load_date) load_dt,
+  DATE(b.creation_time) creation_time,
+  DATE(b.last_modified_time) last_modified_time,
+  b.total_rows,
+  b.size_mb  
+FROM
+  `gpcadmin.MetadataStore.all_projects_bq_objects_complete_stats` a
+LEFT JOIN
+  `gpcadmin.MetadataStore.all_projects_bq_tables_info` b
+ON
+  a.table_database=b.project_id
+  AND a.table_schema=b.dataset_id
+  AND a.table_name=b.table_id
+ AND a.load_date = b.load_date 
+WHERE  
+   a.load_date='2023-06-29' and ((REGEXP_CONTAINS(LOWER(a.column_name), r'(?i)pch_inbound_id|pch_outbound_id|match_level_flag|individual_id|household_id|residence_id|au002|au003|au004|au005|au006|au007|au008|au013|au014|au017|au018|au020|au026|au029|au02b|au02c|au02d|au02e|bb002|bb423|bb424|bb425|bb426|bb430|df001|df002|df003|df004|df005|df006|df007|df008|df009|df010|ds713|ds751|ds766|ds767|ds769|ds770|ds778|ds784|ds786|ds910|ds911|ds912|ds913|ds918n|ds918s|ds927|ds928|ds929|ds932|ds943|ds944|ds945|ds948|ds950|ds951|ds952|ds953|ds954|ds955|ds956|ds957|ds958|ds959|ds960|ds961|ds962|ds963|ds964|ds965|ds966|ds967|ds968|ds969|ds970|ds971|ds972|ds973|ds974|ds975|ds976|ds977|ds978|ds979|ds980|ds981|ds982|ds983|ds984|ds985|ds986|ds987|ds988|ds989|et002|et003|et004|et005|et006|et007|et012|et013|et014|et015|et016|et017|et022|et023|et024|et025|et026|et027|et032|et033|et034|et035|et036|et037|et042|et043|et044|et045|et046|et047|md001|md002|md003|md004|md006|md007|md008|md013|md014|md018|md019|md020|md021|md024|md027|md028|md029|md030|md031|md044|md051|me001|me002|mr049|mr052|mr053|mr054|ms013|ms014|ms015|ms018|ms020|ms052|ms053|ms054|ms056|ms061|ms073|ms074|ms075|ms078|ms079|ms080|ms112|ms113|ms114|ms116|ms120|ms121|ms126|ms127|ms133|ms134|ms135|ms138|ms139|ms140|ms172|ms173|ms174|ms176|ms180|ms181|ms186|ms187|ms193|ms194|ms195|ms198|ms199|ms200|ms232|ms233|ms234|ms236|ms240|ms241|ms246|ms247|ms253|ms254|ms255|ms258|ms259|ms260|ms292|ms293|ms294|ms296|ms300|ms301|ms306|ms307|ms402|ms403|ms404|ms405|ms406|ms407|ms408|ms410|ms414|ms415|ms457|ms458|ms474|ms475|ms476|ms496|ms511|ms515|ms517|ms518|ms519|ms520|ms527|ms528|ms529|ms530|ms531|ms532|ms533|ms534|ms535|ms536|ms537|ms538|ms539|ms540|ms541|ms542|ms543|ms544|ms545|ms546|ms547|ms548|ms549|ms550|ms551|ms703|ms709|ms754|ms758|ms760|ms764|ms765|ms920|ms923|ms924|ms947|ms957|msc71|mse71|msg71|msi71|mt001|mt002|mt003|mt005|mt006|mt007|mt008|mt010|mt011|mt012|mt014|mt018|mt021|mt022|mt023|mt024|mt025|mt026|mt027|mt028|mt029|mt030|mt031|mt032|mt033|mt034|mt035|mt036|mt037|mt038|mt039|mt040|mt041|mt042|mt043|mt044|mt045|mt046|mt047|mt048|mt049|mt050|mv001|mv002|mv003|mv005|mv006|mv007|mv008|mv010|mv011|mv012|mv014|mv018|mv021|mv022|mv023|mv024|mv025|mv026|mv027|mv028|mv029|mv030|mv031|mv032|mv033|mv034|mv035|mv036|mv037|mv038|mv039|mv040|mv041|mv042|mv043|mv044|mv045|mv046|mv047|mv048|mv049|mv050|vw045|vw048|vw087|vw090|vw102|vw104|vw105|vw106|vw107|vw111|vw112|vw113|vw114|vw115|vw116|vw117|vw118|vw119|vw125|vw126|vw129|vw132|vw137|vw138|vw139|vw142|vw143|vw144|vw145|vw148|vw149|vw150|vw156|vw165|vw167|vw168|vw169|vw189|vw193|vw194|vw203|vw204|vw207|vw214|vw215|vw217|vw220|vw223|vw226|vw231|vw232|vw237|vw239|vw241|vw242|vw244|vw246|vw249|vw256|vw259|vw263|vw264|vw265|vw266|vw271|vw272|vw503|vw504|vw508|vw509|vw510|vw511|vw512|vw513|vw514|vw516|vw517|vw518|vw531|vw532|vw533|vw534|vw535|vw536|vw537|vw538|vw539|vw540|vw541|vw542|vw543|vw544|vw545|vw547|vw548|vw551|vw552|vw553|vw554|vw556|vw557|xb001|xb006|xb009|xb010|xb011|xb012|xb015|xb016|xb017|xb018|xb019|xb020|xb021|xb025|xb026|xb027|xb028|xb029|xb030|xb031|xb032|xb033|xb034|xb044|xb058|xb107|xb108|xb806|xb807|xb808|xb809|xb810|xb811|xb813|xb831|xb837|xb875|xb876|xb951|xb952|xb962|xb974|xb977|xb999|xm907|merkle|merkel|mkl|mercle|mkrl|mkle|mrkl|mercel|markle|merkl|mrkel|merkl')) or
+      (REGEXP_CONTAINS(LOWER(a.table_schema), r'(?i)pch_inbound_id|pch_outbound_id|match_level_flag|individual_id|household_id|residence_id|au002|au003|au004|au005|au006|au007|au008|au013|au014|au017|au018|au020|au026|au029|au02b|au02c|au02d|au02e|bb002|bb423|bb424|bb425|bb426|bb430|df001|df002|df003|df004|df005|df006|df007|df008|df009|df010|ds713|ds751|ds766|ds767|ds769|ds770|ds778|ds784|ds786|ds910|ds911|ds912|ds913|ds918n|ds918s|ds927|ds928|ds929|ds932|ds943|ds944|ds945|ds948|ds950|ds951|ds952|ds953|ds954|ds955|ds956|ds957|ds958|ds959|ds960|ds961|ds962|ds963|ds964|ds965|ds966|ds967|ds968|ds969|ds970|ds971|ds972|ds973|ds974|ds975|ds976|ds977|ds978|ds979|ds980|ds981|ds982|ds983|ds984|ds985|ds986|ds987|ds988|ds989|et002|et003|et004|et005|et006|et007|et012|et013|et014|et015|et016|et017|et022|et023|et024|et025|et026|et027|et032|et033|et034|et035|et036|et037|et042|et043|et044|et045|et046|et047|md001|md002|md003|md004|md006|md007|md008|md013|md014|md018|md019|md020|md021|md024|md027|md028|md029|md030|md031|md044|md051|me001|me002|mr049|mr052|mr053|mr054|ms013|ms014|ms015|ms018|ms020|ms052|ms053|ms054|ms056|ms061|ms073|ms074|ms075|ms078|ms079|ms080|ms112|ms113|ms114|ms116|ms120|ms121|ms126|ms127|ms133|ms134|ms135|ms138|ms139|ms140|ms172|ms173|ms174|ms176|ms180|ms181|ms186|ms187|ms193|ms194|ms195|ms198|ms199|ms200|ms232|ms233|ms234|ms236|ms240|ms241|ms246|ms247|ms253|ms254|ms255|ms258|ms259|ms260|ms292|ms293|ms294|ms296|ms300|ms301|ms306|ms307|ms402|ms403|ms404|ms405|ms406|ms407|ms408|ms410|ms414|ms415|ms457|ms458|ms474|ms475|ms476|ms496|ms511|ms515|ms517|ms518|ms519|ms520|ms527|ms528|ms529|ms530|ms531|ms532|ms533|ms534|ms535|ms536|ms537|ms538|ms539|ms540|ms541|ms542|ms543|ms544|ms545|ms546|ms547|ms548|ms549|ms550|ms551|ms703|ms709|ms754|ms758|ms760|ms764|ms765|ms920|ms923|ms924|ms947|ms957|msc71|mse71|msg71|msi71|mt001|mt002|mt003|mt005|mt006|mt007|mt008|mt010|mt011|mt012|mt014|mt018|mt021|mt022|mt023|mt024|mt025|mt026|mt027|mt028|mt029|mt030|mt031|mt032|mt033|mt034|mt035|mt036|mt037|mt038|mt039|mt040|mt041|mt042|mt043|mt044|mt045|mt046|mt047|mt048|mt049|mt050|mv001|mv002|mv003|mv005|mv006|mv007|mv008|mv010|mv011|mv012|mv014|mv018|mv021|mv022|mv023|mv024|mv025|mv026|mv027|mv028|mv029|mv030|mv031|mv032|mv033|mv034|mv035|mv036|mv037|mv038|mv039|mv040|mv041|mv042|mv043|mv044|mv045|mv046|mv047|mv048|mv049|mv050|vw045|vw048|vw087|vw090|vw102|vw104|vw105|vw106|vw107|vw111|vw112|vw113|vw114|vw115|vw116|vw117|vw118|vw119|vw125|vw126|vw129|vw132|vw137|vw138|vw139|vw142|vw143|vw144|vw145|vw148|vw149|vw150|vw156|vw165|vw167|vw168|vw169|vw189|vw193|vw194|vw203|vw204|vw207|vw214|vw215|vw217|vw220|vw223|vw226|vw231|vw232|vw237|vw239|vw241|vw242|vw244|vw246|vw249|vw256|vw259|vw263|vw264|vw265|vw266|vw271|vw272|vw503|vw504|vw508|vw509|vw510|vw511|vw512|vw513|vw514|vw516|vw517|vw518|vw531|vw532|vw533|vw534|vw535|vw536|vw537|vw538|vw539|vw540|vw541|vw542|vw543|vw544|vw545|vw547|vw548|vw551|vw552|vw553|vw554|vw556|vw557|xb001|xb006|xb009|xb010|xb011|xb012|xb015|xb016|xb017|xb018|xb019|xb020|xb021|xb025|xb026|xb027|xb028|xb029|xb030|xb031|xb032|xb033|xb034|xb044|xb058|xb107|xb108|xb806|xb807|xb808|xb809|xb810|xb811|xb813|xb831|xb837|xb875|xb876|xb951|xb952|xb962|xb974|xb977|xb999|xm907|merkle|merkel|mkl|mercle|mkrl|mkle|mrkl|mercel|markle|merkl|mrkel|merkl')))
+  AND NOT (REGEXP_CONTAINS(LOWER(a.column_name), r'(?i)TimeID'))
+
+  --DOB
+
+     SELECT
+  a.table_database,
+  a.table_schema,
+  a.table_name,
+  a.column_name,
+ a.column_index,
+  --a.is_nullable,
+  a.column_type,
+  a.stats__partitioning_type__value
+,
+  a.stats__clustering_fields__value,
+  DATE(a.load_date) load_dt,
+  DATE(b.creation_time) creation_time,
+  DATE(b.last_modified_time) last_modified_time,
+  b.total_rows,
+  b.size_mb  
+FROM
+  `gpcadmin.MetadataStore.all_projects_bq_objects_complete_stats` a
+LEFT JOIN
+  `gpcadmin.MetadataStore.all_projects_bq_tables_info` b
+ON
+  a.table_database=b.project_id
+  AND a.table_schema=b.dataset_id
+  AND a.table_name=b.table_id
+ AND a.load_date = b.load_date 
+WHERE  
+   a.load_date='2023-06-29'   AND (REGEXP_CONTAINS(LOWER(a.column_name), r'(?i)screen|screen name|dob|date-of-birth|birth|DateOfBirth|birth_dt'))
+  AND 
+  NOT (REGEXP_CONTAINS(LOWER(a.column_name), r'(?i)Page|UserAgentID|Agent|grpS|messageid|message|language|percentage|package|AgeRange|Age_Range|image|Evergag|management|_Age|Age_'))
+
+  DEvice
+
+     SELECT
+  a.table_database,
+  a.table_schema,
+  a.table_name,
+  a.column_name,
+ a.column_index,
+a.table_type,
+  a.column_type,
+  a.stats__partitioning_type__value
+,
+  a.stats__clustering_fields__value,
+  DATE(a.load_date) load_dt,
+  DATE(b.creation_time) creation_time,
+  DATE(b.last_modified_time) last_modified_time,
+  b.total_rows,
+  b.size_mb  
+FROM
+  `gpcadmin.MetadataStore.all_projects_bq_objects_complete_stats` a
+LEFT JOIN
+  `gpcadmin.MetadataStore.all_projects_bq_tables_info` b
+ON
+  a.table_database=b.project_id
+  AND a.table_schema=b.dataset_id
+  AND a.table_name=b.table_id
+ AND a.load_date = b.load_date 
+WHERE  
+   a.load_date='2023-06-29'     AND (REGEXP_CONTAINS(LOWER(a.column_name), r'(?i)maid|idfa|idfv|advertising|advert|adnroid|meid|maid|gaid|gbq|aaid'))
+  AND NOT (REGEXP_CONTAINS(LOWER(a.column_name), r'(?i)TimeID'))
+
+  -IP
+     SELECT
+  a.table_database,
+  a.table_schema,
+  a.table_name,
+  a.column_name,
+ a.column_index,
+a.table_type,
+  a.column_type,
+  a.stats__partitioning_type__value
+,
+  a.stats__clustering_fields__value,
+  DATE(a.load_date) load_dt,
+  DATE(b.creation_time) creation_time,
+  DATE(b.last_modified_time) last_modified_time,
+  b.total_rows,
+  b.size_mb  
+FROM
+  `gpcadmin.MetadataStore.all_projects_bq_objects_complete_stats` a
+LEFT JOIN
+  `gpcadmin.MetadataStore.all_projects_bq_tables_info` b
+ON
+  a.table_database=b.project_id
+  AND a.table_schema=b.dataset_id
+  AND a.table_name=b.table_id
+ AND a.load_date = b.load_date 
+WHERE  
+   a.load_date='2023-06-29'    AND (REGEXP_CONTAINS(LOWER(a.column_name), r'(?i)client_ip|clientip|ip_address|sub_ip_addr|conv_ipaddress|conv_ip_address|client_ip_address|client_ipaddress|source_ipaddress|client|address|add|addr'))
+  AND NOT (REGEXP_CONTAINS(LOWER(a.column_name), r'(?i)addaggmargin|LoadDate|AddAggMarin|f_clientType|AddAggMarin|BillingAddressID|SegmentLoadDate|Online_max_address_startDate|_startDate|AddAggMarin|table_loaddate|LoadDate|total_client_entrants|Cust_Add_Dt|AddAggREV|IsAdDisplayed|ProductAdd|AddtoCart|UserAgent|addressid|dateadded|add_dt|protopayload|ADDRESSSTATUS|DeviceType|addback|is_primary_addr_present_ind|discret|is_sso_address_present_ind|_cd|_id|ds_|length|ge_tmp|_ts'))
+
+
+   SELECT
+  a.table_database,
+  a.table_schema,
+  a.table_name,
+  a.column_name,
+ a.column_index,
+a.table_type,
+  a.column_type,
+  a.stats__partitioning_type__value
+,
+  a.stats__clustering_fields__value,
+  DATE(a.load_date) load_dt,
+  DATE(b.creation_time) creation_time,
+  DATE(b.last_modified_time) last_modified_time,
+  b.total_rows,
+  b.size_mb  
+FROM
+  `gpcadmin.MetadataStore.all_projects_bq_objects_complete_stats` a
+LEFT JOIN
+  `gpcadmin.MetadataStore.all_projects_bq_tables_info` b
+ON
+  a.table_database=b.project_id
+  AND a.table_schema=b.dataset_id
+  AND a.table_name=b.table_id
+ AND a.load_date = b.load_date 
+WHERE  
+   a.load_date='2023-06-29'     AND (REGEXP_CONTAINS(LOWER(a.column_name), r'(?i)emailmd5_hash|email_deployment_vendor_md5_cd|orig_email_deployment_vendor_md5|last_email_deployment_vendor_md5|ref_md5|ref_2_md5|email_md5_hash| email_md5_hash_cd|total_email_md5|total_uq_email_md5|orig_email_deployment_vendor_md5|email|md5|sha|256'))
+  AND NOT (REGEXP_CONTAINS(LOWER(a.column_name), r'(?i)memberemailid|MemberEmailID|email_campaign_deployment_date|email_deployment_vendor_md5|email_deployment_date|email_event_dt|hash|email_deployment_vendor_id|EmailDomain|email_domain|EmailDateCreated|_count|_sum|_ind|module_id|EmailStatusCode|protopayload_auditlog|Source_EmailVendorId|IsHandRaiserInd|email_click|email_send|EmailCampaignID'))
+
+   SELECT
+  a.table_database,
+  a.table_schema,
+  a.table_name,
+ -- a.column_name,
+ --a.column_index,
+  --a.is_nullable,
+ a.table_type,
+  a.stats__partitioning_type__value,
+  a.stats__clustering_fields__value,
+  DATE(a.load_date) load_dt,
+  DATE(b.creation_time) creation_time,
+  DATE(b.last_modified_time) last_modified_time,
+  b.total_rows,
+  b.size_mb  
+FROM
+  `gpcadmin.MetadataStore.all_projects_bq_objects_complete_stats` a
+LEFT JOIN
+  `gpcadmin.MetadataStore.all_projects_bq_tables_info` b
+ON
+  a.table_database=b.project_id
+  AND a.table_schema=b.dataset_id
+  AND a.table_name=b.table_id
+ AND a.load_date = b.load_date 
+WHERE  
+   a.load_date='2023-06-29' and a.table_database='compact-medium-798'
+   group by 1,2,3,4,5,6,7,8,9,10,11

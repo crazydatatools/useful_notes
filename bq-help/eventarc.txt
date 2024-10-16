@@ -1,0 +1,56 @@
+svc-prod-finops@gpcadmin.iam.gserviceaccount.com
+
+
+gcloud config set project gpcadmin
+PROJECT_ID=$(gcloud config get-value project)
+
+gcloud services enable run.googleapis.com
+gcloud services enable eventarc.googleapis.com
+gcloud services enable cloudbuild.googleapis.com
+
+REGION=us-central1
+
+gcloud config set run/platform managed
+gcloud config set run/region $REGION
+gcloud config set eventarc/location $REGION
+
+PROJECT_NUMBER="$(gcloud projects describe $(gcloud config get-value project) --format='value(projectNumber)')"
+
+gcloud projects add-iam-policy-binding $(gcloud config get-value project) \
+    --member=serviceAccount:svc-prod-finops@gpcadmin.iam.gserviceaccount.com \
+    --role='roles/eventarc.eventReceiver'
+
+
+gcloud run deploy $SERVICE_NAME \
+  --image gcr.io/$PROJECT_ID/$SERVICE_NAME \
+  --allow-unauthenticated \
+  --update-env-vars TO_EMAILS=$TO_EMAILS \
+  --service-account=svc-prod-finops@gpcadmin.iam.gserviceaccount.com --location=us-central1
+
+  gcloud eventarc triggers create $SERVICE_NAME-trigger \
+  --destination-run-service=$SERVICE_NAME \
+  --destination-run-region=$REGION \
+  --event-filters="type=google.cloud.audit.log.v1.written" \
+  --event-filters="serviceName=bigquery.googleapis.com" \
+  --event-filters="methodName=jobservice.jobcompleted" \
+  --service-account=svc-prod-finops@gpcadmin.iam.gserviceaccount.com --location=us-central1
+
+  curl -X POST \
+    -H "content-type: application/json"  \
+    -H "ce-specversion: 1.0"  \
+    -H "ce-source: curl-command"  \
+    -H "ce-type: curl.demo"  \
+    -H "ce-id: 123-abc"  \
+    -d @event_data.json \
+ https://bigquery-usage-notifier-t4nfi65pvq-uc.a.run.app/ -v
+
+gcloud beta eventarc attributes types list
+
+ gcloud beta eventarc attributes method-names list --type=google.cloud.audit.log.v1.written --service-name=bigquery.googleapis.com
+
+ TOPIC_ID=$(gcloud eventarc triggers describe $SERVICE_NAME-trigger --location $REGION --format='value(transport.pubsub.topic)')
+
+gcloud eventarc providers list --location=us-central1
+ gcloud eventarc providers list --name=bigquery.googleapis.com
+
+

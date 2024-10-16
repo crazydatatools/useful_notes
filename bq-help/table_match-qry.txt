@@ -1,0 +1,63 @@
+SELECT projectId,user,runQuery ,jobBillDate,sum(totalBilledGigabytes) totalBilledGigabytes,count(jobId) jobId_cnt FROM `gpcadmin.bq_cost_analysis.mw_prevday_bqcost_per_user_v2` where (runQuery like '%pch-app-2014.SubscriberAddresses.SubscriberAddressMatchcodeHistory%' or runQuery like '%pch-app-2014.SubscriberAddresses.SubscriberMatchCodeHistory%'
+or upper(runQuery) like '%TNBMTCH%'
+or upper(runQuery) like '%TDMMTCH%'
+or upper(runQuery) like '%TDMCONS%')
+and jobBillDate >= date_sub(current_date(),  INTERVAL 30 DAY)
+group by 1,2,3,4
+
+SELECT projectId,user,runQuery ,jobBillDate,sum(totalBilledGigabytes) totalBilledGigabytes,count(jobId) jobId_cnt FROM `gpcadmin.bq_cost_analysis.mw_prevday_bqcost_per_user_v2` where (runQuery like '%favorable-bison-88614.Revant%' )
+and jobBillDate >= date_sub(current_date(),  INTERVAL 60 DAY)
+group by 1,2,3,4
+svc-prod-nexus-elt-bigdata@prod-gold-core.iam.gserviceaccount.com
+
+select * from gpcadmin.MetadataStore.all_projects_bq_objects_complete_stats_v2 where load_date='2024-06-21'
+and (lower(column_name) like '%winner%' or lower(column_name) like '%price%' or lower(column_name) like '%prize%' or lower(column_name) like '%cashprize_amount%' or lower(column_name) like '%cashprize%' ) or (table_name like '%winner%' or lower(table_name) like '%prize%')
+
+
+
+select table_database,
+table_schema,
+table_name,
+table_type,ARRAY_TO_STRING(ARRAY_AGG(column_name),',') column_name_list, max(stats__date_shards__value) is_sharded,
+max(stats__date_shard_min__value) shard_min,max(stats__date_shard_max__value) shard_max, max(stats__num_rows__value) no_rows,max(stats__num_bytes_gb__value) data_size, max(stats__partitioning_type__value) is_partition,max(stats__clustering_fields__value) is_clustering,max(creation_time) creation_time, max(last_modified_time) last_modified_time
+from `gpcadmin.MetadataStore.all_projects_bq_objects_complete_stats_v2`  where load_date="2024-06-21" and table_type='table' 
+and (lower(column_name) like '%winner%' or lower(column_name) like '%price%' or lower(column_name) like '%prize%' or lower(column_name) like '%cashprize_amount%' or lower(column_name) like '%cashprize%' ) or (table_name like '%winner%' or lower(table_name) like '%prize%')
+group by 1,2,3,4
+
+
+select * from (
+SELECT projectId,user,runQuery ,jobBillDate,'SubscriberAddressMatchcodeHistory' object_name_match, sum(totalBilledGigabytes) totalBilledGigabytes,count(jobId) jobId_cnt FROM `gpcadmin.bq_cost_analysis.mw_prevday_bqcost_per_user_v2` where (runQuery like '%pch-app-2014.SubscriberAddresses.SubscriberAddressMatchcodeHistory%')
+and jobBillDate >= date_sub(current_date(),  INTERVAL 30 DAY)
+group by 1,2,3,4,5
+union all
+SELECT projectId,user,runQuery ,jobBillDate,'SubscriberMatchCodeHistory' object_name_match,sum(totalBilledGigabytes) totalBilledGigabytes,count(jobId) jobId_cnt FROM `gpcadmin.bq_cost_analysis.mw_prevday_bqcost_per_user_v2` where (runQuery like '%pch-app-2014.SubscriberAddresses.SubscriberMatchCodeHistory%'
+)
+and jobBillDate >= date_sub(current_date(),  INTERVAL 30 DAY)
+group by 1,2,3,4,5
+union all
+SELECT projectId,user,runQuery ,jobBillDate,'TNBMTCH' object_name_match,sum(totalBilledGigabytes) totalBilledGigabytes,count(jobId) jobId_cnt FROM `gpcadmin.bq_cost_analysis.mw_prevday_bqcost_per_user_v2` where (upper(runQuery) like '%TNBMTCH%')
+and jobBillDate >= date_sub(current_date(),  INTERVAL 30 DAY)
+group by 1,2,3,4,5
+union all
+SELECT projectId,user,runQuery ,jobBillDate,'TDMMTCH' object_name_match,sum(totalBilledGigabytes) totalBilledGigabytes,count(jobId) jobId_cnt FROM `gpcadmin.bq_cost_analysis.mw_prevday_bqcost_per_user_v2` where (upper(runQuery) like '%TDMMTCH%')
+and jobBillDate >= date_sub(current_date(),  INTERVAL 30 DAY)
+group by 1,2,3,4
+union all
+SELECT projectId,user,runQuery ,jobBillDate,'TDMCONS' object_name_match, sum(totalBilledGigabytes) totalBilledGigabytes,count(jobId) jobId_cnt FROM `gpcadmin.bq_cost_analysis.mw_prevday_bqcost_per_user_v2` where (upper(runQuery) like '%TDMCONS%')
+and jobBillDate >= date_sub(current_date(),  INTERVAL 30 DAY)
+group by 1,2,3,4,5
+)
+
+select * from ( 
+SELECT projectId,user,runQuery,
+case when REGEXP_CONTAINS(upper(runQuery),r'%TNBMTCH%') then 1 else 0 end TNBMTCH_Flag,
+case when REGEXP_CONTAINS(upper(runQuery),r'%TDMMTCH%') then 1 else 0 end TDMMTCH_Flag,
+case when REGEXP_CONTAINS(upper(runQuery),r'%TDMCONS%') then 1 else 0 end TDMCONS_Flag,
+case when REGEXP_CONTAINS(upper(runQuery),r'%pch-app-2014.SubscriberAddresses.SubscriberAddressMatchcodeHistory%') then 1 else 0 end SubscriberAddressMatchcodeHistory_Flag,
+case when REGEXP_CONTAINS(upper(runQuery),r'%pch-app-2014.SubscriberAddresses.SubscriberMatchCodeHistory%') then 1 else 0 end SubscriberMatchCodeHistory_Flag
+ ,jobBillDate,sum(totalBilledGigabytes) totalBilledGigabytes,count(jobId) jobId_cnt FROM `gpcadmin.bq_cost_analysis.mw_prevday_bqcost_per_user_v2` where (runQuery like '%pch-app-2014.SubscriberAddresses.SubscriberAddressMatchcodeHistory%' or runQuery like '%pch-app-2014.SubscriberAddresses.SubscriberMatchCodeHistory%'
+or upper(runQuery) like '%TNBMTCH%'
+or upper(runQuery) like '%TDMMTCH%'
+or upper(runQuery) like '%TDMCONS%')
+and jobBillDate >= date_sub(current_date(),  INTERVAL 30 DAY) and projectId<>'gpcadmin'
+group by 1,2,3,4,5,6,7,8,9) 

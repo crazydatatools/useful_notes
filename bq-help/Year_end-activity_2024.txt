@@ -1,0 +1,21 @@
+  bq update --require_partition_filter prod-gold-core:it_dms_flat_variables.dmsm10_dmdo002_2024
+
+  bq show --schema --format=prettyjson it_dms_flat_variables.dmsm10_dmdo002_2023 >> dmsm10_dmdo002_2023.json
+
+      bq mk --time_partitioning_type=DAY \
+ --time_partitioning_field=selection_date \
+ --clustering_fields=orig_cust_id \
+ prod-gold-core:it_dms_flat_variables.dmsm10_dmdo002_2024 ./dmsm10_dmdo002_2023.json
+
+
+rl_app3_seg4_me3_tot10
+
+
+  bq show --schema --format=prettyjson it_dms_fullscores.dms_fullscores_2023 >> dms_fullscores_2023.json
+
+        bq mk --time_partitioning_type=DAY \
+ --time_partitioning_field=score_date \
+ --clustering_fields=orig_cust_id \
+ prod-gold-core:it_dms_fullscores.dms_fullscores_2024 ./dms_fullscores_2023.json
+
+prod-gold-core:it_dms_fullscores.dms_fullscores_2024

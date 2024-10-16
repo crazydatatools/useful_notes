@@ -1,0 +1,44 @@
+SELECT
+REPLACE(STRING_AGG(CONCAT('"', partition_name,'"') ORDER BY partition_name ), ","," ")
+FROM 
+(
+  SELECT
+  DISTINCT date AS partition_name
+  FROM
+  `[Project_ID].[DATASET_NAME].ga_sessions_*`
+  ORDER BY PARSE_DATE(“%Y%m%d”, date)
+)
+Output:
+"20180322" "20180323" "20180324" "20180325" "20180326" "20180327"...
+
+bq cp -a source_table destination_table
+
+tables=("20180322" "20180323" "20180324" "20180325" "20180326" "20180327"…)
+for val in ${tables[*]}; do
+  bq cp -a [source_dataset].ga_sessions_$val [destination_dataset].ga_sessions_backup_$val
+done
+
+
+WITH first_ga_session AS (
+   SELECT MIN(PARSE_DATE("%Y%m%d", REGEXP_EXTRACT(table_id, '20[0–9]      
+   {6,6}'))) AS day
+   FROM `[PROJECT_ID].[DATASET_NAME].__TABLES__` AS ga_tables
+   WHERE table_id LIKE 'ga_sessions_backup_2%'
+),
+all_days AS (
+   SELECT period
+   FROM 
+   UNNEST(GENERATE_DATE_ARRAY((SELECT day from first_ga_session),              
+   CURRENT_DATE())) AS period
+),
+available_ga_sessions AS (
+   SELECT PARSE_DATE("%Y%m%d", REGEXP_EXTRACT(table_id, '20[0–9]
+   {6,6}')) AS ga_day
+   FROM `[PROJECT_ID].[DATASET_NAME].__TABLES__` AS ga_tables
+   WHERE table_id LIKE 'ga_sessions_backup_2%'
+)
+SELECT A.period AS Day, B.ga_day AS Available_session
+FROM all_days A
+LEFT JOIN available_ga_sessions B
+ON A.period = B.ga_day
+WHERE B.ga_day IS NULL

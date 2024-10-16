@@ -1,0 +1,7 @@
+[11:28 AM] Basa, Prashant
+
+call `uat-gold-core.it_cm_off_elt_com_recon.sp_dms_customer_snapshot_phase1`('prod-analytics-datasci','snap_dms_customer_20230624')
+
+[11:29 AM] Basa, Prashant
+
+on Saturday evening around 5PM or 6PM est hours

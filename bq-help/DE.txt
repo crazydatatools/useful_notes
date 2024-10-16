@@ -1,0 +1,46 @@
+Principal Software Engineer - Data Platforms
+San Mateo, CA, United States
+JOB DESCRIPTION
+?The Data Platforms organization at Fanatics is at the heart of our company's data-driven decision making, building the foundational infrastructure that empowers our data engineers and ML engineers to unlock the power of data. We work on exciting projects across a diverse landscape, including: 
+
+Storage Infrastructure: Building and managing scalable and reliable data storage solutions. 
+Streaming Data Processing Engines: Handling real-time data pipelines with high throughput and low latency. 
+Data Orchestration Engines: Coordinating complex data processing workflows with efficiency and reliability. 
+Messaging Infrastructure: Ensuring secure and efficient communication between data systems. 
+Big Data Processing Engines: Analyzing massive datasets with speed and accuracy. 
+Data Warehouse: Providing a centralized and accessible repository for historical data. 
+Real Time OLAP Databases: Enabling fast and interactive data analysis for insights on the fly. 
+AI & ML Platforms: Building and maintaining a robust platform that supports the development and deployment of impactful ML models. 
+The Opportunity:
+
+We are seeking a passionate and experienced Principal Engineer to play a key role in shaping the future of our data platforms at Fanatics. As a technical leader in the organization, you will be responsible for driving technical innovation, leading large initiatives, and mentoring junior engineers. You will have the opportunity to contribute to building scalable solutions that will empower our entire company to make data-driven decisions. 
+
+Responsibilities:
+
+Design and drive the technical roadmap for the evolution of our data platforms, ensuring they are scalable, reliable, and meet the evolving needs of the business.
+Lead large initiatives within the Data Platforms organization, collaborating effectively with cross-functional teams including data engineering, ML engineering, and product management. 
+Provide mentorship and guidance to junior engineers, fostering their growth and development within the team. 
+Build data platforms that promote standardization, including data pipeline development, platform tooling, data lake formatting, and data democratization. 
+Lead the development and implementation of a shared AI/ML infrastructure platform, accelerating the adoption and deployment of impactful ML models across the company. 
+Build and maintain the AI/ML infrastructure to support Fanatics' AI/ML needs, with a focus on standardized MLOps practices. 
+Champion data governance best practices, establishing and enforcing data processing principles, design patterns, and practices. 
+Build strong cross-functional partnerships with data teams across the organization, influencing them to adopt best practices and collaborate effectively.
+Qualifications:
+
+10+ years of experience leading the development of modern data architecture, analytics, data governance, AI/ML, or related areas. 
+Strong expertise in the big data ecosystem, including tools like Kafka, Spark, Apache Iceberg, Airflow, S3, data modeling, data warehouses, OLAP databases, etc.
+Proven experience in data processing, orchestration, data engineering, and AI/ML domains. 
+Excellent communication skills, with the ability to collaborate effectively across teams and provide clear and concise technical guidance. 
+Experience with AI/ML platforms and a working knowledge of how data scientists leverage data for AI is a strong plus.
+ 
+
+The expected salary range for this role is $225,000 - $285,000. This is based on job-related knowledge, skills, and experience. This role is also eligible for the Fanatics Commerce annual bonus program and an equity award. This salary range is listed in USD and will be determined in part by a successful candidate’s geographic location.
+
+ABOUT US
+Fanatics is building a leading global digital sports platform. The company ignites the passions of global sports fans and maximizes the presence and reach for hundreds of sports partners globally by offering innovative products and services across Fanatics Commerce, Fanatics Collectibles, and Fanatics Betting & Gaming, allowing sports fans to Buy, Collect and Bet. Through the Fanatics platform, sports fans can buy licensed fan gear, jerseys, lifestyle and streetwear products, headwear, and hardgoods; collect physical and digital trading cards, sports memorabilia, and other digital assets; and bet as the company builds its Sportsbook and iGaming platform. Fanatics has an established database of over 100 million global sports fans, a global partner network with over 900 sports properties, including major national and international professional sports leagues, teams, players associations, athletes, celebrities, colleges, and college conferences, and over 2,000 retail locations, including its Lids retail business stores.  
+
+As a market leader with more than 18,000 employees, and hundreds of partners, suppliers, and vendors worldwide, we take responsibility for driving toward more ethical and sustainable practices. We are committed to building an inclusive Fanatics community, reflecting and representing society at every level of the business, including our employees, vendors, partners and fans. Fanatics is also dedicated to making a positive impact in the communities where we all live, work, and play through strategic philanthropic initiatives. 
+ABOUT THE TEAM
+Fanatics Commerce is a leading designer, manufacturer, and seller of licensed fan gear, jerseys, lifestyle and streetwear products, headwear, and hardgoods. It operates a vertically-integrated platform of digital and physical capabilities for leading sports leagues, teams, colleges, and associations globally – as well as its flagship site, www.fanatics.com. 
+
+Fanatics Commerce has a broad range of online, sports venue, and vertical apparel partnerships worldwide, including comprehensive partnerships with leading leagues, teams, colleges, and sports organizations across the world—including the NFL, NBA, MLB, NHL, MLS, Formula 1, and Australian Football League (AFL); the Dallas Cowboys, Golden State Warriors, Paris Saint-Germain, Manchester United, Chelsea FC, and Tokyo Giants; the University of Notre Dame, University of Alabama, and University of Texas; the International Olympic Committee (IOC), England Rugby, and the Union of European Football Associations (UEFA).

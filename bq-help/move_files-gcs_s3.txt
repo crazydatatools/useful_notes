@@ -1,0 +1,32 @@
+hadoop distcp -D HADOOP_OPTS=-Xmx12g -D HADOOP_CLIENT_OPTS='-Xmx12g -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=70 -XX:+CMSParallelRemarkEnabled' -D 'mapreduce.map.memory.mb=12288' -D 'mapreduce.map.java.opts=-Xmx10g' -D 'mapreduce.reduce.memory.mb=12288' -D 'mapreduce.reduce.java.opts=-Xmx10g'-overwrite -m 50 gs://bkt_prod_ds_outbound_data/aws_clean_room/09302024/* /mapr/JMAPRCLUP01.CLASSIC.PCHAD.COM/codebase/bigdata/prod/aws_bck/aws_cc_s3/
+
+
+
+hadoop distcp -D HADOOP_OPTS=-Xmx12g -D HADOOP_CLIENT_OPTS='-Xmx12g -XX:+UseParNewGC -XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=70 -XX:+CMSParallelRemarkEnabled' -D 'mapreduce.map.memory.mb=12288' -D 'mapreduce.map.java.opts=-Xmx10g' -D 'mapreduce.reduce.memory.mb=12288' -D 'mapreduce.reduce.java.opts=-Xmx10g'-overwrite -m 50 /mapr/JMAPRCLUP01.CLASSIC.PCHAD.COM/codebase/bigdata/prod/aws_bck/aws_cc_s3/* s3n://aws-data-collaboration-prod/amazon/v3/
+
+
+s3://aws-data-collaboration-prod/amazon/v3/
+
+bkt_prod_ds_outbound_data/aws_clean_room/09302024
+
+TBLPROPERTIES (
+    'skip.header.line.count'='1'
+);
+
+CREATE EXTERNAL TABLE `dc_pch_ds_amzn_v3`(
+  `publisheruserid` string COMMENT 'from deserializer', 
+  `joinid` string COMMENT 'from deserializer', 
+  `joinidtype` string COMMENT 'from deserializer', 
+  `userinterestlevel` string COMMENT 'from deserializer')
+ROW FORMAT SERDE 
+  'org.apache.hadoop.hive.serde2.OpenCSVSerde' 
+WITH SERDEPROPERTIES ( 
+  'separatorChar'=',') 
+STORED AS INPUTFORMAT 
+  'org.apache.hadoop.mapred.TextInputFormat' 
+OUTPUTFORMAT 
+  'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
+LOCATION
+  's3://aws-data-collaboration-prod/amazon/v3/'
+TBLPROPERTIES (   'skip.header.line.count'='1',
+  'classification'='csv')

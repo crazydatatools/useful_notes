@@ -1,0 +1,8 @@
+SELECT 'DROP TABLE ' || 'your_project_id.' || table_schema || '.' || table_name || ';'
+FROM `your_project_id.your_dataset.INFORMATION_SCHEMA.TABLES`
+WHERE table_name LIKE 'your_table_name_202202%'
+ORDER BY table_name ASC;
+
+https://medium.com/google-cloud/google-oauth-credential-going-deeper-the-hard-way-f403cf3edf9d
+https://github.com/googleapis/python-dataproc/blob/main/UPGRADING.md
+https://medium.com/@akhilasaineni7/triggering-google-cloud-composer-airflow-dags-via-the-rest-api-7d1c2999ac7e

@@ -1,0 +1,68 @@
+WITH
+  BQAudit AS (
+  SELECT
+    protopayload_auditlog.authenticationInfo.principalEmail,
+    protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobName.projectId,
+    protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobName.jobId,
+    protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobStatistics.createTime,
+    protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobStatistics.startTime,
+    protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobStatus.error.code AS errorCode,
+    protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobStatistics.totalProcessedBytes,
+    protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobStatistics.totalBilledBytes,
+    protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobConfiguration.query as runquery,
+    round(CAST(FORMAT_TIMESTAMP('%H',protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobStatistics.startTime) as int64),0) hh
+    , CAST(FORMAT_TIMESTAMP('%M',protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobStatistics.startTime) as int64) minutes
+		 
+  FROM
+    `prod-pch-it-secmon.it_gcp_logs_export.cloudaudit_googleapis_com_data_access`
+  WHERE
+    (timestamp)>=TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 60 DAY) AND
+    protopayload_auditlog.serviceName = 'bigquery.googleapis.com'
+    AND protopayload_auditlog.methodName = 'jobservice.jobcompleted'
+    AND protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.eventName IN ( 'table_copy_job_completed',
+      'query_job_completed',
+      'extract_job_completed',
+      'load_job_completed' )
+    AND (protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobStatistics.startTime)>= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 60 DAY))
+     --AND DATE(protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobStatistics.startTime)='2022-11-22' 
+     --and round(CAST(FORMAT_TIMESTAMP('%H',protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobStatistics.startTime) as int64),0) between 0 and 23 )
+SELECT
+  billdate,
+  email,origquery,
+  ARRAY_TO_STRING(ARRAY_AGG(projectname), ',') projectsqueried,
+  SUM(noofjobs) jobssubmited,
+  ROUND((SUM((totalBilledBytes ))/ POW(2,30))) AS totalBilledGigabytes,
+  ROUND( ((SUM((totalBilledBytes ))/ POW(2,40)) *5),2) AS estimatedCostUsd
+FROM (
+  SELECT
+    DATE(startTime) billdate,
+    principalEmail email,
+    projectId projectname,
+    runquery.query origquery,
+    COUNT(jobId) AS noofjobs,
+    SUM(totalBilledBytes) totalBilledBytes ,  ROUND((SUM((totalBilledBytes ))/ POW(2,30))) AS totalBilledGigabytes,
+     ROUND( ((SUM((totalBilledBytes ))/ POW(2,40)) *6.25),2) AS estimatedCostUsd
+  FROM
+    BQAudit
+  GROUP BY
+    1,
+    2,
+    3 ,4) g where  origquery like '%PCHSessionMetadata.SessionUserAgentID_Proxy_%' and email <>'rjannu@pch.com'
+GROUP BY
+  1,
+  2,3
+
+
+
+
+   SELECT
+
+  concat("drop table if exists `",table_catalog,"`.`", table_schema,"`." ,table_name,";") table_to_drop_qry--,table_name 
+  --, extract(year from creation_time) yr
+
+FROM
+
+  pch-app-2014.GA_GameActivity.INFORMATION_SCHEMA.TABLES
+
+where table_name like "%EDialog.agg_Ed_EmailActivity%"
+

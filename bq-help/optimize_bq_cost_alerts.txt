@@ -1,0 +1,59 @@
+WITH
+  BQAudit AS (
+  SELECT
+    protopayload_auditlog.authenticationInfo.principalEmail,
+    protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobName.projectId,
+    protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobName.jobId,
+    protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobStatistics.createTime,
+    protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobStatistics.startTime,
+    protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobStatus.error.code AS errorCode,
+    protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobStatistics.totalProcessedBytes,
+    protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobStatistics.totalBilledBytes,
+    protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobConfiguration.query
+  FROM
+    `prod-pch-it-secmon.it_gcp_logs_export.cloudaudit_googleapis_com_data_access`
+  WHERE
+    DATE(timestamp)=DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) AND
+    protopayload_auditlog.serviceName = 'bigquery.googleapis.com'
+    AND protopayload_auditlog.methodName = 'jobservice.jobcompleted'
+    AND protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.eventName IN ( 'table_copy_job_completed',
+      'query_job_completed',
+      'extract_job_completed',
+      'load_job_completed' )
+    AND DATE(protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobStatistics.startTime)= DATE_SUB(CURRENT_DATE(), INTERVAL 1 DAY) )
+SELECT
+  billdate,
+  email,
+  ARRAY_TO_STRING(ARRAY_AGG(distinct projectname), ',') projectsqueried,
+  SUM(noofjobs) jobssubmited,
+  ROUND((SUM((totalBilledBytes ))/ POW(2,40)),2) AS totalBilledTerabytes,
+  ROUND( ((SUM((totalBilledBytes ))/ POW(2,40)) *5),2) AS estimatedCostUsd
+FROM (
+  SELECT
+    DATE(startTime) billdate,
+    principalEmail email,
+    projectId projectname,
+    query.statementType statementType,
+    COUNT(jobId) AS noofjobs,
+    SUM(totalBilledBytes) totalBilledBytes,
+    (SUM((totalBilledBytes))/ POW(2,30)) AS totalBilledGigabytes,
+    (SUM((totalBilledBytes ))/ POW(2,40)) AS totalBilledTerabytes,
+    ((SUM((totalBilledBytes ))/ POW(2,40)) *5) AS estimatedCostUsd
+  FROM
+    BQAudit where  query.statementType<>'SCRIPT'
+  GROUP BY
+    1,
+    2,
+    3,4 ) g
+WHERE
+  estimatedCostUsd>0
+GROUP BY
+  1,
+  2
+ORDER BY 6 DESC
+
+
+select jobBillDate ,jobStatsStarthh ,user,sum_avgSlots,sum_totalBilledTerabytes,jobcnt,ARRAY_TO_STRING(ARRAY_AGG(distinct projectId), ',') projectsqueried,  from (
+SELECT  jobBillDate,round(CAST(FORMAT_TIMESTAMP('%H',jobStatsStartTime) as int64),0)  jobStatsStarthh,projectId,
+ user, sum (avgSlots) sum_avgSlots ,sum(totalBilledTerabytes) sum_totalBilledTerabytes,count(jobId) jobcnt FROM `gpcadmin.bq_cost_analysis.mw_prevday_bqcost_per_user_v2` where jobBillDate='2023-06-05' and totalBilledTerabytes>1
+ group by 1,2,3,4) group by 1,2,3,4,5,6

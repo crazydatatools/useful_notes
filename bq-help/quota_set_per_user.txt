@@ -1,0 +1,25 @@
+curl -d @data \
+  -H "content-type: application/json" \
+  -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+  -X PATCH \
+  "https://servicemanagement.googleapis.com/v1/services/bigquery-json.googleapis.com/projectSettings/PROJECT_ID?updateMask=quotaSettings.consumerOverrides%5B%22QueryUsagePerDay%22%5D"
+
+
+
+  data file--
+  {
+  "quotaSettings": 
+  {
+    "adminOverrides":{},
+    "consumerOverrides":
+    {
+      "QueryUsagePerDay":   
+      {
+        "limit":"151380224"
+      }
+    },
+    "force":true
+  },
+  "consumerProjectId":"PROJECT_ID",
+  "serviceName":"bigquery-json.googleapis.com"
+}

@@ -1,0 +1,2 @@
+val df = spark.read.format("jdbc").option("driver","com.mysql.cj.jdbc.Driver").option("url", "jdbc:mysql://frontpagefpcdbslave.prod.pch.com:3306/frontv2_prod").option("dbtable", "story_log").option("user", "p_bd_ms_mysql_svc").option("password", "GR@nd-s3ntrLP").load()
+/mapr/JMAPRCLUP01.CLASSIC.PCHAD.COM/codebase/bigdata/prod/online/etl_generic_prototype/generic_ingestion/bin/gcp_spark_ingestion

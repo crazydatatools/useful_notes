@@ -1,0 +1,17 @@
+Language models basically predict what word comes next in a sequence of words. We train these models on large volumes of text so they better understand what word is likely to come next. One way — but not the only way — to improve a language model is by giving it more “reading” — or training it on more data — kind of like how we learn from the materials we study.
+
+A generative model can take what it has learned from the examples it’s been shown and create something entirely new based on that information. Hence the word “generative!” Large language models (LLMs) are one type of generative AI since they generate novel combinations of text in the form of natural-sounding language
+
+
+Generative AI is a type of artificial intelligence (AI) that can create new content, such as text, images, audio, and video. It does this by learning from existing data and then using that knowledge to generate new and unique outputs.
+
+A foundation model is a large AI model pretrained on a vast quantity of data that was "designed to be adapted” (or fine-tuned) to a wide range of downstream tasks, such as sentiment analysis, image captioning, and object recognition.
+
+
+The point is that the business term may have different (or encompass multiple) data elements depending on the context and the only reasonable way for a technical oriented stakeholder to execute the business requirements is to have the capability to look it up in a catalogue, trace its lineage, extract/process the data, and ultimately provision it back to the ‘Business View’. 
+
+Metadata management is often an afterthought to a regulatory request or crisis. Being able to find the appropriate data element matching a business element requires a level of efficiency. The data likely exists, but if you can’t find it, it might as well never have existed. The speed and efficiency with which data can be provisioned for analysis and presented as insights matter greatly in today’s operating environment. Slow means eaten by the market! 
+
+The business and technical perspective is achieved in your data catalogue by recording the business perspective in the business glossary and technical perspective in the data dictionary with the business element and data element linked.
+
+Evaluate data governance requirements for new initiatives or modifications to existing data components. Develop execution plans, oversee implementation, and manage the entire process for Data Governance by Design initiatives from start to finish

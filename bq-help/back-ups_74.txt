@@ -1,0 +1,163 @@
+"""
+This is the DAG to execute the 'goldCore_device_details_core' daily and hourly load
+"""
+from bigdata.utils.gcp_extractMetadataFromMySQL import BQTableDtls
+from airflow.models import DAG, Variable
+from datetime import datetime, timedelta, date
+from bigdata.utils.airflow_factory import *
+from airflow.operators.empty import EmptyOperator
+import sys
+
+#tmpl_search_path = Variable.get("bigdata_sql_golddata_path")
+tmpl_search_path = "/home/airflow/gcs/dags/bigdata/sql/"
+
+mysql_mtdt_conn = "bigdata_meta_golddata"
+
+json_file_loc = Variable.get("bigdata_etlconfig_env")
+
+default_args = {
+    "start_date": datetime(2020, 9, 1),
+    "owner": "bigdata",
+    "email": ['BigData_Dev@pch.com'],
+    "email_on_retry": False,
+    "conn_id": mysql_mtdt_conn
+}
+
+dag_name_dtls = {'dag_name': "goldCore_device_details_core"}
+
+object_properties_json = f"{json_file_loc}group_binding_id_46/json_39.json"
+
+# Reading the values from the json properties file
+object_details = BQTableDtls(object_properties_json)
+
+# Main logic begins here
+########################
+
+# Now creating a dict to capure the metadata connecting to the ObjectID
+object_id_macros_dict = {}
+
+
+def getObjValue(key_associated):
+    return object_id_macros_dict[key_associated]
+
+
+dag = DAG(dag_id=dag_name_dtls['dag_name'], schedule_interval=None, default_args=default_args, catchup=False,
+          tags=["index", "bigdata", "device_details", "tgt", "core"],
+          user_defined_macros={'get_macro_value': getObjValue},
+          template_searchpath=tmpl_search_path)
+
+start_task = EmptyOperator(task_id="start_task", dag=dag)
+end_task = EmptyOperator(task_id="end_task", retries=1, retry_delay=timedelta(seconds=10), dag=dag)
+backfill_run_id = "{{ run_id }}"
+
+# Defining a intermediate variable
+counter = 0
+prev_exec_id = "-1"
+
+for i in object_details.object_id_list_sorted:
+    # Defining the Setter
+    object_details.recon_start_limit = i
+    object_details.recon_end_limit = i
+    object_details.object_id = i
+    object_details.airflow_control_flag = i
+    object_details.airflow_mapping_id = i
+    object_details.gcp_conn_var = i
+    object_details.project_name = i
+    object_details.gcp_schema_intermediate = i
+    object_details.gcp_schema_final = i
+    object_details.object_name = i
+    object_details.gcp_partition_cols = i
+    object_details.gcp_cluster_cols = i
+    object_details.vw_sql_loc = i
+    object_details.gcp_conn_bigdata_etl_metadata = i
+    object_details.exec_order = i
+    object_details.load_type = i
+    object_details.frequency = i
+    object_details.subjectarea_name = i
+    object_details.gcp_schema_sas_final = i
+
+    # print("gcp_schema_sas_final : ",object_details.gcp_schema_sas_final)
+    snapshot_start_dt = date.today() - timedelta(int(object_details.recon_start_limit))
+    snapshot_end_dt = date.today() - timedelta(int(object_details.recon_end_limit))
+    object_id_macros_dict[f'{object_details.object_id}_snapshot_start_dt'] = snapshot_start_dt
+    object_id_macros_dict[f'{object_details.object_id}_snapshot_end_dt'] = snapshot_end_dt
+
+    if object_details.exec_order != prev_exec_id:
+        exec_order_task_start = EmptyOperator(task_id="i" + str(object_details.exec_order), dag=dag)
+        exec_order_task_end = EmptyOperator(task_id="j" + str(object_details.exec_order), dag=dag)
+
+    if object_details.airflow_control_flag == "NoByPass":
+        insert_sql = f"insert into gcp_airflow_lastrun(airflow_mapping_id, airflow_backfill_id" \
+                     f", exec_status, exec_start_ts, exec_end_ts" \
+                     f", insert_dt) values('{object_details.airflow_mapping_id}', '{backfill_run_id}'" \
+                     f", 'Success'" \
+                     f", cast(REPLACE(SUBSTR('{backfill_run_id}'" \
+                     f",INSTR('{backfill_run_id}','2'),19),\"T\",\" \") as datetime)" \
+                     f",CURRENT_TIMESTAMP,CURRENT_DATE)"
+
+        mySQLInsertTask = gcp_mysqlDMLOperator("i" + str(object_details.exec_order)
+                                               , object_details.object_name
+                                               , insert_sql
+                                               , dag)
+
+        bq_sql_exec = f"select 'bigdata' as team,'online_etl' as process_type,'uat' as environment," \
+                      f"'airflow' as tool,'{object_details.subjectarea_name}' as subject_area," \
+                      f"'{object_details.project_name}' as project_name," \
+                      f"'{object_details.gcp_schema_final}' as dataset_name," \
+                      f"'{object_details.object_name}' as object_name," \
+                      f"'{object_details.frequency}' as frequency,'success' as exec_status," \
+                      f"'na' as boundary_value" \
+                      f",cast(DATETIME(CURRENT_TIMESTAMP,\"America/New_York\") as timestamp) as insert_ts"
+
+        bqSqlExecOutAppndTask = gcp_sql_exec_bq_append("i" + str(object_details.exec_order)
+                                                       , object_details.object_name
+                                                       , object_details.gcp_conn_var
+                                                       , object_details.project_name
+                                                       , 'it_etl_monitoring'
+                                                       , 'bigdata_etl_logging'
+                                                       , bq_sql_exec
+                                                       , dag)
+
+        if object_details.load_type == 'FULL':
+            # print("its full load")
+            Obj_stored_proc = gcp_FromExtSQLFileExecQuery("i" + str(object_details.exec_order) + "_stored_proc"
+                                                          , object_details.object_name
+                                                          ,
+                                                          object_details.vw_sql_loc + "full/sp_" + object_details.object_name
+                                                          , object_details.gcp_conn_var
+                                                          , dag=dag)
+
+            clone_to_recon_obj_copy_task = gcp_bq_to_bq_copy_entire_table(
+                "i" + str(object_details.exec_order) + "_clone_to_recon_obj",
+                object_details.gcp_conn_var,
+                object_details.project_name,
+                object_details.gcp_schema_intermediate,  # it_cm_onl_elt_com_stg
+                object_details.object_name + "_clone",  # device_details_clone
+                object_details.gcp_schema_final,  # it_cm_onl_elt_com_recon
+                object_details.object_name,  # device_details
+                dag=dag
+            )
+
+        if counter == 0:
+            if object_details.load_type == 'FULL':
+                start_task >> exec_order_task_start
+                exec_order_task_start >> Obj_stored_proc >> clone_to_recon_obj_copy_task >> bqSqlExecOutAppndTask
+            else:
+                start_task >> exec_order_task_start
+                exec_order_task_start >> bqSqlExecOutAppndTask
+        bqSqlExecOutAppndTask >> mySQLInsertTask >> exec_order_task_end
+
+    else:
+        if counter == 0:
+            start_task >> exec_order_task_start
+            exec_order_task_start >> exec_order_task_end
+        else:
+            if object_details.exec_order != prev_exec_id:
+                prev_exec_order >> exec_order_task_start
+                exec_order_task_start >> exec_order_task_end
+
+    prev_exec_order = exec_order_task_end
+    prev_exec_id = object_details.exec_order
+    counter += 1
+if counter == object_details.length_list:
+    exec_order_task_end >> end_task

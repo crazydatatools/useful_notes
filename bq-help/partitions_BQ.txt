@@ -1,0 +1,77 @@
+CONCATUS@AIRINDIA.COM
+Afridi, Zahid <zafridi@pch.com>
+
+SELECT MAX(partition_id)
+FROM `bigquery-public-data.google_trends.INFORMATION_SCHEMA.PARTITIONS`
+WHERE table_name = 'top_terms';
+#legacySQL
+
+SELECT
+
+ max(partition_id)
+
+FROM
+
+  [prod-gold-core:it_dms_flat_variables.dmsm10_dmdo002_2022$__PARTITIONS_SUMMARY__]
+
+SELECT MAX(partition_id)
+FROM `prod-gold-usersummary.INFORMATION_SCHEMA.PARTITIONS`
+WHERE table_name ='user_profile.gmt_profile'
+
+
+  CREATE TABLE `prod-gold-usersummary.user_profile.gmt_profile`
+  (
+    global_member_token STRING,
+    snapshotdate DATE,
+    gmt_cnt_at_custid_level INT64,
+    gmt_email_domain STRING,
+    gmt_gender_cd STRING,
+    gmt_self_reported_age INT64,
+    gmt_city STRING,
+    gmt_zip_postal_cd STRING,
+    gmt_state_cd STRING,
+    gmt_dma_cd STRING,
+    gmt_dma_cd_desc STRING,
+    gmt_zip3_scf STRING,
+    is_test_account_ind INT64,
+    is_email_purged_ind INT64,
+    last_access_ts DATETIME,
+    identity_match_suppress_ind INT64,
+    stream_no INT64,
+    subscriber_random_id_a INT64,
+    subscriber_random_id_b INT64,
+    gmt_registration_type STRING,
+    is_first_last_name_present_ind INT64,
+    is_sso_address_present_ind INT64,
+    is_sso_password_present_ind INT64,
+    subscriber_id INT64,
+    online_account_token STRING,
+    is_gmt_disabled_ind INT64,
+    is_pch_globally_emailable_ind INT64,
+    is_email_valid_ind INT64,
+    is_email_deliverable_ind INT64,
+    is_primary_addr_present_ind INT64,
+    is_email_thirdparty_valid_ind INT64,
+    is_direct_mktg_emailable_ind INT64,
+    shopper_id_flip INT64,
+    gmt_offline_user_ind INT64,
+    customer_lifetime_buyer_status STRING,
+    gmt_buyer_channel STRING,
+    gmt_overall_age INT64,
+    cust_gender_cd STRING,
+    gmt_direct_marketing_remove_reason_cd STRING,
+    gmt_direct_marketing_remove_reason_cd_desc STRING,
+    tpd_truck_owner_ind INT64,
+    tpd_republican_affiliated_ind INT64,
+    pch_vip_status STRING,
+    registration_account_status STRING,
+    eligible_subscription_cd STRING,
+    is_do_not_sell_ind INT64,
+    gmt_create_dt DATETIME
+  )
+  PARTITION BY snapshotdate
+  CLUSTER BY global_member_token
+  OPTIONS(
+    require_partition_filter=true,
+    labels=[("functionalgroup", "omnicoreonline")]
+);

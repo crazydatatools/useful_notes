@@ -1,0 +1,102 @@
+class Task:
+    
+    def __init__(self, spark: SparkSession, config: JobConfig):
+        self.config = config
+        self.spark = spark
+        
+    def main(self):
+        extracted = self.extract()
+        transformed = self.transform(**extracted)
+        return self.load(transformed)
+
+    def extract(self):
+        pass
+   
+    def transform(self, dataframes):
+        pass
+   
+    def load(self, transformed, uri=None):
+        pass
+
+
+
+@pytest.fixture(scope="session")
+def stock_data(spark):
+    schema = StructType([
+        StructField("stock", StringType()),
+        StructField("date", StringType()),
+        StructField("price", DoubleType())
+    ])
+    data = [
+        {"stock": "AA", "date": "20180902", "price": 200.0},
+        {"stock": "AA", "date": "20181002", "price": 300.50},
+        {"stock": "AA", "date": "20181102", "price": 400.50},
+        {"stock": "BB", "date": "20180902", "price": None},
+        {"stock": "BB", "date": "20181002", "price": 450.50},
+        {"stock": "BB", "date": "20181102", "price": 200.50},
+    ]
+    df = spark.createDataFrame([Row(**x) for x in data], schema)
+    df.cache()
+    df.count()
+    return df
+
+def test_end_to_end(session, input_path, tmp_path, expected_path):
+    config = {"input_path": input_path, "output_path": tmp_path}
+    job = Task(session, config)
+    job.main()
+    output = load(tmp_path)
+    expected = load(expected_path)
+    assert_frame_equals(output, expected)
+
+
+class Task:
+    pass
+
+def entrypoint(argv):
+    args = parse_arguments(argv)
+    config = load_configuration(args)
+    session = initialize_session(config)
+    task = Task(session=session, config=conf_model)
+    task.main()
+    print("done")
+
+
+if __name__ == "__main__":
+    entrypoint(sys.argv)
+
+ps237
+padamata
+pinky
+
+Project structure with dbx and hydra-based configuration
+.
++-- .github
+¦   +-- workflows
+¦       +--ondeploy.yaml
+|       +--onpush.yaml
++-- .dbx
+¦   +--project.json
++-- conf
+¦   +-- deployment.yaml      #dbx
+¦   +-- tasks
+¦       +-- my_task          #hydra
+¦           +-- my_task.yaml  
+|           +-- test
+¦           +-- stage
+|           +-- prod
++-- my_pipeline
+¦   +-- entrypoint.py
+¦   +-- tasks
+¦       +-- my_task.py
++-- tests
+¦   +-- data
+¦   +-- unit
+¦   ¦   +-- tasks
+¦   ¦       +-- my_task_test.py
+¦   +-- system
+¦       +-- system_test.py
++-- .pre-commit-config.yaml
++-- pyproject.toml
++-- setup.cfg
++-- setup.py
++-- README.md

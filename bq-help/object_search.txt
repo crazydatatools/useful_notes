@@ -1,0 +1,101 @@
+SELECT projectId,
+user,runQuery,estimatedCostUsd,jobBillDate,count(1) cnt
+  FROM `gpcadmin.bq_cost_analysis.mw_prevday_bqcost_per_user_v2` where jobBillDate>='2023-09-01' and runQuery like '%prod-gold-usersummary.user_entry.customer_entry_activity%'
+  group by 1,2,3,4,5
+
+CREATE OR REPLACE FUNCTION `flowfunctions.hash.hex_md5_row_hash`(row_json STRING) 
+AS (
+TO_HEX(MD5(row_json)) 
+);
+
+
+CREATE OR REPLACE FUNCTION `flowfunctions.hash.hex_md5_row_hash`(row_json STRING)
+OPTIONS (
+description="Returns: [STRING] Hexadecimal encoding of an MD5 hash of the JSON string representation of a row.  The row_json argument should be passed as TO_JSON_STRING(cte_name) where cte_name is the name of a prior common table expression"
+)
+AS (
+TO_HEX(MD5(row_json))
+);
+
+
+  gcloud dataproc clusters create \
+    bq-spark-cluster \
+    --enable-component-gateway \
+    --region $REGION \
+    --master-machine-type \
+    n2-standard-4 \
+    --master-boot-disk-size 500 \
+    --num-workers 2 \
+    --worker-machine-type \
+    n2-standard-4 \
+    --worker-boot-disk-size 1000 \
+    --image-version 2.0-debian10 \
+    --initialization-actions \
+    gs://goog-dataproc-initialization-actions-${REGION}/connectors/connectors.sh \
+    --metadata \
+    spark-bigquery-connector-version=0.21.0
+
+
+    #!/usr/bin/env python
+
+"""BigQuery I/O PySpark example."""
+
+import sys
+from pyspark.sql import SparkSession
+
+spark = SparkSession \
+  .builder \
+  .master('yarn') \
+  .appName('spark-bigquery-demo') \
+  .getOrCreate()
+
+# Use the Cloud Storage bucket for
+# temporary BigQuery export data 
+# used by the connector.
+bucket = sys.argv[1]
+spark.conf.set('temporaryGcsBucket', bucket)
+
+ # Load data from BigQuery.
+words = spark.read.format('bigquery') \
+  .option('table', 'bigquery-public-data:samples.shakespeare') \
+  .load()
+words.createOrReplaceTempView('words')
+
+# Perform the word count operation.
+word_count = spark.sql(
+    'SELECT word, SUM(word_count) AS word_count FROM words GROUP BY word')
+word_count.show()
+word_count.printSchema()
+
+# Save the data to BigQuery
+word_count.write.format('bigquery') \
+  .option('table', 'wordcount_dataset.wordcount_output') \
+  .save()
+
+
+  gcloud dataproc jobs submit \
+    pyspark wordcount.py \
+    --cluster=bq-spark-cluster \
+    --region=$REGION \
+    --jars=gs://spark-lib/bigquery/spark-bigquery-latest.jar \
+    -- dataproc_bq_gpcadmin
+
+
+    gcloud dataproc clusters delete \
+    bq-spark-cluster --region \
+    $REGION -q
+
+
+
+#standardSQL
+CREATE VIEW `fh-bigquery.views.wikipedia_views_test_ddl`
+AS SELECT
+  PARSE_TIMESTAMP('%Y%m%d-%H%M%S', REGEXP_EXTRACT(_FILE_NAME, '[0-9]+-[0-9]+')) datehour
+  , REGEXP_EXTRACT(line, '([^ ]*) ') wiki
+  , REGEXP_EXTRACT(line, '[^ ]* (.*) [0-9]+ [0-9]+') title
+  , CAST(REGEXP_EXTRACT(line, ' ([0-9]+) [0-9]+$') AS INT64) views
+  , CAST(REGEXP_EXTRACT(line, ' ([0-9]+)$') AS INT64) zero
+  , _FILE_NAME filename
+  , line
+FROM `fh-bigquery.views.wikipedia_views_gcs`WHERE REGEXP_EXTRACT(line, ' ([0-9]+) [0-9]+$') IS NOT NULL # views
+AND REGEXP_EXTRACT(line, ' ([0-9]+)$') = '0' # zero

@@ -1,0 +1,333 @@
+BEGIN
+DECLARE
+  source_org_name STRING;
+DECLARE
+  projectname STRING;
+  
+DECLARE
+  source_project_name STRING;
+DECLARE
+  source_table_name STRING;
+DECLARE
+  full_source_table_name STRING;
+DECLARE
+  columns_to_profile ARRAY<STRING>;
+DECLARE
+  source_obj_list ARRAY<STRING>;
+
+DECLARE
+  project_list ARRAY<STRING>;
+DECLARE
+  iter INT64 DEFAULT 0; --
+  DECLARE
+  outiter INT64 DEFAULT 0;
+SET
+  project_list = (SELECT  ARRAY_AGG(projectname) from (SELECT distinct project_id projectname  
+                FROM gpcadmin.GCSMetaInfo.all_bq_tbl_suffix_51  ));
+
+  WHILE  outiter < ARRAY_LENGTH(project_list) DO
+  SET  projectname= project_list[OFFSET(outiter)];
+
+                SET
+                  source_obj_list =(
+                  SELECT  ARRAY_AGG(full_source_table_name) FROM (
+                            SELECT
+                              CONCAT(project_id,".",dataset_id,".",full_tbl) full_source_table_name
+                            FROM gpcadmin.GCSMetaInfo.all_bq_tbl_suffix_51
+                            WHERE  full_tbl  not like '%audit%'  and project_id=projectname ) );
+
+                    WHILE  iter < ARRAY_LENGTH(source_obj_list) DO
+                            SET  full_source_table_name= source_obj_list[OFFSET(iter)];
+                            SET  source_org_name = SPLIT(TRIM(full_source_table_name, '`'), '.')[OFFSET(0)];
+                            SET  source_project_name = SPLIT(TRIM(full_source_table_name, '`'), '.')[OFFSET(1)];
+                            SET  source_table_name = SPLIT(TRIM(full_source_table_name, '`'), '.')[OFFSET (2)]; 
+                            # Get the list OF COLUMNS IN the TABLE TO profile.
+                            EXECUTE IMMEDIATE
+                              FORMAT("""
+                                      INSERT INTO
+                                        `gpcadmin.MetadataStore.all_projects_bqobjects_columns_info`
+                                      SELECT table_catalog,table_schema,table_name, column_name,ordinal_position,is_nullable,data_type,
+                                      is_generated,generation_expression,  is_stored,is_hidden, is_updatable,is_system_defined,
+                                      is_partitioning_column,  clustering_ordinal_position, collation_name,column_default,
+                                      rounding_mode,CURRENT_DATE()
+                                      FROM
+                                        %s
+                                      WHERE
+                                        table_catalog = @var_source_org_name
+                                        AND table_schema = @var_source_project_name
+                                        AND table_name = @var_source_table_name ;""", CONCAT("`",source_org_name,".",source_project_name,".INFORMATION_SCHEMA.COLUMNS`") )
+                                      USING
+                                        source_org_name AS var_source_org_name,
+                                        source_project_name AS var_source_project_name,
+                                        source_table_name AS var_source_table_name;
+                              SET   iter = iter + 1;
+                    END WHILE;
+                    SET   outiter = outiter + 1;
+                    END WHILE;
+END
+
+
+
+BEGIN
+DECLARE
+  source_org_name STRING;
+DECLARE
+  projectname STRING;
+  
+DECLARE
+  source_project_name STRING;
+DECLARE
+  source_table_name STRING;
+DECLARE
+  full_source_table_name STRING;
+DECLARE
+  columns_to_profile ARRAY<STRING>;
+DECLARE
+  source_obj_list ARRAY<STRING>;
+
+DECLARE
+  project_list ARRAY<STRING>;
+DECLARE
+  iter INT64 DEFAULT 0; --
+  DECLARE
+  outiter INT64 DEFAULT 0;
+SET
+  project_list = (SELECT  ARRAY_AGG(projectname) from (SELECT distinct project_id projectname  
+                FROM gpcadmin.MetadataStore.shard_tables_bq_52  ));
+
+  WHILE  outiter < ARRAY_LENGTH(project_list) DO
+  SET  projectname= project_list[OFFSET(outiter)];
+
+                SET
+                  source_obj_list =(
+                  SELECT  ARRAY_AGG(full_source_table_name) FROM (
+                            SELECT
+                              CONCAT(project_id,".",dataset_id,".",full_tbl) full_source_table_name
+                            FROM gpcadmin.MetadataStore.shard_tables_bq_52
+                            WHERE  full_tbl  not like '%audit%'  and project_id=projectname ) );
+
+                    WHILE  iter < ARRAY_LENGTH(source_obj_list) DO
+                            SET  full_source_table_name= source_obj_list[OFFSET(iter)];
+                            SET  source_org_name = SPLIT(TRIM(full_source_table_name, '`'), '.')[OFFSET(0)];
+                            SET  source_project_name = SPLIT(TRIM(full_source_table_name, '`'), '.')[OFFSET(1)];
+                            SET  source_table_name = SPLIT(TRIM(full_source_table_name, '`'), '.')[OFFSET (2)]; 
+                            # Get the list OF COLUMNS IN the TABLE TO profile.
+                            EXECUTE IMMEDIATE
+                              FORMAT("""
+                                      INSERT INTO
+                                        `gpcadmin.MetadataStore.all_projects_bqobjects_columns_info2`
+                                      SELECT table_catalog,table_schema,table_name, column_name,ordinal_position,is_nullable,data_type,
+                                      is_generated,generation_expression,  is_stored,is_hidden, is_updatable,is_system_defined,
+                                      is_partitioning_column,  clustering_ordinal_position, collation_name,column_default,
+                                      rounding_mode,CURRENT_DATE()
+                                      FROM
+                                        %s
+                                      WHERE
+                                        table_catalog = @var_source_org_name
+                                        AND table_schema = @var_source_project_name
+                                        AND table_name = @var_source_table_name ;""", CONCAT("`",source_org_name,".",source_project_name,".INFORMATION_SCHEMA.COLUMNS`") )
+                                      USING
+                                        source_org_name AS var_source_org_name,
+                                        source_project_name AS var_source_project_name,
+                                        source_table_name AS var_source_table_name;
+                              SET   iter = iter + 1;
+                    END WHILE;
+                    SET   outiter = outiter + 1;
+                    END WHILE;
+END
+
+
+
+select * from gpcadmin.GCSMetaInfo.all_bq_tbl_suffix_51 where project_id in (
+select distinct project_id from (
+select project_id,dataset_id ,sst,full_tbl,cnt,count(1) cnt1 from gpcadmin.GCSMetaInfo.all_bq_tbl_suffix_51 where cnt>1  group by project_id,dataset_id ,sst,full_tbl,cnt
+))
+
+
+
+SELECT  ARRAY_AGG(projectname) from (SELECT distinct project_id projectname       FROM gpcadmin.GCSMetaInfo.all_bq_tbl_suffix_51 )
+
+
+ SELECT    CONCAT(project_id,".",dataset_id,".",full_tbl) full_source_table_name
+   FROM  gpcadmin.GCSMetaInfo.all_bq_tbl_suffix_51
+                            WHERE  full_tbl  not like '%audit%' and project_id='pch-sw-2014'
+
+
+select * from gpcadmin.MetadataStore.shard_tables_bq_52 a where  cnt=1 
+
+create table gpcadmin.MetadataStore.shard_tables_bq_52_dups as
+select * from (
+with df as(
+select project_id,dataset_id,sst from gpcadmin.MetadataStore.shard_tables_bq_52 where cnt>1 
+)
+select b.* from df a join gpcadmin.MetadataStore.shard_tables_bq_52  b
+on a.project_id=b.project_id and a.dataset_id=b.dataset_id and a.sst=b.sst
+where b.cnt=1)
+
+select * from gpcadmin.MetadataStore.shard_tables_bq_52
+
+(SELECT  ARRAY_AGG(projectname) from (SELECT distinct project_id projectname  
+                FROM gpcadmin.MetadataStore.shard_tables_bq_52  ))
+
+
+delete from gpcadmin.MetadataStore.shard_tables_bq_52 where cnt=1 and CONCAT(project_id,dataset_id,full_tbl)  in (
+select CONCAT(project_id,dataset_id,full_tbl) fulltbel from gpcadmin.MetadataStore.shard_tables_bq_52_dups)
+
+delete from gpcadmin.MetadataStore.shard_tables_bq_52_dups a join gpcadmin.MetadataStore.shard_tables_bq_52 b 
+on a.project_id=b.project_id and a.dataset_id=b.dataset_id and a.full_tbl=b.full_tbl where b.cnt=a.cnt where true
+
+create or replace table gpcadmin.MetadataStore.all_projects_bqobjects_columns_info_52  as select distinct * from (
+select * from gpcadmin.MetadataStore.all_projects_bqobjects_columns_info3
+union all
+select * from gpcadmin.MetadataStore.all_projects_bqobjects_columns_info)
+
+
+select * from gpcadmin.GCSMetaInfo.all_bq_tbl_suffix_51 where project_id in (
+select distinct project_id from (
+select project_id,dataset_id ,sst,full_tbl,cnt,count(1) cnt1 from gpcadmin.GCSMetaInfo.all_bq_tbl_suffix_51 where cnt>1  group by project_id,dataset_id ,sst,full_tbl,cnt
+))
+
+
+
+SELECT  ARRAY_AGG(projectname) from (SELECT distinct project_id projectname       FROM gpcadmin.GCSMetaInfo.all_bq_tbl_suffix_51 )
+
+
+ SELECT    CONCAT(project_id,".",dataset_id,".",full_tbl) full_source_table_name
+   FROM  gpcadmin.GCSMetaInfo.all_bq_tbl_suffix_51
+                            WHERE  full_tbl  not like '%audit%' and project_id='pch-sw-2014'
+
+
+select * from gpcadmin.MetadataStore.shard_tables_bq_52 a where  cnt=1 
+
+create table gpcadmin.MetadataStore.shard_tables_bq_52_dups as
+select * from (
+with df as(
+select project_id,dataset_id,sst from gpcadmin.MetadataStore.shard_tables_bq_52 where cnt>1 
+)
+select b.* from df a join gpcadmin.MetadataStore.shard_tables_bq_52  b
+on a.project_id=b.project_id and a.dataset_id=b.dataset_id and a.sst=b.sst
+where b.cnt=1)
+
+select * from gpcadmin.MetadataStore.shard_tables_bq_52
+
+(SELECT  ARRAY_AGG(projectname) from (SELECT distinct project_id projectname  
+                FROM gpcadmin.MetadataStore.shard_tables_bq_52  ))
+
+
+delete from gpcadmin.MetadataStore.shard_tables_bq_52 where cnt=1 and CONCAT(project_id,dataset_id,full_tbl)  in (
+select CONCAT(project_id,dataset_id,full_tbl) fulltbel from gpcadmin.MetadataStore.shard_tables_bq_52_dups)
+
+delete from gpcadmin.MetadataStore.shard_tables_bq_52_dups a join gpcadmin.MetadataStore.shard_tables_bq_52 b 
+on a.project_id=b.project_id and a.dataset_id=b.dataset_id and a.full_tbl=b.full_tbl where b.cnt=a.cnt where true
+
+
+
+#legacySQL
+SELECT
+  /* Replace white spaces in the title with underscores. */
+  REGEXP_REPLACE(title, r'\s+', '_') AS regexp_title, revisions
+FROM
+  (SELECT title, COUNT(revision_id) as revisions
+  FROM
+    [bigquery-public-data:samples.wikipedia]
+  WHERE
+    wp_namespace=0
+    /* Match titles that start with 'G', end with
+     * 'e', and contain at least two 'o's.
+     */
+    AND REGEXP_MATCH(title, r'^G.*o.*o.*e$')
+  GROUP BY
+    title
+  ORDER BY
+    revisions DESC
+  LIMIT 100);
+
+
+
+select project_id,dataset_id ,mxtable,sst,cnt ,concat(sst,mxtable) full_tbl from (
+select project_id,dataset_id ,max(tab_sufix) mxtable ,sst,count(1) cnt from (
+  select *, REGEXP_CONTAINS(tab_sufix, r'^[[:digit:]]+$') df from (
+select project_id,dataset_id ,table_id,STRPOS(REVERSE(table_id),'_') firt_unscr,(LENGTH(table_id)+1)-STRPOS(REVERSE(table_id),'_') pos_ext ,SUBSTR(table_id, (LENGTH(table_id)+1)-STRPOS(REVERSE(table_id),'_')+1) tab_sufix,replace(table_id, SUBSTR(table_id, (LENGTH(table_id)+1)-STRPOS(REVERSE(table_id),'_')+1),'') sst FROM `gpcadmin.MetadataStore.all_projects_bq_tables_info` WHERE load_date = "2023-05-02" ) where REGEXP_CONTAINS(tab_sufix, r'^[[:digit:]]+$')=true) 
+group by project_id,dataset_id ,sst
+union all
+select project_id,dataset_id ,tab_sufix mxtable ,sst,count(1) cnt from (
+  select *, REGEXP_CONTAINS(tab_sufix, r'^[[:alpha:]]+$') df from (
+select project_id,dataset_id ,table_id,STRPOS(REVERSE(table_id),'_') firt_unscr,(LENGTH(table_id)+1)-STRPOS(REVERSE(table_id),'_') pos_ext ,SUBSTR(table_id, (LENGTH(table_id)+1)-STRPOS(REVERSE(table_id),'_')+1) tab_sufix,replace(table_id, SUBSTR(table_id, (LENGTH(table_id)+1)-STRPOS(REVERSE(table_id),'_')+1),'') sst FROM `gpcadmin.MetadataStore.all_projects_bq_tables_info` WHERE load_date = "2023-05-02" ) where (REGEXP_CONTAINS(tab_sufix, r'^[[:alpha:]]+$')=true or tab_sufix ='' or (REGEXP_CONTAINS(tab_sufix, r'^[[:alpha:]]+$')=true 
+and REGEXP_CONTAINS(tab_sufix, r'^[[:digit:]]+$')=true ))) 
+group by project_id,dataset_id,tab_sufix ,sst
+)
+
+
+
+BEGIN
+DECLARE
+  source_org_name STRING;
+DECLARE
+  projectname STRING;
+  
+DECLARE
+  source_project_name STRING;
+DECLARE
+  source_table_name STRING;
+DECLARE
+  full_source_table_name STRING;
+DECLARE
+  columns_to_profile ARRAY<STRING>;
+DECLARE
+  source_obj_list ARRAY<STRING>;
+
+DECLARE
+  project_list ARRAY<STRING>;
+DECLARE
+  iter INT64 DEFAULT 0; --
+  DECLARE
+  outiter INT64 DEFAULT 0;
+SET
+  project_list = (SELECT  ARRAY_AGG(project_id) from (select distinct project_id FROM  `gpcadmin.MetadataStore.complaince_base_53`));
+
+  WHILE  outiter < ARRAY_LENGTH(project_list) DO
+  SET  projectname= project_list[OFFSET(outiter)];
+                            # Get the list OF COLUMNS IN the TABLE TO profile.
+                            EXECUTE IMMEDIATE
+                              FORMAT("""
+                                      INSERT INTO
+                                        `gpcadmin.MetadataStore.all_projects_bqobjects_columns_info53`
+                                      SELECT table_catalog,table_schema,table_name, column_name,ordinal_position,is_nullable,data_type,
+                                      is_generated,generation_expression,  is_stored,is_hidden, is_updatable,is_system_defined,
+                                      is_partitioning_column,  clustering_ordinal_position, collation_name,column_default,
+                                      rounding_mode,CURRENT_DATE()
+                                      FROM
+                                        %s  cc join   `gpcadmin.MetadataStore.complaince_base_53` bb on
+                                        cc.table_catalog=bb.project_id and cc.table_schema=bb.dataset_id 
+                                        and cc.table_name=bb.full_tbl;""", CONCAT("`",projectname,".","region-us.INFORMATION_SCHEMA.COLUMNS`") )
+                                      USING
+                                        projectname AS projectname;
+
+              SET   outiter = outiter + 1;
+     END WHILE;
+END
+
+
+select * from `gpcadmin.MetadataStore.all_projects_bqobjects_columns_info_52` where  (REGEXP_CONTAINS(LOWER(column_name), r'(?i)emailmd5_hash|email_deployment_vendor_md5_cd|orig_email_deployment_vendor_md5|last_email_deployment_vendor_md5|ref_md5|ref_2_md5|email_md5_hash| email_md5_hash_cd|total_email_md5|total_uq_email_md5|orig_email_deployment_vendor_md5|email|md5|hash|sha|256')) and not (REGEXP_CONTAINS(LOWER(column_name), r'(?i)memberemailid|MemberEmailID|email_campaign_deployment_date|email_deployment_vendor_md5|email_deployment_date|email_event_dt'))
+
+
+select * from `gpcadmin.MetadataStore.all_projects_bqobjects_columns_info53` where  (REGEXP_CONTAINS(LOWER(column_name), r'(?i)emailmd5_hash|email_deployment_vendor_md5_cd|orig_email_deployment_vendor_md5|last_email_deployment_vendor_md5|ref_md5|ref_2_md5|email_md5_hash| email_md5_hash_cd|total_email_md5|total_uq_email_md5|orig_email_deployment_vendor_md5|email|md5|hash|sha|256')) and not (REGEXP_CONTAINS(LOWER(column_name), r'(?i)memberemailid|MemberEmailID|email_campaign_deployment_date|email_deployment_vendor_md5|email_deployment_date|email_event_dt'))
+
+
+
+select distinct a.table_catalog,a.table_schema,a.table_name from `gpcadmin.MetadataStore.all_projects_bqobjects_columns_info53` a 
+left join `gpcadmin.MetadataStore.all_projects_bqobjects_columns_info_52` b 
+on a.table_catalog=b.table_catalog and a.table_schema=b.table_schema and a.table_name=b.table_name and b.table_catalog is null  and  b.table_schema is null and   b.table_name is null 
+
+
+select distinct concat(a.table_catalog,a.table_schema,a.table_name ) fulltable   from `gpcadmin.MetadataStore.all_projects_bqobjects_columns_info53` a where concat(a.table_catalog,a.table_schema,a.table_name ) not in ( select distinct concat(a.table_catalog,a.table_schema,a.table_name ) fulltable   from `gpcadmin.MetadataStore.all_projects_bqobjects_columns_info_52` a )
+
+
+create table `gpcadmin.MetadataStore.all_projects_bqobjects_columns_info53_missing` as 
+select distinct *  from `gpcadmin.MetadataStore.all_projects_bqobjects_columns_info_52` a where concat(a.table_catalog,a.table_schema,a.table_name ) not in ( select distinct concat(a.table_catalog,a.table_schema,a.table_name ) fulltable   from `gpcadmin.MetadataStore.all_projects_bqobjects_columns_info53` a )
+
+create or replace table `gpcadmin.MetadataStore.all_projects_bqobjects_columns_info53_final` as (
+  select distinct * from (
+select * from `gpcadmin.MetadataStore.all_projects_bqobjects_columns_info53_missing`
+union all 
+select * from `gpcadmin.MetadataStore.all_projects_bqobjects_columns_info53`))

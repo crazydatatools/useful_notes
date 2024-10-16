@@ -1,0 +1,270 @@
+#Fetch all datasets
+    SELECT s.catalog_name	,s.schema_name,	s.creation_time	,s.last_modified_time,s.location,
+ TIMESTAMP_DIFF(CURRENT_TIMESTAMP(), creation_time, DAY) AS days_live
+FROM
+ `prod-gold-core.INFORMATION_SCHEMA.SCHEMATA` AS s
+ LEFT JOIN `prod-gold-core.INFORMATION_SCHEMA.SCHEMATA_OPTIONS` AS so
+ USING (schema_name)
+
+ORDER BY last_modified_time DESC
+  ======================
+  
+  Table Last Accessed Data
+  
+  WITH tables AS (
+  SELECT FORMAT("%s.%s.%s", table.projectId, table.datasetId, table.tableId) table
+    , MAX(timestamp) last_access
+  FROM (
+    SELECT timestamp
+      , protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobStatistics.referencedTables  
+    FROM `prod-pch-it-secmon.it_gcp_logs_export.cloudaudit_googleapis_com_data_access`
+  ), UNNEST(referencedTables) table
+  GROUP BY 1
+)
+
+SELECT * 
+FROM tables
+
+
+====================amount of bytes used by each storage tier in all of the tables 
+
+SELECT storage_tier, SUM(total_billable_bytes) billable_bytes
+ FROM `bigquery-public-data.crypto_bitcoin.INFORMATION_SCHEMA.PARTITIONS`
+ GROUP BY storage_tier'
+
+
+resource.type="bigquery_resource"
+protoPayload.authorizationInfo.resource="projects/<PROJECT_NAME>/datasets/<DATASET_NAME>/tables/<TABLE_NAME>"
+protoPayload.methodName="jobservice.insert"
+
+
+SELECT * FROM 
+  -- Replace baseball with a different dataset:
+ `bigquery-public-data.baseball.INFORMATION_SCHEMA.COLUMNS`
+WHERE 
+  is_partitioning_column = 'YES' OR clustering_ordinal_position IS NOT NULL;
+
+Partiton and clsuter Columns :-
+
+
+SELECT table_catalog,	table_schema,	table_name,
+CASE WHEN is_partitioning_column = 'YES' THEN column_name END as Partition_Columns,
+ARRAY_TO_STRING(ARRAY_AGG((CASE WHEN clustering_ordinal_position IS NOT NULL THEN column_name ELSE 'NA' END)),',') AS Cluster_columns
+
+FROM 
+  -- Replace baseball with a different dataset:
+ `it_dms_customer.INFORMATION_SCHEMA.COLUMNS`
+WHERE 
+  is_partitioning_column = 'YES' OR clustering_ordinal_position IS NOT NULL
+  group by 1,2,3,4
+
+
+       with  PROFILE_SOURCE_CTE AS (
+  SELECT
+    SRC.* EXCEPT(is_TYPED),
+    OPTNS.* EXCEPT(table_catalog,
+      table_schema,
+      table_name)
+  FROM
+    it_dms_customer.INFORMATION_SCHEMA.TABLES SRC
+  LEFT JOIN
+    it_dms_customer.INFORMATION_SCHEMA.TABLE_OPTIONS OPTNS
+  ON
+    SRC.table_catalog = OPTNS.table_catalog
+    AND SRC.table_schema = OPTNS.table_schema
+    AND SRC.table_name = OPTNS.table_name )
+        select * from PROFILE_SOURCE_CTE
+
+
+
+SELECT
+   project_id, dataset_id,table_id,
+    COUNT(*) AS tables,
+    SUM(row_count) AS total_rows,
+    SUM(size_bytes)/1e+6 AS size_mb,
+     SUM(size_bytes)/1e+9 AS size_gb,
+      SUM(size_bytes)/1e+12 AS size_tb
+  FROM (
+    SELECT project_id,dataset_id,table_id, row_count, size_bytes FROM `it_dms_flat_variables_ext.__TABLES__`UNION ALL SELECT project_id,dataset_id,table_id, row_count, size_bytes FROM `analytics_dms_nbvars_variables.__TABLES__`UNION ALL SELECT project_id,dataset_id,table_id, row_count, size_bytes FROM `it_dms_customer_stg.__TABLES__`UNION ALL SELECT project_id,dataset_id,table_id, row_count, size_bytes FROM `it_ecommerce_ext.__TABLES__`UNION ALL SELECT project_id,dataset_id,table_id, row_count, size_bytes FROM `im_app_analytics.__TABLES__`UNION ALL SELECT project_id,dataset_id,table_id, row_count, size_bytes FROM `it_dms_prospect.__TABLES__`UNION ALL SELECT project_id,dataset_id,table_id, row_count, size_bytes FROM `it_online_entries_stg.__TABLES__`
+    )ll
+
+
+    DECLARE
+  select_dataset_sql STRING;
+DECLARE
+  sql STRING;
+SET
+  select_dataset_sql = (
+  SELECT
+    ARRAY_TO_STRING(ARRAY_AGG("SELECT project_id,dataset_id,table_id, , TIMESTAMP_MILLIS(creation_time) AS creation_time, TIMESTAMP_MILLIS(last_modified_time) AS last_modified_time,type objtype ,row_count, size_bytes FROM `"||schema_name||".__TABLES__`")," UNION ALL ") AS sql
+  FROM    	
+prod-gold-core.INFORMATION_SCHEMA.SCHEMATA );
+SET
+  sql = FORMAT("""
+  SELECT
+   project_id, dataset_id,table_id,creation_time,last_modified_time,CASE WHEN objtype = 1 THEN 'table' WHEN objtype = 2 THEN 'view' ELSE NULL END AS obj_type,
+    COUNT(*) AS tables,
+    SUM(row_count) AS total_rows,
+    SUM(size_bytes)/1e+6 AS size_mb,
+     SUM(size_bytes)/1e+9 AS size_gb,
+      SUM(size_bytes)/1e+12 AS size_tb
+  FROM (
+    %s
+    )
+  GROUP BY
+    1,2,3,4,5
+  ORDER BY
+    size_mb DESC 
+"""
+,select_dataset_sql 
+);
+EXECUTE IMMEDIATE  sql;
+
+
+===========Get Table Infro==============
+
+DECLARE schema_list ARRAY<STRING>;
+DECLARE iter INT64 DEFAULT 0;
+DECLARE query_string STRING;
+
+SET schema_list = (
+  SELECT
+    ARRAY_AGG(schema_name)
+  FROM
+    INFORMATION_SCHEMA.SCHEMATA
+  );
+
+WHILE
+  iter < ARRAY_LENGTH(schema_list) DO
+    SET query_string = "SELECT * EXCEPT (table_catalog) FROM "
+      || schema_list[OFFSET(iter)] || ".INFORMATION_SCHEMA.TABLES";
+    EXECUTE IMMEDIATE query_string;
+    SET iter = iter + 1;
+END WHILE;
+
+
+create table `gpcadmin.MetadataStore.all_projects_dataset_info`(
+project_name	STRING,	
+dataset_name	STRING,	
+creation_time	TIMESTAMP,	
+last_modified_time	TIMESTAMP,	
+location	STRING,	
+days_live	INTEGER,	
+load_date	DATE)
+PARTITION BY load_date 
+
+create table `gpcadmin.MetadataStore.all_pch_org_projects_info`(
+billing_account_id	STRING,	
+project_id	STRING,	
+project_number	STRING,	
+project_name	STRING,	
+billing_date	DATE,	
+invoice_month	STRING,	
+total_cost	FLOAT64,	
+load_date	DATE,	
+load_timestamp	TIMESTAMP,	
+active_status	STRING)
+PARTITION BY load_date 
+create table `gpcadmin.MetadataStore.all_projects_bq_tables_info`(
+project_id  STRING,
+dataset_id STRING,
+table_id STRING,
+creation_time TIMESTAMP,
+last_modified_time TIMESTAMP,
+obj_type STRING,
+tables INT64,
+total_rows INT64,
+size_mb FLOAT64,
+size_gb FLOAT64,
+size_tb FLOAT64,
+load_date DATE
+)PARTITION BY load_date
+
+insert into `gpcadmin.MetadataStore.all_pch_org_projects_info` 
+SELECT
+ billing_account_id, project_id,	project_number,	project_name,
+   billing_date,
+  invoice_month,
+  SUM(IFNULL(cost,0)) total_cost ,current_date() load_date ,current_timestamp() load_timestamp,'Y' active_status from (  
+select billing_account_id,project.id project_id,	project.number project_number,	project.name project_name,date(usage_start_time) billing_date, invoice.month invoice_month,cost
+ FROM   `prod-pch-it-secmon.it_gcp_billing_export.gcp_billing_export_v1_014161_F9CD83_314E17` WHERE  _PARTITIONTIME >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 2 DAY) and project.id is not null and project.id !='prod-gold-core'
+ AND date(usage_start_time) = DATE(TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 1 DAY))) ll group by 1,2,3,4,5,6
+
+
+===============Proc--to lead all project datasets info
+
+DECLARE schema_list ARRAY<STRING>;
+DECLARE iter INT64 DEFAULT 0;
+DECLARE query_string STRING;
+
+DECLARE project_list ARRAY<STRING>;
+
+SET project_list = (
+  SELECT
+    ARRAY_AGG(projectname) from ( select distinct project.id projectname
+ FROM   `prod-pch-it-secmon.it_gcp_billing_export.gcp_billing_export_v1_014161_F9CD83_314E17` WHERE  _PARTITIONTIME >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 2 DAY) and project.id is not null and project.id <>'prod-gold-core') kk 
+  );
+
+WHILE
+  iter < ARRAY_LENGTH(project_list) DO
+    SET query_string = "insert into   `gpcadmin.MetadataStore.all_projects_dataset_info`  SELECT catalog_name	,schema_name,	creation_time	,last_modified_time,location,TIMESTAMP_DIFF(CURRENT_TIMESTAMP(), creation_time, DAY) AS days_live,current_date() load_date FROM "
+      || project_list[OFFSET(iter)] || ".INFORMATION_SCHEMA.SCHEMATA";
+    EXECUTE IMMEDIATE query_string;
+    SET iter = iter + 1;
+END WHILE;
+
+
+SELECT
+ billing_account_id, project_id,
+ project_number,	project_name,
+   bill_date,
+  invoice_month,
+  SUM(IFNULL(cost,0)) total_cost ,current_date() load_date ,current_timestamp() load_timestamp from (  
+select billing_account_id,project.id project_id,	project.number project_number,	project.name project_name,date(usage_start_time) bill_date, invoice.month invoice_month,cost
+ FROM   `prod-pch-it-secmon.it_gcp_billing_export.gcp_billing_export_v1_014161_F9CD83_314E17` WHERE  _PARTITIONTIME >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 2 DAY) and project.id is not null and project.id ='prod-gold-core'
+ AND date(usage_start_time) = DATE(TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 1 DAY))) ll group by 1,2,3,4,5,6
+
+
+
+gcloud auth activate-service-account svc-prod-finops@gpcadmin.iam.gserviceaccount.com --key-file=gpcadmin-357e3f9daea4.json --project=gpcadmin
+
+
+
+DECLARE
+  select_dataset_sql STRING;
+  DECLARE
+  select_dataset_sql_new STRING;
+DECLARE
+  sql STRING;
+  #DECLARE current_projectname STRING DEFAULT projectname;
+SET
+  select_dataset_sql = (
+  SELECT
+    ARRAY_TO_STRING(ARRAY_AGG("SELECT project_id,dataset_id,table_id, TIMESTAMP_MILLIS(creation_time) AS creation_time, TIMESTAMP_MILLIS(last_modified_time) AS last_modified_time,type objtype ,row_count, size_bytes FROM `"||catalog_name||"."||schema_name||".__TABLES__`")," UNION ALL ") AS sql
+  FROM advertising-aggregates.INFORMATION_SCHEMA.SCHEMATA);
+  
+# SET    select_dataset_sql_new = (select REGEXP_REPLACE(select_dataset_sql, r'prod-gold-core', projectname));
+  
+SET
+  sql = FORMAT("""
+  insert into `gpcadmin.MetadataStore.all_projects_bq_tables_info` SELECT
+   project_id, dataset_id,table_id,creation_time,last_modified_time,CASE WHEN objtype = 1 THEN 'table' WHEN objtype = 2 THEN 'view' ELSE NULL END AS obj_type,
+    COUNT(*) AS tables,
+    SUM(row_count) AS total_rows,
+    SUM(size_bytes)/1e+6 AS size_mb,
+     SUM(size_bytes)/1e+9 AS size_gb,
+      SUM(size_bytes)/1e+12 AS size_tb,current_date() load_date
+  FROM (
+    %s
+    )
+  GROUP BY
+    1,2,3,4,5,6
+  ORDER BY
+    size_mb DESC 
+"""
+,select_dataset_sql 
+);
+EXECUTE IMMEDIATE  sql;
+
+
+--select distinct project_id from `gpcadmin.MetadataStore.all_pch_org_projects_info` where load_date='2022-02-15'

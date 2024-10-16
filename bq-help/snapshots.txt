@@ -1,0 +1,17 @@
+bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230326  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230326;
+bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230327  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230327;
+bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230328  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230328;
+bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230329  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230329;
+bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230330  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230330;
+bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230331  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230331;
+bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230401  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230401;
+bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230402  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230402;
+bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230334  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230334;
+bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230335  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230335;
+bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230336  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230336;
+bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230337  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230337;
+bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230338  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230338;
+bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230339  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230339;
+bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230340  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230340;
+bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230341  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230341;
+bq cp --snapshot --no_clobber prod-gold-external-user-lld:analytics_302115254.events_20230342  sb-analytics-infotrust:infotrust_team_workpsace.snap_events_20230342;

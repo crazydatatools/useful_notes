@@ -1,0 +1,70 @@
+#notebook_instance.tf
+resource "google_notebooks_instance" "test-notebook" {
+  name               = "test-notebook"
+  project            = "naka-test-notebook"
+  location           = "asia-northeast1-b"
+  machine_type       = "n1-standard-1" // n1-standard-1 $41.01 monthly estimate
+  install_gpu_driver = false
+  instance_owners    = ["naka@gmail.com"]
+  vm_image { // https://cloud.google.com/vertex-ai/docs/workbench/user-managed/images
+    project      = "deeplearning-platform-release"
+    image_family = "common-cpu-notebooks"
+  }
+  metadata = {
+    terraform = "true"
+  }
+}
+
+#service_account.tf
+
+resource "google_service_account" "workbench-default" {
+  account_id   = "workbench-default"
+  display_name = "Default service account for AI workbench"
+}
+resource "google_project_iam_binding" "workbench-default-bigquery-data-viwer" {
+  project = var.project
+  role    = "roles/bigquery.dataViewer"
+  members = ["serviceAccount:${google_service_account.workbench-default.email}"]
+}
+
+resource "google_project_iam_binding" "workbench-default-bigquery-job-user" {
+  project = var.project
+  role    = "roles/bigquery.jobUser" // to run a bigquery job https://cloud.google.com/bigquery/docs/access-control
+  members = ["serviceAccount:${google_service_account.workbench-default.email}"]
+}
+
+resource "google_project_iam_custom_role" "storage-reader" {
+  role_id     = "storageReader"
+  title       = "Custom Storage Reader"
+  description = "Allow to read storage"
+  permissions = ["storage.buckets.get"]
+}
+
+resource "google_project_iam_binding" "workbench-default-custom-storage-reader" {
+  project = var.project
+  role    = google_project_iam_custom_role.storage-reader.name
+  members = ["serviceAccount:${google_service_account.workbench-default.email}"]
+}
+
+resource "google_project_iam_binding" "workbench-default-storage-object-viewer" {
+  project = var.project
+  role    = "roles/storage.objectViewer"
+  members = ["serviceAccount:${google_service_account.workbench-default.email}"]
+}
+
+#bigquery_dataset.tf
+resource "google_bigquery_dataset" "test_dataset" {
+  dataset_id    = "test_dataset"
+  friendly_name = "test_dataset"
+  description   = "This is a test dataset"
+  location      = "asia-northeast1"
+
+  labels = {
+    terraform = "true"
+  }
+
+  access { // for workbench
+    role          = "READER"
+    user_by_email = google_service_account.workbench-default.email
+  }
+}

@@ -1,0 +1,153 @@
+
+SELECT * from (
+with recon_cnt as (SELECT count(cust_id) rcn_cnt from `prod-gold-core`.sa_dms_customer_core.tdmcust_recon where it_header_change_oper<>'d' ),
+fin_cnt as (SELECT count(cust_id)  fn_cnt from `prod-gold-core`.it_dms_customer.customer_tdmcust)
+select rcn_cnt,fn_cnt from recon_cnt,fin_cnt
+)WHERE IF(rcn_cnt = fn_cnt, true, ERROR(FORMAT('Error: recon object and final having differences, please check recon_object_count-%t, and fina_object_count-%t', rcn_cnt,fn_cnt)));
+ -- Create a temporary table called test_results.
+    EXECUTE IMMEDIATE
+     "CREATE TEMP TABLE test_results (test_id STRING,isFailed BOOLEAN,info ARRAY<STRUCT<transaction_id INT64, created_at TIMESTAMP, expire_time_after_purchase TIMESTAMP, expected TIMESTAMP, isFailed BOOLEAN>>)";
+
+    LOOP
+        SET i = i + 1;
+
+        IF i > ARRAY_LENGTH(tests) THEN 
+            LEAVE;
+        END IF;
+
+        IF i > 0 THEN
+        
+            EXECUTE IMMEDIATE "INSERT test_results" || format(test_query,tests[ORDINAL(i)],  tests[ORDINAL(i)] );
+        END IF;
+
+    END LOOP;
+
+    -- Now add dataset tests from the beginning:
+    SET  data_test_query =
+    """
+    insert test_results(test_id, isFailed)
+
+    with testData1 as (
+    select * from unnest([
+    struct
+    (1799867122 as user_id, 158 as product_id, timestamp (null) as expire_time_after_purchase,  70000000 as transaction_id, timestamp '2020-11-23 09:01:00' as created_at),
+    (1799867122,158,timestamp (null),70000001,timestamp '2020-11-23 09:15:00.042308 UTC'),
+    (1799867122,158,timestamp (null),70000002,timestamp '2020-11-23 09:30:00.042308 UTC'),
+    (1799867122,158,timestamp (null),70000003,timestamp '2020-11-23 09:45:00.042308 UTC')
+    ]
+    ) as t
+    )
+
+    select test_id 
+        , isFailed as isFailed 
+
+    from (    
+        -- test1:
+        select  
+            'For every (transaction_id) there is one and only one (created_at): ' as test_id 
+            , case when ( select count(distinct transaction_id) from testData1) -- expected value
+                = ( select count(distinct created_at) from testData1)         -- actual value
+            then false else true end
+            AS isFailed
+        
+        UNION ALL   
+
+        -- test2:
+        select  
+            'Transaction_ids are consecutive: ' as test_id
+            ,case when (
+                select count(*)
+                from (
+                    select * 
+                    , ROW_NUMBER()  OVER(order by created_at)       AS created_at_rank
+                    , ROW_NUMBER()  OVER(order by transaction_id)   AS transaction_id_rank
+                    from testData1 a 
+                ) a
+                where a.created_at_rank <> a.transaction_id_rank 
+                
+            ) = 0 
+            then false else true end 
+        ) r
+    ;
+    """
+    ;
+    EXECUTE IMMEDIATE data_test_query;
+
+    EXECUTE IMMEDIATE "SELECT * FROM test_results;";
+
+END;
+
+BEGIN
+  CALL staging.RunBQSQLUnitTests();
+EXCEPTION WHEN ERROR THEN
+  SELECT
+    @@error.message,
+    @@error.stack_trace,
+    @@error.statement_text,
+    @@error.formatted_stack_trace;
+END;
+
+-- to run from the shell:
+-- bq query --use_legacy_sql=false 'CALL staging.RunPurchaseSummarySQLTest();'
+
+https://github.com/mshakhomirov/bigquery_unit_tests/blob/master/chain_bq_unit_tests.sql
+
+
+with testData1 as (
+select * from unnest([
+  struct
+  (1799867122 as user_id, 158 as product_id, timestamp (null) as expire_time_after_purchase,  70000000 as transaction_id, timestamp '2020-11-23 09:01:00' as created_at),
+  (1799867122,158,timestamp (null),70000001,timestamp '2020-11-23 09:15:00.042308 UTC'),
+  (1799867122,158,timestamp (null),70000002,timestamp '2020-11-23 09:30:00.042308 UTC'),
+  (1799867122,158,timestamp (null),70000003,timestamp '2020-11-23 09:45:00.042308 UTC')
+  ]
+  ) as t
+  )
+select test_id 
+    , isFailed as isFailed 
+    ,null as info 
+
+
+from (
+  
+    -- test1:
+    select  
+        'For every (transaction_id) there is one and only one (created_at): ' as test_id 
+        , case when ( select count(distinct transaction_id) from testData1) -- expected value
+            = ( select count(distinct created_at) from testData1)         -- actual value
+        then false else true end
+        AS isFailed
+    
+    UNION ALL   
+
+    -- test2:
+    select  
+        'Transaction_ids are consecutive: ' as test_id
+        ,case when (
+            select count(*)
+            from (
+                select * 
+                , ROW_NUMBER()  OVER(order by created_at)       AS created_at_rank
+                , ROW_NUMBER()  OVER(order by transaction_id)   AS transaction_id_rank
+                from testData1 a 
+            ) a
+            where a.created_at_rank <> a.transaction_id_rank 
+            
+        ) = 0 
+        then false else true end 
+    ) r
+;
+
+EXECUTE IMMEDIATE "SELECT CONCAT('[', STRING_AGG(TO_JSON_STRING(t), ','), ']') data FROM test_results t;";
+
+    
+-- Performing simple healthcheks:
+-- We can extend this example by simulating an outage in an upstream data table (as if all records were accidentally removed). One of the ways you can guard against reporting on a faulty upstream data source is by adding health checks using the BigQuery ERROR() function:
+-- https://wideops.com/whats-happening-in-bigquery-new-features-bring-flexibility-and-scale-to-your-data-warehouse/
+
+-- Now let's imagine our pipeline is up and running processing new records. What I would like to do is to monitor every time it does the transformation and data load.
+-- One of the ways you can guard against reporting on a faulty data streams is by adding health checks using the BigQuery ERROR() function.
+-- We can now schedule this query to run hourly for example and receive notification if error was raised:
+
+    SELECT COUNT(*) as row_count FROM yourDataset.yourTable 
+    HAVING IF(row_count > ), true, ERROR(FORMAT('ERROR: row count must be > 0 but is %t',row_count)));

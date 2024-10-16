@@ -1,0 +1,160 @@
+# 1. Get all relevant details for success entries:
+###############################################################
+
+#Check last success entry in MySQL for COMPUTE:
+Select * from gcp_airflow_lastrun where airflow_mapping_id in
+(Select airflow_mapping_id from gcp_airflow_configobjs_mapping where airflow_binding_id in 
+(Select airflow_binding_id from gcp_airflow_scheduler 
+where group_binding_id in (62)))
+and insert_dt = '2024-08-28'
+-- and exec_start_ts > '2024-08-19 10:30:00.0'
+order by exec_start_ts desc
+
+delete from gcp_airflow_lastrun where airflow_mapping_id = 153
+and insert_dt = '2024-08-22'
+
+# Check PARENT airflow mapping Id success entry for COMPUTE:
+Select distinct airflow_mapping_id from gcp_airflow_lastrun where airflow_mapping_id in
+(Select distinct dependent_airflow_mapping_id from gcp_airflow_configobjs_dependency where airflow_mapping_id in
+(Select airflow_mapping_id from  gcp_airflow_configobjs_mapping where airflow_binding_id in
+(Select airflow_binding_id from gcp_airflow_scheduler 
+where group_binding_id in (80)))
+order by 1)
+and insert_dt = '2024-08-22'
+-- and exec_start_ts >= '2024-08-14 09:00:00'
+order by exec_start_ts
+
+#Check IN-PROCESS status in gcp_airflow_scheduler for COMPUTE:
+SELECT airflow_binding_id, dag_name, exec_flag  FROM mapr_bigdata_uat_metahub.gcp_airflow_scheduler
+where group_binding_id = 62
+order by exec_order
+
+#Check last success entry in MySQL for INGESTION for a specific SA table name:
+select * from gcp_ingestion_lastrun where mapping_id in
+(Select mapping_id from gcp_scheduler_ingestion_mapping where sourceid in
+(Select sourceid from gcp_ingestion_sources where 
+satablename like '%session%'))
+and lastrundate = '2024-08-21'
+order by jobstarttime desc
+
+# Get all relevant DATA INGESTION Job details for a specific SA table name:
+select * from vw_gcp_ingestion_details where sourceid in
+(Select sourceid from gcp_ingestion_sources where 
+satablename like '%session%')
+
+# Get all relevant INGESTION SOURCE details for a specific SA table name:
+select * from gcp_ingestion_sources where sourceid in
+(Select sourceid from gcp_ingestion_sources where 
+satablename like '%session%')
+
+# Get all relevant INGESTION Controller details for a specific SA table name:
+SELECT * FROM mapr_bigdata_uat_metahub.gcp_ingestion_controller
+where sourceid in (Select sourceid from gcp_ingestion_sources where 
+satablename like '%session%')
+
+
+#Check IN-PROCESS status in gcp_scheduler for INGESTION for specific subject area name:
+Select group_binding_id, trigger_script, exec_flag, modified_ts from gcp_scheduler where group_binding_id in
+(Select group_binding_id from gcp_scheduler_scheduler_trigger where 
+trigger_group_binding_id in (Select DISTINCT group_binding_id from gcp_airflow_scheduler where airflow_binding_id in
+(Select airflow_binding_id from gcp_airflow_configobjs_mapping where object_id in
+(Select object_id from gcp_config_objects where subjectarea_id in (
+Select subjectarea_id from gcp_subjectarea WHERE 
+subjectarea_name  like '%session_manager%')))))
+#############################################################
+
+
+
+
+# 2. Get all relevant entries for a specific COMPUTE GROUP_BINDING_ID:
+#############################################################
+
+#STEP 1:
+#Fetch COMPUTE GROUP_BINDING_ID from subject area name:
+Select DISTINCT group_binding_id from gcp_airflow_scheduler where airflow_binding_id in
+(Select airflow_binding_id from gcp_airflow_configobjs_mapping where object_id in
+(Select object_id from gcp_config_objects where subjectarea_id in (
+Select subjectarea_id from gcp_subjectarea WHERE 
+subjectarea_name  like '%session_manager%')))
+
+# Fetch INGESTION source TIED to a specific COMPUTE group_bingind_id:
+select * from vw_gcp_ingestion_details where parent_binding_id in
+(Select group_binding_id from gcp_scheduler_scheduler_trigger gsst 
+where trigger_group_binding_id = 55)
+
+
+# Get INGESTION related details for a specific SA table name:
+select * from vw_gcp_ingestion_details where sourceid in
+(Select sourceid from gcp_ingestion_sources where 
+satablename like '%session%')
+
+# Get all Scheduling info for a specific COMPUTE group_bingind_id:
+Select * from gcp_config_objects where object_id in
+(Select object_id from gcp_airflow_configobjs_mapping where airflow_binding_id in 
+(Select airflow_binding_id from gcp_airflow_scheduler WHERE group_binding_id = 62))
+
+Select * from gcp_subjectarea gs 
+
+# Get partition and sql location info for a specific COMPUTE group_bingind_id:
+Select * from gcp_airflow_configobjs_mapping where object_id in
+(Select object_id from gcp_airflow_configobjs_mapping where airflow_binding_id in 
+(Select airflow_binding_id from gcp_airflow_scheduler WHERE group_binding_id = 62))
+
+# Get DAG name and script location info for a specific COMPUTE group_bingind_id:
+Select * from gcp_airflow_scheduler where airflow_binding_id in 
+(Select airflow_binding_id from gcp_airflow_scheduler WHERE group_binding_id = 62)
+
+# Get all dependencies for a specific COMPUTE group_bingind_id:
+Select * from gcp_airflow_configobjs_dependency where airflow_mapping_id in
+(Select airflow_mapping_id from gcp_airflow_configobjs_mapping where airflow_binding_id in 
+(Select airflow_binding_id from gcp_airflow_scheduler WHERE group_binding_id = 62))
+##################################################################
+
+
+
+# 3. Get all relevant entries for a specific COMPUTE SUBJECTAREA_ID:
+#############################################################
+
+# Get all Scheduling info for a specific COMPUTE subjectarea_id:
+Select * from gcp_config_objects where object_id in
+(Select object_id from gcp_config_objects where subjectarea_id = 132)
+
+# Get partition and sql location info for a specific COMPUTE subjectarea_id:
+Select * from gcp_airflow_configobjs_mapping where object_id in
+(Select object_id from gcp_config_objects where subjectarea_id = 132)
+
+# Get DAG name and script location info for a specific COMPUTE subjectarea_id:
+Select * from gcp_airflow_scheduler where airflow_binding_id in 
+(Select airflow_binding_id from gcp_airflow_configobjs_mapping where object_id in
+(Select object_id from gcp_config_objects where subjectarea_id = 132))
+
+# Get all PARENT dependencies for a specific COMPUTE subjectarea_id:
+Select * from gcp_airflow_configobjs_dependency where airflow_mapping_id in
+(Select airflow_mapping_id from gcp_airflow_configobjs_mapping where object_id in
+(Select object_id from gcp_config_objects where subjectarea_id = 123))
+
+# Get all CHILD dependencies for a specific COMPUTE subjectarea_id:
+Select * from gcp_airflow_configobjs_dependency where dependent_airflow_mapping_id in
+(Select airflow_mapping_id from gcp_airflow_configobjs_mapping where object_id in
+(Select object_id from gcp_config_objects where subjectarea_id = 126))
+and airflow_mapping_id not in ((Select airflow_mapping_id from gcp_airflow_configobjs_mapping where object_id in
+(Select object_id from gcp_config_objects where subjectarea_id = 126)))
+
+
+# Get all CHILD dependency DAGs for a specific COMPUTE subjectarea_id:
+Select * from gcp_airflow_scheduler where airflow_binding_id in 
+(Select airflow_binding_id from gcp_airflow_configobjs_mapping 
+where airflow_mapping_id in 
+(Select airflow_mapping_id from gcp_airflow_configobjs_dependency where dependent_airflow_mapping_id in
+(Select airflow_mapping_id from gcp_airflow_configobjs_mapping where object_id in
+(Select object_id from gcp_config_objects where subjectarea_id = 126))
+and airflow_mapping_id not in ((Select airflow_mapping_id from gcp_airflow_configobjs_mapping where object_id in
+(Select object_id from gcp_config_objects where subjectarea_id = 126)))))
+##################################################################
+
+
+# 4. Final verification:
+################################################################
+Select * from vw_gcp_compute_basic_details where object_id in
+(Select object_id from gcp_config_objects where subjectarea_id = 132)
+################################################################

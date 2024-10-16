@@ -1,0 +1,119 @@
+# Dataset Service Insert
+protoPayload.authenticationInfo.principalEmail="rjannu@pch.com"
+protoPayload.authorizationInfo.permission="bigquery.datasets.create"
+protoPayload.methodName="datasetservice.insert"
+
+
+# Table Service Insert
+protoPayload.authenticationInfo.principalEmail="rjannu@pch.com"
+protoPayload.authorizationInfo.permission="bigquery.tables.create"
+--protoPayload.methodName="datasetservice.insert"
+--protoPayload.resourceName="projects/dev-cd-shared-infra/datasets/RaviDataset3/tables/ravitable3"
+
+
+# TABLe replace or recreate table
+protoPayload.authenticationInfo.principalEmail="rjannu@pch.com"
+--protoPayload.authorizationInfo.permission="bigquery.tables.create"
+--protoPayload.authorizationInfo.permission="bigquery.tables.updateData"
+--protoPayload.metadata.tableDataChange.truncated="true"
+protoPayload.authorizationInfo.permission="bigquery.tables.update"
+
+severity>=ERROR 301346062336"
+serviceAccount:o523597170945-718150@gcp-sa-logging.iam.gserviceaccount.com
+#Table Insert Data to Table:-
+--protoPayload.authenticationInfo.principalEmail="rjannu@pch.com"
+protoPayload.authorizationInfo.permission="bigquery.tables.updateData"
+protoPayload.resourceName="projects/dev-cd-shared-infra/datasets/RaviDataset3/tables/ravitable4"
+protoPayload.metadata.tableDataChange.insertedRowsCount>="1"
+
+
+##Deleted records Count or truncate
+protoPayload.authorizationInfo.permission="bigquery.tables.updateData"
+protoPayload.resourceName="projects/dev-cd-shared-infra/datasets/RaviDataset3/tables/ravitable4"
+protoPayload.metadata.tableDataChange.deletedRowsCount>="1"
+
+#Table Export
+protoPayload.authorizationInfo.permission="bigquery.tables.export"
+protoPayload.metadata.jobChange.job.jobConfig.type="EXPORT"
+protoPayload.metadata.jobChange.job.jobConfig.type="COPY"
+
+protoPayload.serviceData.jobInsertResponse.resource.jobConfiguration.query.statementType="INSERT"
+
+
+resource.type="bigquery_resource"
+logName=("projects/pch-app-2014/logs/cloudaudit.googleapis.com%2Factivity" OR "projects/pch-app-2014/logs/cloudaudit.googleapis.com%2Fdata_access")
+protoPayload.methodName="jobservice.jobcompleted"
+severity>=ERROR
+protoPayload.serviceData.jobCompletedEvent.job.jobConfiguration.query.queryPriority="QUERY_INTERACTIVE"
+protoPayload.serviceData.jobCompletedEvent.job.jobConfiguration.query.statementType="UPDATE"
+
+
+sink_pchcom_bq_errors
+
+sink_pchcom_bq_errors
+
+serviceAccount:o523597170945-157615@gcp-sa-logging.iam.gserviceaccount.com
+
+--include-children \
+organization=ORGANIZATION_ID
+prod-pch-it-secmon.it_gcp_all_bq_errors_export
+gcloud logging sinks create SINK_NAME \
+bigquery.googleapis.com/projects/PROJECT_ID/datasets/DATASET_ID --include-children \
+--folder=FOLDER_ID --log-filter="logName:activity"
+
+
+Cloud Console Logs Viewer Use this advanced filter:
+
+protoPayload.metadata.@type="type.googleapis.com/google.cloud.audit.BigQueryAuditMetadata" 
+AND ( 
+  (
+    protoPayload.metadata.jobChange.job.jobConfig.queryConfig.statementType="SCRIPT" 
+    AND protoPayload.metadata.jobChange.job.jobStatus.jobState="DONE"
+  ) 
+  OR ( 
+    protoPayload.metadata.jobChange.job.jobStats.parentJobName!="" 
+    AND protoPayload.metadata.jobChange.job.jobStatus.jobState="DONE"
+  ) 
+  OR protoPayload.metadata.tableDataChange.reason="QUERY"
+  OR protoPayload.metadata.tableCreation.reason="QUERY"
+  OR protoPayload.metadata.tableChangeEvent.reason="QUERY"
+  OR protoPayload.metadata.tableDeletion.reason="QUERY" 
+  OR protoPayload.metadata.tableDataRead.reason="QUERY"  
+)
+
+gcloud beta logging sinks create my_org_logs_to_bq \
+bigquery.googleapis.com/projects/my-project/datasets/my_dataset  \
+--use-partitioned-tables \
+--include-children \
+--organization=12345678910 \
+--log-filter=protoPayload.serviceName=bigquery.googleapis.com
+
+##https://cloud.google.com/blog/products/data-analytics/bigquery-audit-logs-pipelines-analysis
+SELECT
+REGEXP_EXTRACT(protopayload_auditlog.resourceName, 'projects/([^/]+)') as projectid,
+REGEXP_EXTRACT(protopayload_auditlog.resourceName, '/datasets/([^/]+)') AS datasetid,
+REGEXP_EXTRACT(protopayload_auditlog.resourceName, '/tables/([^/]+)') AS tableid,
+protopayload_auditlog.methodName as method,
+protopayload_auditlog.metadataJson,
+timestamp
+FROM `tw-pso-bq-admin.bq_logs.cloudaudit_googleapis_com_system_event`
+ WHERE lower(protopayload_auditlog.methodName) = 'internaltableexpired'
+
+
+
+ 
+protoPayload.resourceName="projects/pch-dw-2014/datasets/Reporting/tables/MediaSessionsByDevice"
+protoPayload.methodName="google.cloud.bigquery.v2.JobService.InsertJob"
+svc-prod-reporting-diginsights@gpcadmin.iam.gserviceaccount.com
+
+
+resource.type="bigquery_resource" AND
+proto_payload.method_name="jobservice.jobcompleted" AND
+proto_payload.service_data.job_completed_event.job.job_statistics.total_billed_bytes>100111111100
+
+
+gcloud eventarc triggers create events-pubsub-trigger \
+    --destination-run-service=helloworld-events-pubsub-quickstart \
+    --destination-run-region=us-central1 \
+    --event-filters="type=google.cloud.pubsub.topic.v1.messagePublished" \
+    --transport-topic=projects/PROJECT_ID/topics/TOPIC_ID

@@ -1,0 +1,96 @@
+DECLARE jsonstring DEFAULT """
+{
+    "teamName": "teamAlpha",
+    "location": {
+        "country": "USA",
+        "state": "NY",
+        "city": "New York"
+    },
+    "members": [
+        {
+            "memberName": "member1",
+            "age": "25",
+            "languageCode": "FR",
+            "abilities": [
+                "football",
+                "cricket",
+                "chess"
+            ]
+        },
+        {
+            "memberName": "member2",
+            "age": "30",
+            "languageCode": "EN",
+            "abilities": [
+                "ping-pong",
+                "solitaire",
+                "chess"
+            ]
+        },
+        {
+            "memberName": "member3",
+            "age": "21",
+            "languageCode": "DE",
+            "abilities": [
+                "football",
+                "poker",
+                "tennis"
+            ]
+        },
+        {
+            "memberName": "member4",
+            "age": "26",
+            "languageCode": "ES",
+            "abilities": [
+                "weightlifting",
+                "cricket",
+                "swimming"
+            ]
+        }
+    ]
+}
+""";
+
+
+
+WITH parsed_json AS 
+
+(
+SELECT PARSE_JSON(jsonstring) AS  jsondata 
+)
+
+SELECT 
+
+  STRUCT(
+
+    JSON_VALUE(jsondata, "$.teamName") AS team_name,
+
+    STRUCT(
+
+      JSON_VALUE(jsondata, "$.location.country") AS  name,
+      JSON_VALUE(jsondata, "$.location.state") AS  state,
+      JSON_VALUE(jsondata, "$.location.city") AS  city
+
+          ) AS location,
+
+
+    ARRAY(
+
+      SELECT STRUCT(
+
+      JSON_VALUE(member, '$.memberName') AS member_name,
+      JSON_VALUE(member, '$.languageCode') AS language_code,
+      CAST(JSON_VALUE(member, '$.age') AS INT64) AS age,
+      ARRAY ( SELECT JSON_VALUE(ability) FROM UNNEST(JSON_EXTRACT_ARRAY(member, '$.abilities')) AS ability) AS abilities
+
+      )
+
+      FROM UNNEST(JSON_EXTRACT_ARRAY(jsondata, "$.members")) AS member
+
+    ) AS members
+
+
+  ) AS data
+
+
+FROM parsed_json

@@ -1,0 +1,305 @@
+
+DECLARE active_logical_gib_price FLOAT64 DEFAULT 0.02;
+DECLARE long_term_logical_gib_price FLOAT64 DEFAULT 0.01;
+DECLARE active_physical_gib_price FLOAT64 DEFAULT 0.04;
+DECLARE long_term_physical_gib_price FLOAT64 DEFAULT 0.02;
+
+create or replace table gpcadmin.MetadataStore.all_projects_bqobjects_storage_624 as 
+WITH
+ storage_sizes AS (
+   SELECT project_id,
+     table_schema AS dataset_name,
+     -- Logical
+     SUM(IF(deleted=false, active_logical_bytes, 0)) / power(1024, 3) AS active_logical_gib,
+     SUM(IF(deleted=false, long_term_logical_bytes, 0)) / power(1024, 3) AS long_term_logical_gib,
+     -- Physical
+     SUM(active_physical_bytes) / power(1024, 3) AS active_physical_gib,
+     SUM(active_physical_bytes - time_travel_physical_bytes) / power(1024, 3) AS active_no_tt_physical_gib,
+     SUM(long_term_physical_bytes) / power(1024, 3) AS long_term_physical_gib,
+     -- Restorable previously deleted physical
+     SUM(time_travel_physical_bytes) / power(1024, 3) AS time_travel_physical_gib,
+     SUM(fail_safe_physical_bytes) / power(1024, 3) AS fail_safe_physical_gib,
+   FROM
+     `region-us`.INFORMATION_SCHEMA.TABLE_STORAGE_BY_ORGANIZATION
+   WHERE total_physical_bytes > 0
+     -- Base the forecast on base tables only for highest precision results
+     AND table_type  = 'BASE TABLE'
+     GROUP BY 1,2
+ )
+SELECT project_id,
+  dataset_name,
+  -- Logical
+  ROUND(active_logical_gib, 2) AS active_logical_gib,
+  ROUND(long_term_logical_gib, 2) AS long_term_logical_gib,
+  -- Physical
+  ROUND(active_physical_gib, 2) AS active_physical_gib,
+  ROUND(time_travel_physical_gib, 2) AS time_travel_physical_gib,
+  ROUND(long_term_physical_gib, 2) AS long_term_physical_gib,
+  (ROUND(active_logical_gib, 2)+ROUND(long_term_logical_gib, 2)) as total_logical_gib,
+  (ROUND(active_physical_gib, 2)+ROUND(long_term_physical_gib, 2)) as total_physical_gib,
+  -- Compression ratio
+  ROUND(SAFE_DIVIDE(active_logical_gib, active_no_tt_physical_gib), 2) AS active_compression_ratio,
+  ROUND(SAFE_DIVIDE(long_term_logical_gib, long_term_physical_gib), 2) AS long_term_compression_ratio,
+  -- Forecast costs logical
+  ROUND(active_logical_gib * active_logical_gib_price, 2) AS forecast_active_logical_cost,
+  ROUND(long_term_logical_gib * long_term_logical_gib_price, 2) AS forecast_long_term_logical_cost,
+  -- Forecast costs physical
+  ROUND((active_no_tt_physical_gib + time_travel_physical_gib + fail_safe_physical_gib) * active_physical_gib_price, 2) AS forecast_active_physical_cost,
+  ROUND(long_term_physical_gib * long_term_physical_gib_price, 2) AS forecast_long_term_physical_cost,
+  -- Forecast costs total
+  ROUND(((active_logical_gib * active_logical_gib_price) + (long_term_logical_gib * long_term_logical_gib_price)) -
+     (((active_physical_gib + fail_safe_physical_gib) * active_physical_gib_price) + (long_term_physical_gib * long_term_physical_gib_price)), 2) AS forecast_total_cost_difference
+FROM
+  storage_sizes 
+ORDER BY
+  (forecast_active_logical_cost + forecast_active_physical_cost) DESC;
+  ===================
+  create or replace table gpcadmin.MetadataStore.all_bq_table_stats_623 as
+select table_database,
+table_schema,
+table_name,
+table_type,count(column_name) column_name_cnt, max(stats__date_shards__value) is_sharded_cnt,
+max(stats__date_shard_min__value) shard_min,max(stats__date_shard_max__value) shard_max, max(stats__num_rows__value) no_rows,max(stats__num_bytes_gb__value) data_size, max(stats__partitioning_type__value) is_partition,max(stats__clustering_fields__value) is_clustering,max(date(creation_time)) creation_dt, max(date(last_modified_time)) last_modified_dt
+from `gpcadmin.MetadataStore.all_projects_bq_objects_complete_stats_v2`  where load_date="2024-06-21" and table_type='table' 
+group by 1,2,3,4
+
+create or replace table gpcadmin.MetadataStore.all_bq_table_stats_623 as
+select table_database,
+table_schema,
+table_name,
+table_type,count(column_name) column_name_cnt, max(stats__date_shards__value) is_sharded_cnt,
+max(stats__date_shard_min__value) shard_min,max(stats__date_shard_max__value) shard_max, max(stats__num_rows__value) no_rows,max(stats__num_bytes_gb__value) data_size, max(stats__partitioning_type__value) is_partition,max(stats__clustering_fields__value) is_clustering,max(date(creation_time)) creation_dt, max(date(last_modified_time)) last_modified_dt
+from `gpcadmin.MetadataStore.all_projects_bq_objects_complete_stats_v2`  where load_date="2024-06-21" and table_type='table' 
+group by 1,2,3,4
+=====
+
+create or replace table gpcadmin.MetadataStore.all_projects_bqobjects_storage_all_stats624 as 
+select table_database,
+table_schema,
+table_name,
+b.active_logical_gib,
+b.long_term_logical_gib,
+b.total_logical_gib,
+b.active_physical_gib,
+b.long_term_physical_gib,
+b.total_physical_gib,
+b.time_travel_physical_gib,
+(b.total_logical_gib+b.total_physical_gib+b.time_travel_physical_gib) total_size_all_gb,
+column_name_cnt,
+is_sharded_cnt,
+shard_min,
+shard_max,
+no_rows,
+data_size,
+is_partition,
+is_clustering,
+creation_dt,
+last_modified_dt
+ from gpcadmin.MetadataStore.all_bq_table_stats_623 a 
+ left join gpcadmin.MetadataStore.all_projects_bqobjects_storage_624 b on
+ a.table_database=b.project_id and a.table_schema=b.dataset_name
+
+
+SELECT * FROM `gpcadmin.MetadataStore.all_projects_bqobjects_storage_all_stats624` order by data_size desc
+SELECT *,date_diff( current_date,last_modified_dt,DAY) not_updated_since_days FROM `gpcadmin.MetadataStore.all_projects_bqobjects_storage_all_stats624` 
+where table_database='pch-app-2014' order by data_size desc
+
+
+select * 
+from `gpcadmin.MetadataStore.all_projects_bq_objects_complete_stats_v2`  where load_date="2024-06-21" and table_type='table' and (column_name like '%matchcode%' or  column_name like '%cust_id%')
+
+
+
+
+SELECT
+date(creation_time) job_date,
+k.project_id job_triggered_from,
+referenced_tables.project_id job_ref_projectid,referenced_tables.dataset_id, case when REGEXP_CONTAINS(referenced_tables.table_id, '^.+[0-9]{8}$') then concat(REGEXP_EXTRACT(referenced_tables.table_id, '^(.+)[0-9]{8}$'),'*') else referenced_tables.table_id end as table_id,
+ARRAY_TO_STRING(ARRAY_AGG(distinct user_email),',') user_list,
+count(distinct job_id) obj_referenced_cnt
+FROM `pch-app-2014`.`region-us`.INFORMATION_SCHEMA.JOBS_BY_PROJECT k,
+UNNEST(referenced_tables) AS referenced_tables
+WHERE job_type = 'QUERY' and user_email<>'rjannu@gmail.com' and k.project_id<>'gpcadmin'
+AND DATE(creation_time) = DATE_SUB(DATE(CURRENT_TIMESTAMP()), INTERVAL 1 DAY)
+group by 1,2,3,4,5
+
+
+create or replace table gpcadmin.MetadataStore.pchraw_obs_usage as 
+SELECT
+date(creation_time) job_date,
+k.project_id job_triggered_from,
+referenced_tables.project_id job_ref_projectid,referenced_tables.dataset_id, case when REGEXP_CONTAINS(referenced_tables.table_id, '^.+[0-9]{8}$') then concat(REGEXP_EXTRACT(referenced_tables.table_id, '^(.+)[0-9]{8}$'),'*') else referenced_tables.table_id end as table_id,
+ARRAY_TO_STRING(ARRAY_AGG(distinct user_email),',') user_list,
+count(distinct job_id) obj_referenced_cnt
+FROM `pch-app-2014`.`region-us`.INFORMATION_SCHEMA.JOBS_BY_PROJECT k,
+UNNEST(referenced_tables) AS referenced_tables
+WHERE job_type = 'QUERY' and user_email<>'rjannu@gmail.com' and k.project_id<>'gpcadmin'
+AND DATE(creation_time) = DATE_SUB(DATE(CURRENT_TIMESTAMP()), INTERVAL 1 DAY)
+group by 1,2,3,4,5
+
+
+SELECT a.*,b.job_ref_projectid,b.obj_referenced_cnt,b.user_list FROM `gpcadmin.MetadataStore.all_projects_bqobjects_storage_all_stats624` a
+left join gpcadmin.MetadataStore.pchraw_obs_usage b on a.table_database=b.job_triggered_from and a.table_schema=b.dataset_id and a.table_name=b.table_id
+where table_database='pch-app-2014' order by data_size desc
+
+
+
+============================
+
+
+create or replace table gpcadmin.MetadataStore.pchraw_obs_usage as 
+SELECT
+date(creation_time) job_date,
+k.project_id job_triggered_from,
+referenced_tables.project_id job_ref_projectid,referenced_tables.dataset_id, case when REGEXP_CONTAINS(referenced_tables.table_id, '^.+[0-9]{8}$') then concat(REGEXP_EXTRACT(referenced_tables.table_id, '^(.+)[0-9]{8}$'),'*') else referenced_tables.table_id end as table_id,DATE_DIFF( current_date(),date(creation_time), DAY)day_count,
+ARRAY_TO_STRING(ARRAY_AGG(distinct user_email),',') user_list,
+count(distinct job_id) obj_referenced_cnt
+FROM `pch-app-2014`.`region-us`.INFORMATION_SCHEMA.JOBS_BY_PROJECT k,
+UNNEST(referenced_tables) AS referenced_tables
+WHERE job_type = 'QUERY' and user_email<>'rjannu@gmail.com' and k.project_id<>'gpcadmin'
+AND DATE(creation_time) >= DATE_SUB(DATE(CURRENT_TIMESTAMP()), INTERVAL 30 DAY)
+group by 1,2,3,4,5,6
+
+create or replace table gpcadmin.MetadataStore.pchraw_obs_usage_vars_lst30days as 
+WITH
+  activity_drv AS (
+  SELECT
+  job_triggered_from,
+job_ref_projectid,
+dataset_id,
+table_id,
+--user_list,
+
+CASE
+WHEN day_count between 0 and 1 THEN obj_referenced_cnt
+ ELSE 0 END obj_referenced_cnt_lst_1day,
+ CASE
+WHEN day_count between 1 and 7 THEN obj_referenced_cnt
+ ELSE 0 END obj_referenced_cnt_lst_7day,
+  CASE
+WHEN day_count between 1 and 15 THEN obj_referenced_cnt
+ ELSE 0 END obj_referenced_cnt_lst_15day,
+   CASE
+WHEN day_count between 1 and 30 THEN obj_referenced_cnt
+ ELSE 0 END obj_referenced_cnt_lst_30day, 
+ day_count
+ from gpcadmin.MetadataStore.pchraw_obs_usage 
+  )
+  select 
+    job_triggered_from,
+job_ref_projectid,
+dataset_id,
+table_id,
+--user_list,
+sum(obj_referenced_cnt_lst_1day) obj_referenced_cnt_lst_1day,
+sum(obj_referenced_cnt_lst_7day) obj_referenced_cnt_lst_7day,
+sum(obj_referenced_cnt_lst_15day) obj_referenced_cnt_lst_15day,
+sum(obj_referenced_cnt_lst_30day) obj_referenced_cnt_lst_30day
+from activity_drv
+group by 1,2,3,4
+
+SELECT a.*,b.job_ref_projectid,b.obj_referenced_cnt_lst_1day,
+b.obj_referenced_cnt_lst_7day,
+b.obj_referenced_cnt_lst_15day,
+b.obj_referenced_cnt_lst_30day
+ FROM `gpcadmin.MetadataStore.all_projects_bqobjects_storage_all_stats624` a
+left join gpcadmin.MetadataStore.pchraw_obs_usage_vars_lst30days b on a.table_database=b.job_ref_projectid and a.table_schema=b.dataset_id and a.table_name=b.table_id
+where table_database='pch-app-2014' order by data_size desc
+
+
+===========Final=================
+
+create or replace table gpcadmin.MetadataStore.all_bq_objs_usage_731 as 
+SELECT
+date(creation_time) job_date,
+k.project_id job_triggered_from,
+referenced_tables.project_id job_ref_projectid,referenced_tables.dataset_id, case when REGEXP_CONTAINS(referenced_tables.table_id, '^.+[0-9]{8}$') then concat(REGEXP_EXTRACT(referenced_tables.table_id, '^(.+)[0-9]{8}$'),'*') else referenced_tables.table_id end as table_id,DATE_DIFF( current_date(),date(creation_time), DAY)day_count,
+ARRAY_TO_STRING(ARRAY_AGG(distinct user_email),',') user_list,
+count(distinct job_id) obj_referenced_cnt
+FROM `region-us`.INFORMATION_SCHEMA.JOBS_BY_ORGANIZATION k,
+UNNEST(referenced_tables) AS referenced_tables
+WHERE job_type = 'QUERY' and user_email<>'rjannu@gmail.com' and k.project_id<>'gpcadmin'
+AND DATE(creation_time) >= DATE_SUB(DATE(CURRENT_TIMESTAMP()), INTERVAL 30 DAY)
+group by 1,2,3,4,5,6
+
+
+create or replace table gpcadmin.MetadataStore.all_bq_objs_usage_731_vars_lst30days as 
+WITH
+  activity_drv AS (
+  SELECT
+
+job_ref_projectid,
+dataset_id,
+table_id, user_list,
+ job_triggered_from, 
+CASE
+WHEN day_count between 0 and 1 THEN obj_referenced_cnt
+ ELSE 0 END obj_referenced_cnt_lst_1day,
+ CASE
+WHEN day_count between 1 and 7 THEN obj_referenced_cnt
+ ELSE 0 END obj_referenced_cnt_lst_7day,
+  CASE
+WHEN day_count between 1 and 15 THEN obj_referenced_cnt
+ ELSE 0 END obj_referenced_cnt_lst_15day,
+   CASE
+WHEN day_count between 1 and 30 THEN obj_referenced_cnt
+ ELSE 0 END obj_referenced_cnt_lst_30day, 
+ day_count
+ from gpcadmin.MetadataStore.all_bq_objs_usage_731 
+  )
+  select 
+    
+job_ref_projectid,
+dataset_id,
+table_id,ARRAY_TO_STRING(ARRAY_AGG(distinct job_triggered_from),',') job_triggered_from,
+ARRAY_TO_STRING(ARRAY_AGG(distinct user_list),',') user_list,
+sum(obj_referenced_cnt_lst_1day) obj_referenced_cnt_lst_1day,
+sum(obj_referenced_cnt_lst_7day) obj_referenced_cnt_lst_7day,
+sum(obj_referenced_cnt_lst_15day) obj_referenced_cnt_lst_15day,
+sum(obj_referenced_cnt_lst_30day) obj_referenced_cnt_lst_30day
+from activity_drv
+group by 1,2,3
+
+SELECT a.*,b.job_triggered_from,b.obj_referenced_cnt_lst_1day,
+b.obj_referenced_cnt_lst_7day,
+b.obj_referenced_cnt_lst_15day,
+b.obj_referenced_cnt_lst_30day
+ FROM `gpcadmin.MetadataStore.all_projects_bqobjects_storage_all_stats624` a
+left join gpcadmin.MetadataStore.all_bq_objs_usage_731_vars_lst30days b on a.table_database=b.job_ref_projectid and a.table_schema=b.dataset_id and a.table_name=b.table_id
+where table_database='pch-app-2014' order by data_size desc
+
+
+CALL BQ.REFRESH_MATERIALIZED_VIEW('dev-gold-core.it_cm_onl_etl_emailhub_com_recon.eh_pre_agg_vars_app_mv');
+
+
+ALTER MATERIALIZED VIEW `dev-gold-core.it_cm_onl_etl_rpt_com_recon.tdmnono_custid_reconciled_mv`
+SET OPTIONS (enable_refresh = false);
+
+
+ SELECT
+
+  concat("drop table if exists `",table_catalog,"`.`", table_schema,"`." ,table_name,";") table_to_drop_qry--,table_name 
+  --, extract(year from creation_time) yr
+
+FROM
+
+ dev-gold-core.offline_migration_dev_test.INFORMATION_SCHEMA.TABLES
+
+SELECT a.*,date_diff( current_date,last_modified_dt,DAY) not_updated_since_days,b.job_triggered_from,b.obj_referenced_cnt_lst_1day,
+b.obj_referenced_cnt_lst_7day,
+b.obj_referenced_cnt_lst_15day,
+b.obj_referenced_cnt_lst_30day
+ FROM `gpcadmin.MetadataStore.all_projects_bqobjects_storage_all_stats915` a
+left join gpcadmin.MetadataStore.all_bq_objs_usage_731_vars_lst30days b on a.table_database=b.job_ref_projectid and a.table_schema=b.dataset_id and a.table_name=b.table_id
+--where table_database like '%gold%'
+ order by data_size desc
+
+
+SELECT a.*,date_diff( current_date,last_modified_dt,DAY) not_updated_since_days,b.job_triggered_from,b.obj_referenced_cnt_lst_1day,
+b.obj_referenced_cnt_lst_7day,
+b.obj_referenced_cnt_lst_15day,
+b.obj_referenced_cnt_lst_30day
+ FROM `gpcadmin.MetadataStore.all_projects_bqobjects_storage_all_stats915` a
+left join gpcadmin.MetadataStore.all_bq_objs_usage_731_vars_lst30days b on a.table_database=b.job_ref_projectid and a.table_schema=b.dataset_id and a.table_name=b.table_id
+--where table_database like '%gold%'
+ order by data_size desc

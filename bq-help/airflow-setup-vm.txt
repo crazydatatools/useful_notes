@@ -1,0 +1,182 @@
+VM--Let’s deploy a Debian instance with the minimum requirements for this case.
+e2-standard-2 (2vCPU, 8GB memory)
+Debian 10
+50 GB HDD
+Additionally, allo
+sudo apt update
+sudo apt -y upgrade
+sudo apt-get install wget 
+sudo apt install -y python3-pip
+
+--miniconda--to crete virtuanl environment
+mkdir -p ~/miniconda3 
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda3/miniconda.sh 
+bash ~/miniconda3/miniconda.sh -b -u -p ~/miniconda3 
+rm -rf ~/miniconda3/miniconda.sh 
+~/miniconda3/bin/conda init bash 
+~/miniconda3/bin/conda init zsh
+
+--activate
+mkdir airflow-medium
+cd airflow-medium 
+pwd #important for setting AIRFLOW HOME variable export AIRFLOW_HOME=/home/acachuan/airflow-medium
+conda create --name airflow-medium python=3.8 
+conda activate airflow-medium
+
+--install airflow--
+AIRFLOW_VERSION=2.0.1
+PYTHON_VERSION=3.8
+CONSTRAINT_URL="https://raw.githubusercontent.com/apache/airflow/constraints-${AIRFLOW_VERSION}/constraints-${PYTHON_VERSION}.txt"
+pip install "apache-airflow[gcp]==${AIRFLOW_VERSION}" --constraint "${CONSTRAINT_URL}"
+pip install pyspark==2.4.5
+pip install cryptography==2.9.2
+
+--DB-init
+airflow db init
+airflow users create -r Admin -u username -p mypassword -e example@mail.com -f yourname -l lastname
+
+airflow webserver -p 8080
+
+export AIRFLOW_HOME=/home/acachuan/airflow-medium 
+cd airflow-medium 
+conda activate airflow-medium
+airflow db init
+airflow scheduler
+Create a script, upload the file and keep it as a backup
+--gsutil cp gs://BUCKET-NAME/airfow-start.sh .
+#!/bin/bash
+export AIRFLOW_HOME=/home/antoniocachuan/airflow-medium
+cd /home/acachuan/airflow-medium
+conda activate /home/antoniocachuan/miniconda3/envs/airflow-medium
+nohup airflow scheduler >> scheduler.log &
+nohup airflow webserver -p 8080 >> webserver.log &
+
+It’s time to upload our key-file.json to our instance and move to the location
+
+/home/antoniocachuan/airflow-medium/secure/key-file.json
+
+
+
+import pyspark
+import yaml
+from google.cloud import storage
+from datetime import date
+import pandas as pd
+from google.cloud import bigquery
+from pyspark.sql import SparkSession
+
+tmp_bucket = "dataproc-etl-demo"
+bq_dataset_id = "sales"
+bq_write_mode = ""
+
+# Create a GCS client and download the YAML file.
+storage_client = storage.Client()
+bucket = storage_client.get_bucket('dataproc-etl-demo')
+blob = bucket.blob('elt_config.yaml')
+blob.download_to_filename('elt_config.yaml')
+
+# Read the YAML file.
+with open('elt_config.yaml', 'r') as f:
+  config = yaml.load(f, Loader=yaml.FullLoader)
+
+# Create a SparkSession 
+spark = SparkSession.builder \
+        .appName("Postgres_to_BigQuery") \
+        .config('temporaryGcsBucket',tmp_bucket) \
+        .getOrCreate()
+
+# Specify the Postgres database connection details. Replace <Private IP> with the IP of your DB instance, 
+# and replace <password> with your DB password
+postgres_url = "jdbc:postgresql://<private IP>:5432/postgres"
+postgres_properties = {"user": "postgres", "password": "<password>", "driver": "org.postgresql.Driver"}
+
+# Reading from postgres tables and writing to bigquery tables
+print("Starting data movement job.")
+for key, value in config.items():
+  source_table_name = value['source_table_name']
+  load_type = value['load_type']
+  incremental_identifier = value['incremental_identifier']
+  target_table_name = value['target_table_name']
+  load_type = value['load_type']
+  
+  if load_type == "incremental":  
+      s_query = "(select * from " + source_table_name + " where " + incremental_identifier + " >= current_date - interval '1 day') as pgtable"
+      bq_write_mode= "append"
+  else:
+      s_query = "(select * from " + source_table_name + " ) as pgtable"
+      bq_write_mode= "overwrite"
+
+  df = spark.read.jdbc(url=postgres_url, table=s_query, properties=postgres_properties)
+
+  bigquery_table_id = f"{bq_dataset_id}.{target_table_name}"
+
+# Write the DataFrame df to BigQuery
+  df.write.format("bigquery") \
+    .option("table", bigquery_table_id) \
+    .mode(bq_write_mode) \
+    .save()
+  print ("Records ingested : '"+ str(df.count()) +"', Source Table: " + source_table_name + ", Target table: "+target_table_name) 
+
+print("job successfully completed")
+
+
+---
+from pyspark.sql import SparkSession
+from pyspark.sql import *
+from datetime import datetime, timedelta
+from datetime import date
+from pyspark.sql import functions as F
+
+tmp_bucket = "dataproc-etl-demo"
+
+print("Transformation job started")
+# Create a Spark session
+spark = SparkSession.builder.appName("BigQueryTransform") \
+.config('temporaryGcsBucket',tmp_bucket) \
+.getOrCreate()
+
+today = date.today()
+
+# Convert the current date to strings
+yesterday_str = str(today - timedelta(1))
+today_str = str(today)
+
+# Query to fetch day-1 records
+query = f"order_date >= '{yesterday_str}' AND order_date < '{today_str}'"
+
+orders_df = spark.read.format("bigquery") \
+.option("table", "<project_id>.sales.b_orders") \
+.option("filter", query) \
+.load()
+
+orders_df = orders_df.withColumnRenamed("order_date", "order_date_alias")
+orders_df = orders_df.withColumnRenamed("tax_amount", "tax_amount_alias")
+print("Records read from orders table: " + str(orders_df.count()))
+
+line_items_df = spark.read.format("bigquery") \
+.option("table", "<project_id>.sales.b_line_items") \
+.option("filter", query) \
+.load()
+print("Records read from line_items table: " + str(line_items_df.count()))
+
+# Products is a master table so reading full table
+product_df = spark.read.format("bigquery").option("table", "<project_id>.sales.b_products").load()
+print("Records read from products table: " + str(product_df.count()))
+
+# Join orders, line_items, and products tables
+joined_df = orders_df.join(line_items_df, "order_id")
+final_df = joined_df.join(product_df, joined_df.product_id == product_df.id)
+
+# Aggregate data to calculate day wise sales KPIs
+result_df = final_df.groupBy("order_date_alias", "category", "name", "brand", "department", "order_status", "delivery_channel") \
+   .agg(F.sum("order_value").alias("order_value"), F.sum("tax_amount_alias").alias("tax_amount"), F.count("*").alias("order_count"))
+result_df = result_df.withColumnRenamed("order_date_alias","order_date")
+
+# Write day wise summary in Bigquery table for analytics
+result_df.write.format("bigquery") \
+.option("table", "<project_id>.sales.daily_sales") \
+.mode('append') \
+.save()
+
+print ("Records ingested : '"+ str(result_df.count()) +"', Target table: sales.daily_sales") 
+print ("Transformation job completed successfully")

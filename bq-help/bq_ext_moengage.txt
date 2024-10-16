@@ -1,0 +1,74 @@
+bkt_dev_dis_staging/moengage_test
+
+
+
+bq mk --connection --location=us --project_id=alert-impulse-704  --connection_type=CLOUD_RESOURCE  bl_pdev_bkt_bkt_dev_dis_staging
+
+
+bq mk --connection --location=us --project_id=dev-gold-core --connection_type=CLOUD_RESOURCE  bl_dgc_bkt_dev_qlikreplicate_goldcore
+
+CREATE EXTERNAL TABLE `dev-gold-core.moengage_test.mo_data`
+(
+  app_name STRING,
+  export_hour  STRING,
+  export_doc_id STRING,
+  db_name STRING,
+  event  JSON,
+  export_day STRING
+
+)
+WITH PARTITION COLUMNS
+(
+  export_day STRING, export_hour STRING
+)
+WITH CONNECTION `us.bl_dgc_bkt_bkt_dev_fq_goldcore`
+OPTIONS(
+  hive_partition_uri_prefix = "gs://bkt_dev_fq_goldcore/moengage_test/pchcom",
+  uris = ['gs://bkt_dev_fq_goldcore/moengage_test/pchcom/*'],
+  max_staleness = INTERVAL 2 HOUR,
+  metadata_cache_mode = 'MANUAL'
+);
+
+
+
+CREATE EXTERNAL TABLE `dev-gold-core.moengage_test.mo_data2`
+
+WITH CONNECTION `us.bl_dgc_bkt_bkt_dev_fq_goldcore`
+OPTIONS(
+   uris = ['gs://bkt_dev_fq_goldcore/moengage_test/pchcom/*'],
+  format= JSON,
+  max_staleness = INTERVAL 2 HOUR,
+  metadata_cache_mode = 'MANUAL'
+);
+
+
+
+CREATE EXTERNAL TABLE `dev-gold-core.moengage_test.mo_data3`
+
+(
+
+  app_name STRING,
+
+  export_hour  STRING,
+
+  export_doc_id STRING,
+
+  db_name STRING,
+
+  event  JSON,
+
+  export_day STRING
+
+)
+
+OPTIONS(
+
+  uris = ['gs://bkt_dev_fq_goldcore/moengage_test/pchcom/*'],
+
+  format= JSON,
+
+  metadata_cache_mode = 'MANUAL'
+
+);
+
+Error while reading table: dev-gold-core.moengage_test.mo_data2, error message: JSON parsing error in row starting at position 0: No such field: event.event_attributes.status. File: gs://bkt_dev_fq_goldcore/moengage_test/pchcom/export_day=2023-10-08/export_hour=06/moengage_test_Email_Dropped.json.gz

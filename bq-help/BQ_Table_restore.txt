@@ -1,0 +1,9 @@
+bq cp it_adpost_lld.sqs_lld_staging@1695667497000  it_adpost_lld.sqs_lld_staging
+
+https://www.epochconverter.com/
+
+
+
+1711993248
+
+bq cp it_adpost_lld.sqs_lld_staging@1711561248000  it_adpost_lld.sqs_lld_staging

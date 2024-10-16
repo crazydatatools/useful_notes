@@ -1,0 +1,116 @@
+SELECT model_name,count(1) cnt FROM `prod-gold-core.it_model_scores.analytics_model_scores` WHERE model_score_dt = "2024-09-20" group by 1
+
+
+select * from `prod-gold-core.it_model_scores.analytics_model_scores` where model_name='winb_game' and model_score_dt = "2024-09-20" and global_member_token in
+(select global_member_token from `prod-gold-core.it_model_scores.analytics_model_scores` where model_name='onb_pchplus' and model_score_dt = "2024-09-20")
+
+-- Create Historical Table (table_a)
+CREATE OR REPLACE TABLE `prod-gold-core.it_model_scores.pchdigital_model_scores_base` 
+ (
+  global_member_token string,
+  model_name string,
+  model_score FLOAT64,
+  model_rank INT64,
+  score_dt date,
+  it_hash_cd INT64 
+) partition by score_dt cluster by model_name,global_member_token,it_hash_cd;
+
+-- Create Current Table (table_b)
+CREATE OR REPLACE TABLE `prod-gold-core.it_model_scores.pchdigital_model_scores_current` 
+ (
+  global_member_token string,
+  model_name string,
+  model_score FLOAT64,
+  model_rank INT64,
+  score_dt date,
+  it_hash_cd INT64 
+) partition by score_dt cluster by model_name,global_member_token,it_hash_cd;
+
+delete from `prod-gold-core.it_model_scores.pchdigital_model_scores_base` where true
+
+INSERT INTO `prod-gold-core.it_model_scores.pchdigital_model_scores_base`  (global_member_token,  model_name ,  model_score ,  model_rank ,  score_dt ,  it_hash_cd)
+SELECT 
+global_member_token,  model_name ,  model_score ,  model_rank , model_score_dt score_dt , 
+  FARM_FINGERPRINT(CONCAT(global_member_token , model_name,  CAST(model_rank AS STRING),CAST(model_score_dt AS STRING))) AS it_hash_cd
+FROM `prod-gold-core.it_model_scores.analytics_model_scores` where model_name='onb_pchplus' and model_score_dt = "2024-09-19" and 
+global_member_token in ('ffce08b2-8abc-4ea2-a2c2-b23f1055dfd8','ffa55c96-0887-46b9-af65-ce9bc77f2903','ff286a16-04d2-47c2-ae2c-ccafd156b037')
+;
+
+INSERT INTO `prod-gold-core.it_model_scores.pchdigital_model_scores_base`  (global_member_token,  model_name ,  model_score ,  model_rank ,  score_dt ,  it_hash_cd)
+SELECT 
+global_member_token,  model_name ,  model_score ,  model_rank , model_score_dt score_dt , 
+  FARM_FINGERPRINT(CONCAT(global_member_token , model_name,   CAST(model_rank AS STRING),CAST(model_score_dt AS STRING))) AS it_hash_cd
+FROM `prod-gold-core.it_model_scores.analytics_model_scores` where model_name='winb_game' and model_score_dt = "2024-09-19" and 
+global_member_token in ('ffce08b2-8abc-4ea2-a2c2-b23f1055dfd8','ffa55c96-0887-46b9-af65-ce9bc77f2903','ffa1ac2b-c18e-489c-b172-b45e556b6c38')
+;
+
+
+INSERT INTO `prod-gold-core.it_model_scores.pchdigital_model_scores_current`  (global_member_token,  model_name ,  model_score ,  model_rank ,  score_dt ,  it_hash_cd)
+SELECT 
+global_member_token,  model_name ,  model_score ,  model_rank , model_score_dt score_dt , 
+  FARM_FINGERPRINT(CONCAT(global_member_token , model_name,  CAST(model_rank AS STRING),CAST(model_score_dt AS STRING))) AS it_hash_cd
+FROM `prod-gold-core.it_model_scores.analytics_model_scores` where model_name='onb_pchplus' and model_score_dt = "2024-09-20" and 
+global_member_token in ('ffce08b2-8abc-4ea2-a2c2-b23f1055dfd8','ffa55c96-0887-46b9-af65-ce9bc77f2903','ff286a16-04d2-47c2-ae2c-ccafd156b037')
+;
+
+INSERT INTO `prod-gold-core.it_model_scores.pchdigital_model_scores_current`  (global_member_token,  model_name ,  model_score ,  model_rank ,  score_dt ,  it_hash_cd)
+SELECT 
+global_member_token,  model_name ,  model_score ,  model_rank , model_score_dt score_dt , 
+  FARM_FINGERPRINT(CONCAT(global_member_token , model_name,   CAST(model_rank AS STRING),CAST(model_score_dt AS STRING))) AS it_hash_cd
+FROM `prod-gold-core.it_model_scores.analytics_model_scores` where model_name='winb_game' and model_score_dt = "2024-09-20" and 
+global_member_token in ('ffce08b2-8abc-4ea2-a2c2-b23f1055dfd8','ffa55c96-0887-46b9-af65-ce9bc77f2903','ffa1ac2b-c18e-489c-b172-b45e556b6c38')
+;
+
+
+MERGE INTO `prod-gold-core.it_model_scores.pchdigital_model_scores_base`  T
+USING (
+  SELECT
+    global_member_token,  model_name ,  model_score ,  model_rank ,  score_dt ,  it_hash_cd
+  FROM `prod-gold-core.it_model_scores.pchdigital_model_scores_current` 
+) S
+ON T.global_member_token = S.global_member_token AND T.model_name = S.model_name 
+WHEN MATCHED AND T.it_hash_cd != S.it_hash_cd THEN
+  UPDATE SET T.model_score = S.model_score, T.model_rank = S.model_rank,T.score_dt=S.score_dt, T.it_hash_cd = S.it_hash_cd
+WHEN NOT MATCHED THEN
+  INSERT (global_member_token,  model_name ,  model_score ,  model_rank ,  score_dt ,  it_hash_cd)
+  VALUES (S.global_member_token,  S.model_name ,  S.model_score ,  S.model_rank ,  S.score_dt ,  S.it_hash_cd);
+
+
+SELECT 
+    ggt,
+    -- Condition for winb: scores between 0 and 10
+    MAX(CASE WHEN model_name = 'winb' AND model_score BETWEEN 0 AND 10 THEN model_score ELSE NULL END) AS winb,
+    -- Condition for onb: scores between 0 and 100
+    MAX(CASE WHEN model_name = 'onb' AND model_score BETWEEN 0 AND 100 THEN model_score ELSE NULL END) AS onb
+FROM 
+    `your_project.your_dataset.your_table_name`
+GROUP BY 
+    ggt;
+
+
+CREATE OR REPLACE TABLE `prod-gold-core.it_model_scores.pchdigital_model_scores_history` (
+  global_member_token string,
+  model_name string,
+  model_score FLOAT64,
+  model_rank INT64,
+  score_dt date,
+  it_hash_cd INT64,
+  update_timestamp TIMESTAMP 
+) partition by score_dt cluster by model_name,global_member_token,it_hash_cd;
+
+-- Insert changes into history table
+INSERT INTO `prod-gold-core.it_model_scores.pchdigital_model_scores_history`(global_member_token,  model_name ,  model_score ,  model_rank ,  score_dt ,it_hash_cd, update_timestamp
+)
+SELECT 
+  b.global_member_token,
+  b.model_name,
+  b.model_score,
+  b.model_rank,
+  b.score_dt,
+ FARM_FINGERPRINT(CONCAT(b.global_member_token , b.model_name,  CAST(b.model_score AS STRING), CAST(b.model_rank AS STRING),CAST(b.score_dt AS STRING))) AS it_hash_cd
+,  CURRENT_TIMESTAMP() AS update_timestamp,
+FROM `prod-gold-core.it_model_scores.pchdigital_model_scores_current`  b
+LEFT JOIN `prod-gold-core.it_model_scores.pchdigital_model_scores_base`  a
+  ON a.global_member_token = b.global_member_token AND a.model_name = b.model_name 
+WHERE a.it_hash_cd IS NULL  -- New record
+   OR a.it_hash_cd != FARM_FINGERPRINT(CONCAT(b.global_member_token , b.model_name,  CAST(b.model_score AS STRING), CAST(b.model_rank AS STRING),CAST(b.score_dt AS STRING)));

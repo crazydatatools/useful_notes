@@ -1,0 +1,9 @@
+bq mkdef --autodetect --source_format=PARQUET "gs://bkt_dev_fq_goldcore/test_64/cc/TNPHBLS/*" > /tmp/TNPHBLS.txt
+bq mk --external_table_definition=/tmp/TNPHBLS.txt  dev-gold-core:it_adhoc_creditcoll_sept21.tnphbls
+
+bq mkdef --source_format=PARQUET \
+  --hive_partitioning_mode=AUTO \
+  --hive_partitioning_source_uri_prefix=gs://bkt_prod_archive_goldcore/mapr_clu_migration_bckup/im/bigdata/prod/hot/offlinescores/core/tdmcusc \
+  gs://bkt_prod_archive_goldcore/mapr_clu_migration_bckup/im/bigdata/prod/hot/offlinescores/core/tdmcusc/* > /tmp/tdmcusc123.txt
+
+bq mk --external_table_definition=/tmp/tdmcusc123.txt  prod-gold-core:it_crossref_ext.tdmcusc

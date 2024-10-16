@@ -1,0 +1,7 @@
+bq query --nouse_legacy_sql --label=purpose:6-15-311-analysis \
+'SELECT
+  COUNT(*) as `311_count`
+FROM
+  `bigquery-public-data.new_york_311.311_service_requests`
+WHERE
+  DATE(`created_date`) = DATE(2021, 06, 15)'

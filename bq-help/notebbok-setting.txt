@@ -1,0 +1,88 @@
+Custom metadata
+Key
+Value
+serial-port-logging-enable	
+true
+notebooks-api-version	
+v1
+proxy-mode	
+service_account
+notebooks-api	
+PROD
+enable-guest-attributes	
+TRUE
+warmup-libraries	
+matplotlib.pyplot
+shutdown-script	
+/opt/deeplearning/bin/shutdown_script.sh
+post-startup-script	
+gs://qwiklabs-gcp-01-eb3d132659e4-labconfig-bucket/notebook_config.sh
+disable-swap-binaries	
+true
+title	
+TensorFlow2.15/Keras.CPU
+version	
+122
+framework	
+TensorFlow:2.15
+
+
+
+/opt/deeplearning/bin/shutdown_script.sh
+#!/bin/bash -e
+
+# shellcheck disable=SC1091
+source /opt/c2d/c2d-utils || exit 1
+source /etc/profile.d/env.sh || exit 1
+
+INSTANCE_NAME=$(get_metadata_value "instance/name")
+INSTANCE_ZONE="/"$(get_metadata_value "instance/zone")
+INSTANCE_ZONE="${INSTANCE_ZONE##/*/}"
+NAMESPACE=$(guest_attributes_namespace)
+LOCAL_HEALTH_FILE="/var/log/notebooks/notebooks_health.log"
+
+# When user stops VM we need to remove link. If link is not removed UI will show "Open JupyterLab" button active
+# immediately after instance is started. However, in reality proxy agent is not up for ~10-20 seconds (see b/126744148)
+# Since this logs (registration on the proxy) is executed each time VM is booting it is safe to remove link from meta
+# when VM is stopping.
+notebook=$(notebook_type)
+if [[ "$notebook" != "GOOGLE_MANAGED_NOTEBOOK" ]] || [[ "$notebook" != "WORKBENCH_INSTANCE" ]]; then
+  # Google Managed Images uses TP SA credentials by default so this will not work.
+  # In addition, "Open JupyterLab" uses HEARTBEAT for Google Managed UI. (see b/268553207)
+  timeout 30 gcloud compute instances remove-metadata "${INSTANCE_NAME}" --keys=proxy-url --zone "${INSTANCE_ZONE}"
+fi
+
+# Allows for the handle_post_startup_script.sh script to rerun if relevant.
+post_startup_script_behavior="$(get_attribute_value post-startup-script-behavior)"
+if [[ "${post_startup_script_behavior,,}" == *"run_every_start" ]]; then
+  delete_guest_attributes "${NAMESPACE}/handle_post_startup_script"
+fi
+
+# Ensures that at the next instance start, origin_time for the
+# idle shutdown logic won't be the creation time but the start time.
+delete_guest_attributes "${NAMESPACE}/origin_time"
+
+# Ensures startup_status resets after shutdown
+delete_guest_attributes "${NAMESPACE}/startup_status"
+
+# Delete previous system health
+delete_guest_attributes "${NAMESPACE}/system_health"
+
+# Written by notebooks-collection-agent.service.
+# Make sure latest status in file is 0.
+if [[ -f "${LOCAL_HEALTH_FILE}" ]]; then
+  echo -e "$(date --rfc-3339=seconds | sed 's/ /T/') system_health=0" >> ${LOCAL_HEALTH_FILE}
+fi
+
+# Stop file sync to GCS bucket
+# Sync /home/jupyter/ folder to GCS one last time and clean up lock files
+gcs_data_bucket=$(get_attribute_value gcs-data-bucket || true)
+if [[ -n "${gcs_data_bucket}" ]]; then
+  sudo systemctl stop gcs_sync.service
+  sudo systemctl disable gcs_sync.service
+  sync_to_gcs_bucket "${gcs_data_bucket}"
+  instance_hostname=$(get_hostname)
+  lock_filename=".nb_gcs_lock_${instance_hostname}"
+  rm -f "/home/jupyter/${lock_filename}"
+  gsutil rm "gs://${gcs_data_bucket}/${lock_filename}"
+fi

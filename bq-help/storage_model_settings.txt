@@ -1,0 +1,327 @@
+ALTER SCHEMA `prod-gold-core`.`it_web_analytics`  SET OPTIONS(storage_billing_model = 'PHYSICAL',description = 'Enabled physical billing model on this dataset',max_time_travel_hours = 48);
+
+SELECT  a.*,b.storage_billing_model,b.description FROM `gpcadmin.MetadataStore.all_projects_bqobjects_storagebilling_info` a join
+gpcadmin.MetadataStore.all_projects_datasets_storage_info b on a.load_date='2023-10-13' and a.load_date=b.load_date and a.project_name=b.catalog_name and a.dataset_name=b.schema_name
+="ALTER SCHEMA `"&A2&"`.`"&B2&"` SET OPTIONS(storage_billing_model = 'PHYSICAL',description = 'Enabled physical billing model on this dataset',max_time_travel_hours = 48);"
+
+https://cloud.google.com/bigquery/docs/datasets-intro#dataset_storage_billing_models
+
+DECLARE active_logical_gib_price FLOAT64 DEFAULT 0.02;
+DECLARE long_term_logical_gib_price FLOAT64 DEFAULT 0.01;
+DECLARE active_physical_gib_price FLOAT64 DEFAULT 0.04;
+DECLARE long_term_physical_gib_price FLOAT64 DEFAULT 0.02;
+
+WITH
+ storage_sizes AS (
+   SELECT
+     table_schema AS dataset_name,
+     -- Logical
+     SUM(IF(deleted=false, active_logical_bytes, 0)) / power(1024, 3) AS active_logical_gib,
+     SUM(IF(deleted=false, long_term_logical_bytes, 0)) / power(1024, 3) AS long_term_logical_gib,
+     -- Physical
+     SUM(active_physical_bytes) / power(1024, 3) AS active_physical_gib,
+     SUM(active_physical_bytes - time_travel_physical_bytes) / power(1024, 3) AS active_no_tt_physical_gib,
+     SUM(long_term_physical_bytes) / power(1024, 3) AS long_term_physical_gib,
+     -- Restorable previously deleted physical
+     SUM(time_travel_physical_bytes) / power(1024, 3) AS time_travel_physical_gib,
+     SUM(fail_safe_physical_bytes) / power(1024, 3) AS fail_safe_physical_gib,
+   FROM
+     `region-us`.INFORMATION_SCHEMA.TABLE_STORAGE_BY_PROJECT
+   WHERE total_physical_bytes > 0
+     -- Base the forecast on base tables only for highest precision results
+     AND table_type  = 'BASE TABLE'
+     GROUP BY 1
+ )
+SELECT
+  dataset_name,
+  -- Logical
+  ROUND(active_logical_gib, 2) AS active_logical_gib,
+  ROUND(long_term_logical_gib, 2) AS long_term_logical_gib,
+  -- Physical
+  ROUND(active_physical_gib, 2) AS active_physical_gib,
+  ROUND(time_travel_physical_gib, 2) AS time_travel_physical_gib,
+  ROUND(long_term_physical_gib, 2) AS long_term_physical_gib,
+  -- Compression ratio
+  ROUND(SAFE_DIVIDE(active_logical_gib, active_no_tt_physical_gib), 2) AS active_compression_ratio,
+  ROUND(SAFE_DIVIDE(long_term_logical_gib, long_term_physical_gib), 2) AS long_term_compression_ratio,
+  -- Forecast costs logical
+  ROUND(active_logical_gib * active_logical_gib_price, 2) AS forecast_active_logical_cost,
+  ROUND(long_term_logical_gib * long_term_logical_gib_price, 2) AS forecast_long_term_logical_cost,
+  -- Forecast costs physical
+  ROUND((active_no_tt_physical_gib + time_travel_physical_gib + fail_safe_physical_gib) * active_physical_gib_price, 2) AS forecast_active_physical_cost,
+  ROUND(long_term_physical_gib * long_term_physical_gib_price, 2) AS forecast_long_term_physical_cost,
+  -- Forecast costs total
+  ROUND(((active_logical_gib * active_logical_gib_price) + (long_term_logical_gib * long_term_logical_gib_price)) -
+     (((active_physical_gib + fail_safe_physical_gib) * active_physical_gib_price) + (long_term_physical_gib * long_term_physical_gib_price)), 2) AS forecast_total_cost_difference
+     ,REPLACE("ALTER SCHEMA DATASET_NAME SET OPTIONS(storage_billing_model = 'physical');", "DATASET_NAME", storage_cost.table_schema) as command
+FROM
+  storage_sizes
+ORDER BY
+  (forecast_active_logical_cost + forecast_active_physical_cost) DESC;
+
+
+
+  select a.*,b.storage_billing_model, b.default_partition_expiration_days,b.default_table_expiration_days ,b.max_time_travel_hours from gpcadmin.MetadataStore.all_projects_bqobjects_storagebilling_info a join gpcadmin.MetadataStore.all_projects_datasets_storage_info b
+on a.project_name=b.catalog_name and a.dataset_name=b.schema_name and a.load_date=b.load_date
+where b.storage_billing_model is not null-- or b.default_partition_expiration_days is not null or b.default_table_expiration_days is not null
+   SELECT distinct linked_schema_name FROM `prod-gold-usersummary`.`region-us`.INFORMATION_SCHEMA.SCHEMATA_LINKS;
+
+
+
+SELECT
+  *
+FROM
+  `region-us`.INFORMATION_SCHEMA.SCHEMATA_OPTIONS
+    where option_name='storage_billing_model' and option_value='PHYSICAL'
+SELECT
+  *
+FROM
+  `prod-gold-usersummary`.`region-us`.INFORMATION_SCHEMA.SCHEMATA_OPTIONS
+    where option_name='storage_billing_model' and option_value='PHYSICAL'
+
+    SELECT
+                            ARRAY_TO_STRING(ARRAY_AGG("SELECT project_id,dataset_id,table_id, TIMESTAMP_MILLIS(creation_time) AS creation_time, TIMESTAMP_MILLIS(last_modified_time) AS last_modified_time,type objtype ,row_count,  size_bytes FROM `"||catalog_name||"."||schema_name||".__TABLES__` where type=1")," UNION ALL ") AS final_query FROM  `prod-gold-usersummary`.INFORMATION_SCHEMA.SCHEMATA  where (lower(schema_name) not like '%temp_dataset%' or lower(schema_name) not like '%temp%') 
+SELECT  *, ROW_NUMBER() OVER(PARTITION BY project_id,dataset_id,table_id,obj_type ORDER BY last_modified_time DESC) as Rnk  FROM `gpcadmin.MetadataStore.all_projects_bq_tables_info` WHERE load_date = (current_date-1) and dataset_id='user_profile'  and project_id='prod-gold-usersummary' 
+
+                            
+ SELECT project_id,dataset_id,table_id, type objtype ,row_count,  size_bytes ,(TIMESTAMP_MILLIS(creation_time)) AS creation_time, (TIMESTAMP_MILLIS(last_modified_time)) AS last_modified_time FROM `prod-gold-usersummary.pgus_user_profile.__TABLES__` where type=1 group by 1,2,3,4,5,6
+
+ select *  FROM  `prod-gold-usersummary`.INFORMATION_SCHEMA.SCHEMATA_OPTIONS where schema_name='pgus_user_profile'
+
+DECLARE active_logical_gib_price FLOAT64 DEFAULT 0.02;
+DECLARE long_term_logical_gib_price FLOAT64 DEFAULT 0.01;
+DECLARE active_physical_gib_price FLOAT64 DEFAULT 0.04;
+DECLARE long_term_physical_gib_price FLOAT64 DEFAULT 0.02;
+
+create or replace table gpcadmin.MetadataStore.all_projects_bqobjects_storagebilling_full_infov2 as 
+WITH
+ storage_sizes AS (
+   SELECT
+   project_id ,
+     table_schema AS dataset_name,
+     -- Logical
+     SUM(IF(deleted=false, active_logical_bytes, 0)) / power(1024, 3) AS active_logical_gib,
+     SUM(IF(deleted=false, long_term_logical_bytes, 0)) / power(1024, 3) AS long_term_logical_gib,
+     -- Physical
+     SUM(active_physical_bytes) / power(1024, 3) AS active_physical_gib,
+     SUM(active_physical_bytes - time_travel_physical_bytes) / power(1024, 3) AS active_no_tt_physical_gib,
+     SUM(long_term_physical_bytes) / power(1024, 3) AS long_term_physical_gib,
+     -- Restorable previously deleted physical
+     SUM(time_travel_physical_bytes) / power(1024, 3) AS time_travel_physical_gib,
+     SUM(fail_safe_physical_bytes) / power(1024, 3) AS fail_safe_physical_gib,
+   FROM
+     `region-us`.INFORMATION_SCHEMA.TABLE_STORAGE_BY_ORGANIZATION
+   WHERE --total_physical_bytes > 0
+     -- Base the forecast on base tables only for highest precision results
+     --AND
+      table_type  = 'BASE TABLE'
+     GROUP BY 1,2
+ )
+SELECT project_id,
+  dataset_name,
+  -- Logical
+  ROUND(active_logical_gib, 2) AS active_logical_gib,
+  ROUND(long_term_logical_gib, 2) AS long_term_logical_gib,
+  -- Physical
+  ROUND(active_physical_gib, 2) AS active_physical_gib,
+  ROUND(time_travel_physical_gib, 2) AS time_travel_physical_gib,
+  ROUND(long_term_physical_gib, 2) AS long_term_physical_gib,
+  -- Compression ratio
+  ROUND(SAFE_DIVIDE(active_logical_gib, active_no_tt_physical_gib), 2) AS active_compression_ratio,
+  ROUND(SAFE_DIVIDE(long_term_logical_gib, long_term_physical_gib), 2) AS long_term_compression_ratio,
+  -- Forecast costs logical
+  ROUND(active_logical_gib * active_logical_gib_price, 2) AS forecast_active_logical_cost,
+  ROUND(long_term_logical_gib * long_term_logical_gib_price, 2) AS forecast_long_term_logical_cost,
+  -- Forecast costs physical
+  ROUND((active_no_tt_physical_gib + time_travel_physical_gib + fail_safe_physical_gib) * active_physical_gib_price, 2) AS forecast_active_physical_cost,
+  ROUND(long_term_physical_gib * long_term_physical_gib_price, 2) AS forecast_long_term_physical_cost,
+  -- Forecast costs total
+  ROUND(((active_logical_gib * active_logical_gib_price) + (long_term_logical_gib * long_term_logical_gib_price)) -
+     (((active_physical_gib + fail_safe_physical_gib) * active_physical_gib_price) + (long_term_physical_gib * long_term_physical_gib_price)), 2) AS forecast_total_cost_difference
+     --,REPLACE("ALTER SCHEMA DATASET_NAME SET OPTIONS(storage_billing_model = 'physical');", "DATASET_NAME", storage_cost.table_schema) as command
+FROM
+  storage_sizes
+ORDER BY
+  (forecast_active_logical_cost + forecast_active_physical_cost) DESC;
+
+
+  select a.*,b.storage_billing_model from gpcadmin.MetadataStore.all_projects_bqobjects_storagebilling_full_infov2 a
+join gpcadmin.MetadataStore.all_projects_datasets_storage_info b on b.load_date='2023-11-08'  and a.project_id=b.catalog_name and a.dataset_name=b.schema_name
+
+
+==========================
+
+DECLARE active_logical_gib_price FLOAT64 DEFAULT 0.02;
+DECLARE long_term_logical_gib_price FLOAT64 DEFAULT 0.01;
+DECLARE active_physical_gib_price FLOAT64 DEFAULT 0.04;
+DECLARE long_term_physical_gib_price FLOAT64 DEFAULT 0.02;
+
+WITH
+ storage_sizes AS (
+   SELECT project_id,
+     table_schema AS dataset_name,
+     -- Logical
+     SUM(IF(deleted=false, active_logical_bytes, 0)) / power(1024, 3) AS active_logical_gib,
+     SUM(IF(deleted=false, long_term_logical_bytes, 0)) / power(1024, 3) AS long_term_logical_gib,
+     -- Physical
+     SUM(active_physical_bytes) / power(1024, 3) AS active_physical_gib,
+     SUM(active_physical_bytes - time_travel_physical_bytes) / power(1024, 3) AS active_no_tt_physical_gib,
+     SUM(long_term_physical_bytes) / power(1024, 3) AS long_term_physical_gib,
+     -- Restorable previously deleted physical
+     SUM(time_travel_physical_bytes) / power(1024, 3) AS time_travel_physical_gib,
+     SUM(fail_safe_physical_bytes) / power(1024, 3) AS fail_safe_physical_gib,
+   FROM
+     `region-us`.INFORMATION_SCHEMA.TABLE_STORAGE_BY_ORGANIZATION
+   WHERE total_physical_bytes > 0
+     -- Base the forecast on base tables only for highest precision results
+     AND table_type  = 'BASE TABLE'
+     GROUP BY 1,2
+ )
+SELECT project_id,
+  dataset_name,
+  -- Logical
+  ROUND(active_logical_gib, 2) AS active_logical_gib,
+  ROUND(long_term_logical_gib, 2) AS long_term_logical_gib,
+  -- Physical
+  ROUND(active_physical_gib, 2) AS active_physical_gib,
+  ROUND(time_travel_physical_gib, 2) AS time_travel_physical_gib,
+  ROUND(long_term_physical_gib, 2) AS long_term_physical_gib,
+  -- Compression ratio
+  ROUND(SAFE_DIVIDE(active_logical_gib, active_no_tt_physical_gib), 2) AS active_compression_ratio,
+  ROUND(SAFE_DIVIDE(long_term_logical_gib, long_term_physical_gib), 2) AS long_term_compression_ratio,
+  -- Forecast costs logical
+  ROUND(active_logical_gib * active_logical_gib_price, 2) AS forecast_active_logical_cost,
+  ROUND(long_term_logical_gib * long_term_logical_gib_price, 2) AS forecast_long_term_logical_cost,
+  -- Forecast costs physical
+  ROUND((active_no_tt_physical_gib + time_travel_physical_gib + fail_safe_physical_gib) * active_physical_gib_price, 2) AS forecast_active_physical_cost,
+  ROUND(long_term_physical_gib * long_term_physical_gib_price, 2) AS forecast_long_term_physical_cost,
+  -- Forecast costs total
+  ROUND(((active_logical_gib * active_logical_gib_price) + (long_term_logical_gib * long_term_logical_gib_price)) -
+     (((active_physical_gib + fail_safe_physical_gib) * active_physical_gib_price) + (long_term_physical_gib * long_term_physical_gib_price)), 2) AS forecast_total_cost_difference
+     --,REPLACE("ALTER SCHEMA DATASET_NAME SET OPTIONS(storage_billing_model = 'physical');", "DATASET_NAME", storage_cost.table_schema) as command
+FROM
+  storage_sizes
+ORDER BY
+  (forecast_active_logical_cost + forecast_active_physical_cost) DESC;
+
+
+  SELECT
+  *
+FROM
+  `prod-gold-usersummary`.`region-us`.INFORMATION_SCHEMA.SCHEMATA_OPTIONS
+    where option_name='storage_billing_model' and option_value='PHYSICAL'
+
+https://readmedium.com/how-to-save-90-on-bigquery-storage-a1ca99582c5c
+
+    -- pricing details: https://cloud.google.com/bigquery/pricing#storage
+with t as (
+SELECT
+  *,
+  (ACTIVE_LOGICAL_BYTES/POW(1024,3) * 0.02 + LONG_TERM_LOGICAL_BYTES/POW(1024,3) * 0.01 ) AS logical_cost_forecast,
+  (ACTIVE_PHYSICAL_BYTES/POW(1024,3) * 0.04 + LONG_TERM_PHYSICAL_BYTES/POW(1024,3) * 0.02 ) AS physical_cost_forecast,
+  ((ACTIVE_PHYSICAL_BYTES - TIME_TRAVEL_PHYSICAL_BYTES - FAIL_SAFE_PHYSICAL_BYTES) /POW(1024,3) * 0.04 + LONG_TERM_PHYSICAL_BYTES/POW(1024,3) * 0.02 ) AS physical_cost_forecast_with_zero_time_travel_and_fail_safe,
+  safe_divide(time_travel_physical_bytes, ACTIVE_PHYSICAL_BYTES) as time_travel_per_active_byte_ratio,
+  safe_divide(fail_safe_physical_bytes, ACTIVE_PHYSICAL_BYTES) as fail_safe_per_active_byte_ratio
+FROM
+  `<my-project>.<my-region>.INFORMATION_SCHEMA.TABLE_STORAGE`
+where 
+ project_id = "<my-project>"
+)
+select
+  t.table_schema,
+  t.table_name,
+  round((t.ACTIVE_LOGICAL_BYTES + t.LONG_TERM_LOGICAL_BYTES)/POW(1024,3), 0) as total_logical_GiB,
+  round((t.ACTIVE_PHYSICAL_BYTES + t.LONG_TERM_PHYSICAL_BYTES)/POW(1024,3), 0) as total_physical_GiB,
+  round(t.logical_cost_forecast, 0) as logical_cost_forecast,
+  round(t.physical_cost_forecast, 0) as physical_cost_forecast,
+  round(t.physical_cost_forecast_with_zero_time_travel_and_fail_safe, 0) as physical_cost_forecast_with_zero_time_travel_and_fail_safe,
+  round(time_travel_per_active_byte_ratio, 3) as time_travel_per_active_byte_ratio,
+  round(fail_safe_per_active_byte_ratio, 3) as fail_safe_per_active_byte_ratio
+from
+  t
+order by 
+  t.physical_cost_forecast desc
+
+
+  ================Costs by Table
+Base Query
+DECLARE timezone STRING DEFAULT "America/Sao_Paulo";
+DECLARE gb_divisor INT64 DEFAULT 1024*1024*1024;
+DECLARE tb_divisor INT64 DEFAULT gb_divisor*1024;
+DECLARE cost_per_tb INT64 DEFAULT 5;
+DECLARE cost_factor FLOAT64 DEFAULT cost_per_tb / tb_divisor;
+DECLARE filter_date DATE DEFAULT "2023-10-01";
+
+SELECT
+  job_id,
+  parent_job_id,
+  DATE(creation_time, timezone) AS creation_date,
+  user_email,
+  job_type,
+  statement_type,
+  TIMESTAMP_DIFF(end_time, start_time, SECOND) AS time_in_seconds,
+  total_bytes_billed,
+  ROUND((total_bytes_billed / tb_divisor), 6) AS tb_billed,
+  ROUND((total_bytes_billed / tb_divisor) * cost_per_tb, 6) AS cost_us_dolar,
+  total_slot_ms,
+  CASE 
+    WHEN STARTS_WITH(LOWER(destination_table.dataset_id), "anon") THEN CAST(NULL AS STRING)
+    WHEN STARTS_WITH(LOWER(destination_table.dataset_id), "_") THEN CAST(NULL AS STRING)
+    ELSE destination_table.dataset_id
+  END AS dataset_id,
+  IF(
+    STARTS_WITH(LOWER(destination_table.table_id), "anon"),
+    NULL,
+    destination_table.table_id
+  ) AS table_id
+FROM region-us.INFORMATION_SCHEMA.JOBS_BY_PROJECT r
+WHERE statement_type != "SCRIPT"
+  AND DATE(creation_time, timezone) >= filter_date
+  ===============
+
+  Extract created or merged tables names from the query
+Useful for scripts with more than one table, UDFs…
+
+DECLARE timezone STRING DEFAULT "America/Sao_Paulo";
+DECLARE gb_divisor INT64 DEFAULT 1024*1024*1024;
+DECLARE tb_divisor INT64 DEFAULT gb_divisor*1024;
+DECLARE cost_per_tb INT64 DEFAULT 5;
+DECLARE cost_factor FLOAT64 DEFAULT cost_per_tb / tb_divisor;
+DECLARE filter_date DATE DEFAULT "2023-10-01";
+-- Regex pattern to identify comments in the query
+DECLARE pattern_comments STRING DEFAULT r"(?i)--.*|/\*(?s).*?\*/";
+-- Regex pattern to identify created / merged tables
+DECLARE pattern_query STRING DEFAULT r"(?i)(?:create or replace table|create table if not exists|create temp table|merge into|merge)(?:\s+\x60?)(?:project_id.)?(.+?)(?:\x60?\s|\()";
+  
+SELECT
+  job_id,
+  parent_job_id,
+  DATE(creation_time, timezone) AS creation_date,
+  user_email,
+  job_type,
+  statement_type,
+  TIMESTAMP_DIFF(end_time, start_time, SECOND) AS time_in_seconds,
+  total_bytes_billed,
+  ROUND((total_bytes_billed / tb_divisor), 6) AS tb_billed,
+  ROUND((total_bytes_billed / tb_divisor) * cost_per_tb, 6) AS cost_us_dolar,
+  total_slot_ms,
+  CASE 
+    WHEN STARTS_WITH(LOWER(destination_table.dataset_id), "anon") THEN CAST(NULL AS STRING)
+    WHEN STARTS_WITH(LOWER(destination_table.dataset_id), "_") THEN CAST(NULL AS STRING)
+    ELSE destination_table.dataset_id
+  END AS dataset_id,
+  IF(
+    STARTS_WITH(LOWER(destination_table.table_id), "anon"),
+    NULL,
+    destination_table.table_id
+  ) AS table_id,
+  -- Extract created or merged tables names from the query (useful for scripts with more than one table)
+  ARRAY_TO_STRING(
+    (
+      SELECT ARRAY_AGG(DISTINCT x)
+      FROM UNNEST(REGEXP_EXTRACT_ALL(REGEXP_REPLACE(query, pattern_comments, ""), pattern_query)) AS x ),
+      " | "
+    ) AS table_id_regex,
+  query,
+  --referenced_tables
+FROM region-us.INFORMATION_SCHEMA.JOBS_BY_PROJECT r

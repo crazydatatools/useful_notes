@@ -1,0 +1,58 @@
+bq show   --format=prettyjson   pch-dw-2014:AllSearchActivity > AllSearchActivity_access_details.json
+
+
+bq get-iam-policy \
+   --table=true \
+   PROJECT_ID:DATASET.RESOURCE > PATH_TO_FILE
+
+
+   WITH
+BASE AS (
+SELECT
+CONCAT("GRANT  `roles/bigquery.admin` ON SCHEMA ", schema_name, " TO 'user:lace.rogers@dataclinic.co.uk' ;'") AS string_value,
+FROM
+region-us.INFORMATION_SCHEMA.SCHEMATA
+WHERE
+schema_name LIKE 'AllSearchActivity%' )
+SELECT
+STRING_AGG(string_value, "\n") AS OUT_VAL
+FROM
+base ;
+
+
+GRANT/REVOKE `roles/bigquery.dataViewer` 
+ON SCHEMA/ON TABLE `projectname`.dataset
+TO/FROM "user:tom@example.com", "user:sara@example.com", group:data@ilovedata.com ,
+"serviceAccount:genericservice@ilovedata.iam.gserviceaccount.com
+; 
+protoPayload.metadata."@type"="type.googleapis.com/google.cloud.audit.BigQueryAuditMetadata" AND logName="projects/{project-id}/logs/cloudaudit.googleapis.com%2Fdata_access"
+WITH ExtractedData AS ( 
+  SELECT DATE(timestamp) as log_date, 
+      ARRAY_ELEMENT_AT(SPLIT(protopayload_auditlog.resourceName, '/'), 6) AS project_id, 
+      ARRAY_ELEMENT_AT(SPLIT(protopayload_auditlog.resourceName, '/'), 8) AS dataset_id, 
+      ARRAY_ELEMENT_AT(SPLIT(protopayload_auditlog.resourceName, '/'), 10) AS table_name 
+  FROM `{project_id}.{dataset_id}.cloudaudit_googleapis_com_data_access`  
+  WHERE timestamp >= TIMESTAMP("{YYYY-MM-DD}") 
+    AND JSON_QUERY(protopayload_auditlog.metadataJson, "$.tableDataRead") IS NOT NULL 
+) 
+SELECT project_id, dataset_id, table_name, MAX(log_date) AS last_access_date 
+FROM ExtractedData 
+GROUP BY project_id, dataset_id, table_name 
+ORDER BY last_access_date ASC
+;
+
+
+WITH ExtractedData AS ( 
+  SELECT DATE(timestamp) as log_date,
+     ARRAY_ELEMENT_AT(SPLIT(SPLIT(SPLIT(protopayload_auditlog.resourceName, '$')[SAFE_OFFSET(0)], '@')[SAFE_OFFSET(0)], '/'), 0) AS parts 
+  FROM `{project_id}.{dataset_id}.cloudaudit_googleapis_com_data_access` 
+  WHERE TIMESTAMP_TRUNC(timestamp, DAY) >= TIMESTAMP("{YYYY-MM-DD}")
+    AND JSON_QUERY(protopayload_auditlog.metadataJson, "$.tableDataRead") IS NOT NULL 
+) 
+SELECT parts[SAFE_OFFSET(1)] AS project_id, 
+      parts[SAFE_OFFSET(3)] AS dataset_id, parts[SAFE_OFFSET(5)] AS table_name, 
+      MAX(log_date) AS last_access_date 
+FROM ExtractedData 
+GROUP BY 1, 2, 3 
+ORDER BY 4 ASC
+;

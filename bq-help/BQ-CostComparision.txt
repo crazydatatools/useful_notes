@@ -1,0 +1,80 @@
+Query for Audit Logs-- BQ analysis cost for July1 st '2023
+Output -$45 for 1 dayfor uat-gold-core project.
+
+From Billing Report-- $133.34 shown for BQ analysis cost for July1 st '2023 for project-uat-gold-core
+
+WITH
+  BQAudit AS (
+  SELECT
+    protopayload_auditlog.authenticationInfo.principalEmail,
+    protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobName.projectId,
+    protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobName.jobId,
+    protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobStatistics.createTime,
+    protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobStatistics.startTime,
+    protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobStatus.error.code AS errorCode,
+    protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobStatistics.totalProcessedBytes,
+    protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobStatistics.totalBilledBytes,
+    protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobConfiguration.query as runquery
+  FROM
+    `prod-pch-it-secmon.it_gcp_logs_export.cloudaudit_googleapis_com_data_access`
+  WHERE
+    DATE(timestamp)='2023-07-01' AND
+    protopayload_auditlog.serviceName = 'bigquery.googleapis.com'
+    AND protopayload_auditlog.methodName = 'jobservice.jobcompleted'
+    AND protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.eventName IN ( 'table_copy_job_completed',
+      'query_job_completed',
+      'extract_job_completed',
+      'load_job_completed' )
+    AND DATE(protopayload_auditlog.servicedata_v1_bigquery.jobCompletedEvent.job.jobStatistics.startTime)= '2023-07-01' )
+ select sum(estimatedCostUsd) from (
+ SELECT
+  billdate,
+  email,origquery,
+  ARRAY_TO_STRING(ARRAY_AGG(distinct projectname), ',') projectsqueried,
+  SUM(noofjobs) jobssubmited,
+  ROUND((SUM((totalBilledBytes ))/ POW(2,40)),2) AS totalBilledTerabytes,
+  ROUND( ((SUM((totalBilledBytes ))/ POW(2,40)) *6.25),2) AS estimatedCostUsd
+FROM (
+    SELECT
+    DATE(startTime) billdate,
+    principalEmail email,
+    projectId projectname,
+    runquery.query origquery,
+    runquery.statementType statementType,
+    COUNT(jobId) AS noofjobs,
+    SUM(totalBilledBytes) totalBilledBytes,
+    (SUM((totalBilledBytes))/ POW(2,30)) AS totalBilledGigabytes,
+    (SUM((totalBilledBytes ))/ POW(2,40)) AS totalBilledTerabytes,
+    ((SUM((totalBilledBytes ))/ POW(2,40)) *6.25) AS estimatedCostUsd
+  FROM
+    BQAudit where   runquery.statementType <>'SCRIPT' and projectId='uat-gold-core'
+  GROUP BY 1, 2, 3 ,4,5
+  ) g
+WHERE
+  estimatedCostUsd>0  
+GROUP BY
+  1,2,3) 
+
+  From Billing Query--showing as $127 , i know there might be overlap of days, but main point is that audit gives very different values compared to billing export.
+
+      select sum(cost) from (
+    SELECT
+    invoice.month month_sel,
+    sku.description skudescription,
+    project.id id,
+    cost,
+    credits
+  FROM
+    `prod-pch-it-secmon.it_gcp_billing_export.gcp_billing_export_v1_014161_F9CD83_314E17` 
+     WHERE
+  DATE(usage_start_time)='2023-07-01' and DATE(usage_end_time)='2023-07-01' and project.id ='uat-gold-core' 
+  and service.description='BigQuery' and sku.description='Analysis')
+
+
+
+  SELECT  ((SUM((total_bytes_billed ))/ POW(2,40)) *6.25) AS estimatedCostUsd FROM `uat-gold-core`.`region-us`.INFORMATION_SCHEMA.JOBS_BY_PROJECT where EXTRACT(DATE from creation_time)='2023-09-05'
+and statement_type <>'SCRIPT'
+
+
+SELECT  * FROM `uat-gold-core`.`region-us`.INFORMATION_SCHEMA.JOBS_BY_PROJECT where EXTRACT(DATE from creation_time)='2023-09-05'
+and statement_type <>'SCRIPT'

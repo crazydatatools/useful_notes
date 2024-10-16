@@ -1,0 +1,81 @@
+snapshotdate_year   -  This partition column is used to filter yearly data. For example, to access year 2022 data then snapshotdate_year='2022-01-01', which is the first day of the year, to be used in where clause . Similarly, for  year 2023, value to be used is '2023-01-01'.
+
+
+Function def to access column snapshotdate_list :
+This function returns a boolean value. This can be used in WHERE clause to filter rows based on start_date & end_date
+
+CREATE FUNCTION `prod-gold-usersummary.it_etl_metadata.fn_array_date_range_search`(snapshotdate_list ARRAY<DATE>, start_date DATE, end_date DATE) AS (
+(SELECT CASE WHEN match_cnt > 0 THEN TRUE ELSE FALSE END 
+FROM
+  (SELECT ARRAY_LENGTH(ARRAY_AGG(dt)) AS match_cnt 
+  FROM UNNEST(snapshotdate_list) AS dt
+  WHERE dt BETWEEN start_date AND end_date
+  )
+)
+);
+
+
+Sample query using this(adjusted the query given in original email ):
+WITH elevate_gmts AS(
+  -- 22,288 gmts
+  SELECT
+    event_dt,
+    parent_campaign_name,
+    global_member_token
+  FROM
+    `prod-gold-core.analytics_email_activity.vw_email_activity_complete`
+  WHERE 
+    event_dt = '2024-01-21' 
+    AND parent_campaign_name = '24ele0407*'  
+    and event_type = 'send'
+)
+,
+custIDs as(
+  -- 22,284 gmts/custIDs
+  SELECT
+    DISTINCT curr_cust_id,
+    c.global_member_token
+  FROM
+    `prod-gold-core.analytics_online_auxiliary.online_offline_account_id_xref` as c
+  JOIN
+    elevate_gmts as e
+  ON 
+    c.global_member_token=e.global_member_token
+  WHERE 
+    c.curr_cust_id IS NOT NULL
+)
+,
+CustID_gmts AS (
+  --31,940 gmts 
+  SELECT
+    DISTINCT a.global_member_token,
+    a.curr_cust_id
+  FROM
+    `prod-gold-core.analytics_online_auxiliary.online_offline_account_id_xref` as a
+  JOIN
+    custIDs as b
+  ON 
+    a.curr_cust_id=b.curr_cust_id
+  WHERE 
+    a.global_member_token IS NOT NULL
+    AND a.curr_cust_id != -1
+  ORDER BY 2
+)
+
+SELECT
+  DISTINCT a.global_member_token,
+  b.curr_cust_id,
+  a.segment_cd
+FROM
+`prod-gold-core.analytics_online_auxiliary.gmt_segment_date_range` as a
+JOIN
+  CustID_gmts as b
+ON 
+  a.global_member_token=b.global_member_token
+WHERE
+  snapshotdate_year in ('2022-01-01', '2023-01-01', '2024-01-01')
+  and segment_cd in ('cfv', 'cfve')
+  and `prod-gold-usersummary.it_etl_metadata.fn_array_date_range_search`(snapshotdate_list, '2022-01-01', '2024-01-25')
+
+;
+

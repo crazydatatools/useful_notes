@@ -1,0 +1,13 @@
+SELECT  
+JSON_EXTRACT(protopayload_auditlog.metadataJson, "$.tableChange.table.updateTime") as lastUpdate
+FROM `project_id.dataset.cloudaudit_googleapis_com_activity*`
+where protopayload_auditlog.metadataJson IS NOT NULL
+ORDER BY lastUpdate DESC LIMIT 1
+
+SELECT
+ test,
+ REGEXP_CONTAINS(test, r’^([\w.+-]+com|[\w.+-]+.org)$’) AS valid
+FROM
+(SELECT [‘abc.com’, ‘abc.net’, ‘abc.org’, ‘www.abs.org']
+ AS test),
+UNNEST(test) AS test;

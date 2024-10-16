@@ -1,0 +1,60 @@
+Here's the complete MD5 values list:EmailMD5_Hashemail_deployment_vendor_md5_cdorig_email_deployment_vendor_md5last_email_deployment_vendor_md5ref_MD5ref_2_MD5email_md5_hashemail_md5_hash_cdtotal_email_md5total_uq_email_md5orig_email_deployment_vendor_md5last_email_deployment_vendor_md5
+
+
+emailmd5_hash,email_deployment_vendor_md5_cd,orig_email_deployment_vendor_md5,last_email_deployment_vendor_md5,ref_md5,ref_2_md5,email_md5_hash,
+email_md5_hash_cd,total_email_md5,total_uq_email_md5,orig_email_deployment_vendor_md5,last_email_deployment_vendor_md5
+
+
+select * from `gpcadmin.MetadataStore.all_projects_bqobjects_columns_info` where (regexp_contains(lower(column_name), r'(?i)client_ip|clientip|ip_address|sub_ip_addr|conv_ipaddress|conv_ip_address|client_ip_address|client_ipaddress|source_ipaddress') or lower(column_name)='ip')
+
+
+SELECT
+  *
+FROM
+  `gpcadmin.MetadataStore.all_projects_bqobjects_columns_info`
+WHERE
+  (REGEXP_CONTAINS(LOWER(column_name), r'(?i)emailmd5_hash|email_deployment_vendor_md5_cd|orig_email_deployment_vendor_md5|last_email_deployment_vendor_md5|ref_md5|ref_2_md5|email_md5_hash| email_md5_hash_cd|total_email_md5|total_uq_email_md5|orig_email_deployment_vendor_md5|email|md') or lower(column_name)='hash'  or lower(column_name)='256')
+
+
+  select * from `gpcadmin.MetadataStore.all_projects_bqobjects_columns_info` where (regexp_contains(lower(column_name), r'(?i)client_ip|clientip|ip_address|sub_ip_addr|conv_ipaddress|conv_ip_address|client_ip_address|client_ipaddress|source_ipaddress') or lower(column_name)='ip')
+
+  select * from `gpcadmin.MetadataStore.all_projects_bqobjects_columns_info_2022` where (regexp_contains(lower(column_name), r'(?i)client_ip|clientip|ip_address|sub_ip_addr|conv_ipaddress|conv_ip_address|client_ip_address|client_ipaddress|source_ipaddress') or lower(column_name)='ip')
+
+  
+    select * from `gpcadmin.MetadataStore.all_projects_bqobjects_columns_info_52` where (regexp_contains(lower(column_name), r'(?i)client_ip|clientip|ip_address|sub_ip_addr|conv_ipaddress|conv_ip_address|client_ip_address|client_ipaddress|source_ipaddress|address') or lower(column_name)='ip')
+
+        select * from `gpcadmin.MetadataStore.all_projects_bqobjects_columns_info_52` where  (REGEXP_CONTAINS(LOWER(column_name), r'(?i)emailmd5_hash|email_deployment_vendor_md5_cd|orig_email_deployment_vendor_md5|last_email_deployment_vendor_md5|ref_md5|ref_2_md5|email_md5_hash| email_md5_hash_cd|total_email_md5|total_uq_email_md5|orig_email_deployment_vendor_md5|email|md5|hash|sha|256'))
+
+
+	
+    select * from `gpcadmin.MetadataStore.all_projects_bqobjects_columns_info_52` where  (REGEXP_CONTAINS(LOWER(column_name), r'(?i)emailmd5_hash|email_deployment_vendor_md5_cd|orig_email_deployment_vendor_md5|last_email_deployment_vendor_md5|ref_md5|ref_2_md5|email_md5_hash| email_md5_hash_cd|total_email_md5|total_uq_email_md5|orig_email_deployment_vendor_md5|email|md5|hash|sha|256')) and not (REGEXP_CONTAINS(LOWER(column_name), r'(?i)memberemailid|MemberEmailID|email_campaign_deployment_date'))
+
+
+
+    SELECT
+  a.table_catalog,
+  a.table_schema,
+  a.table_name,
+  a.column_name,
+  a.ordinal_position,
+  a.is_nullable,
+  a.data_type,
+  a.is_partitioning_column,
+  a.clustering_ordinal_position,
+  DATE(a.load_dt) load_dt,
+  DATE(b.creation_time) creation_time,
+  DATE(b.last_modified_time) last_modified_time,
+  b.total_rows,
+  b.size_mb
+FROM
+  `gpcadmin.MetadataStore.all_projects_bqobjects_columns_info53_final` a
+JOIN
+  `gpcadmin.MetadataStore.all_projects_bq_tables_info` b
+ON
+  a.table_catalog=b.project_id
+  AND a.table_schema=b.dataset_id
+  AND a.table_name=b.table_id
+WHERE
+  b.load_date = "2023-05-03"
+  AND (REGEXP_CONTAINS(LOWER(a.column_name), r'(?i)client_ip|clientip|ip_address|sub_ip_addr|conv_ipaddress|conv_ip_address|client_ip_address|client_ipaddress|source_ipaddress|client|address|add|addr'))
+  AND NOT (REGEXP_CONTAINS(LOWER(a.column_name), r'(?i)addaggmargin|LoadDate|AddAggMarin|f_clientType|AddAggMarin|BillingAddressID|SegmentLoadDate|Online_max_address_startDate|_startDate|AddAggMarin|table_loaddate|LoadDate|total_client_entrants|Cust_Add_Dt|AddAggREV|IsAdDisplayed|ProductAdd|AddtoCart|UserAgent'))

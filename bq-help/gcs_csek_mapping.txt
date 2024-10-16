@@ -1,0 +1,22 @@
+https://medium.com/google-cloud/data-encryption-techniques-in-google-cloud-gmek-cmek-csek-928d072a1e9d
+
+Create new encryption key, encoded in standard Base64 using below command in cloud shell
+openssl rand -base64 32
+
+2. Update .boto config file and add encryption key. Bot config file can be found in default directory if using cloud shell
+
+
+
+3. Once .boto config file is updated , you can upload objects using gsutil cp command without any additional flag as it will fetch encryption key from .boto config file.
+
+
+https://medium.com/google-cloud/data-encryption-techniques-in-google-cloud-gmek-cmek-csek-928d072a1e9d
+
+More information about the CSEK-
+https://cloud.google.com/storage/docs/encryption/customer-supplied-keys
+
+We will upload the encrypted file with the CSEK key:-
+https://cloud.google.com/storage/docs/samples/storage-upload-encrypted-file
+
+Download the encrypted CSEK File example based on the CSEK key we share:--
+https://cloud.google.com/storage/docs/samples/storage-download-encrypted-file?hl=en

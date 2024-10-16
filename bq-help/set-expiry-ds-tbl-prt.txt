@@ -1,0 +1,6 @@
+-- partition level
+ALTER TABLE mydataset.mytable SET OPTIONS (partition_expiration_days = 5);
+-- table level
+ALTER TABLE mydataset.mytable SET OPTIONS (expiration_timestamp = TIMESTAMP '2025-02-03 12:34:56');
+-- dataset level
+ALTER SCHEMA mydataset SET OPTIONS( default_table_expiration_days = 3.75);

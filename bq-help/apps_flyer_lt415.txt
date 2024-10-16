@@ -1,0 +1,224 @@
+
+
+
+
+
+
+
+
+
+
+
+---mixpanel--
+create or replace table  `prod-gold-external-user-lld`.it_appsflyer_lld.mp_appsflyer_events partition by event_dt
+cluster by appsflyerid ,global_member_token,app as
+select distinct app,global_member_token,mp_os,uappsflyerid  appsflyerid  ,event_dt from (
+
+--pchplus
+SELECT
+  DISTINCT pv. ugmt global_member_token,
+  "pchplus" as app,
+app.mp_os,
+app. uappsflyerid,
+
+  date(TIME) event_dt,
+  UPPER(mp_event_name) mp_event_name
+  FROM `mixpanel-prod-1.mixpanel_nessie_day_partitioned_2104567.mp_master_event` app INNER JOIN
+  `mixpanel-prod-1.mixpanel_nessie_day_partitioned_2104567.mp_identity_mappings_data_view` dv ON app. distinct_id = dv. distinct_id
+  INNER JOIN
+  `mixpanel-prod-1.mixpanel_nessie_day_partitioned_2104567.mp_people_data_view` pv ON dv. resolved_distinct_id = pv. mp_distinct_id 
+  WHERE DATE(_PARTITIONTIME )>= DATE_SUB(CURRENT_DATE(), INTERVAL 110 DAY)
+  and  app. uappsflyerid is not null and pv. ugmt is not null
+ union all
+  #pchsweeps
+  SELECT
+  DISTINCT pv. ugmt global_member_token,
+  "pchsweeps" as app,
+app.mp_os,
+app. uappsflyerid,
+
+  date(TIME) event_dt,
+  UPPER(mp_event_name) mp_event_name
+  FROM `mixpanel-prod-1.mixpanel_nessie_day_partitioned_2123707.mp_master_event` app INNER JOIN
+  `mixpanel-prod-1.mixpanel_nessie_day_partitioned_2123707.mp_identity_mappings_data_view` dv ON app. distinct_id = dv. distinct_id
+  INNER JOIN
+  `mixpanel-prod-1.mixpanel_nessie_day_partitioned_2123707.mp_people_data_view` pv ON dv. resolved_distinct_id = pv. mp_distinct_id 
+  WHERE DATE(_PARTITIONTIME )>= DATE_SUB(CURRENT_DATE(), INTERVAL 110 DAY)
+  and  app. uappsflyerid is not null and pv. ugmt is not null
+ union all
+  #wordmania
+  SELECT
+  DISTINCT pv. ugmt global_member_token,
+  "wordmania" as app,
+app.mp_os,
+app. uappsflyerid,
+
+  date(TIME) event_dt,
+  UPPER(mp_event_name) mp_event_name
+  FROM `mixpanel-prod-1.mixpanel_nessie_day_partitioned_2255892.mp_master_event` app INNER JOIN
+  `mixpanel-prod-1.mixpanel_nessie_day_partitioned_2255892.mp_identity_mappings_data_view` dv ON app. distinct_id = dv. distinct_id
+  INNER JOIN
+  `mixpanel-prod-1.mixpanel_nessie_day_partitioned_2255892.mp_people_data_view` pv ON dv. resolved_distinct_id = pv. mp_distinct_id 
+  WHERE DATE(_PARTITIONTIME )>= DATE_SUB(CURRENT_DATE(), INTERVAL 110 DAY)
+  and  app. uappsflyerid is not null and pv. ugmt is not null
+
+union all
+  #lottoblast
+  SELECT
+  DISTINCT pv. ugmt global_member_token,
+  "lottoblast" as app,
+app.mp_os,
+app. uappsflyerid,
+
+  date(TIME) event_dt,
+  UPPER(mp_event_name) mp_event_name
+  FROM `mixpanel-prod-1.mixpanel_nessie_day_partitioned_2123712.mp_master_event` app INNER JOIN
+  `mixpanel-prod-1.mixpanel_nessie_day_partitioned_2123712.mp_identity_mappings_data_view` dv ON app. distinct_id = dv. distinct_id
+  INNER JOIN
+  `mixpanel-prod-1.mixpanel_nessie_day_partitioned_2123712.mp_people_data_view` pv ON dv. resolved_distinct_id = pv. mp_distinct_id 
+  WHERE DATE(_PARTITIONTIME )>= DATE_SUB(CURRENT_DATE(), INTERVAL 110 DAY)
+  and  app. uappsflyerid is not null and pv. ugmt is not null
+union all
+  #pchslots
+    SELECT
+  DISTINCT pv. ugmt global_member_token,
+  "pchslots" as app,
+app.mp_os,
+app. uappsflyerid,
+
+  date(TIME) event_dt,
+  UPPER(mp_event_name) mp_event_name
+  FROM `mixpanel-prod-1.mixpanel_nessie_day_partitioned_2123719.mp_master_event` app INNER JOIN
+  `mixpanel-prod-1.mixpanel_nessie_day_partitioned_2123719.mp_identity_mappings_data_view` dv ON app. distinct_id = dv. distinct_id
+  INNER JOIN
+  `mixpanel-prod-1.mixpanel_nessie_day_partitioned_2123719.mp_people_data_view` pv ON dv. resolved_distinct_id = pv. mp_distinct_id 
+  WHERE DATE(_PARTITIONTIME )>= DATE_SUB(CURRENT_DATE(), INTERVAL 110 DAY)
+  and  app. uappsflyerid is not null and pv. ugmt is not null
+union all
+#treasurematch
+    SELECT
+  DISTINCT pv. ugmt global_member_token,
+  "treasurematch" as app,
+app.mp_os,
+app. uappsflyerid,
+
+  date(TIME) event_dt,
+  UPPER(mp_event_name) mp_event_name
+  FROM `mixpanel-prod-1.mixpanel_nessie_day_partitioned_2941004.mp_master_event` app INNER JOIN
+  `mixpanel-prod-1.mixpanel_nessie_day_partitioned_2941004.mp_identity_mappings_data_view` dv ON app. distinct_id = dv. distinct_id
+  INNER JOIN
+  `mixpanel-prod-1.mixpanel_nessie_day_partitioned_2941004.mp_people_data_view` pv ON dv. resolved_distinct_id = pv. mp_distinct_id 
+  WHERE DATE(_PARTITIONTIME )>= DATE_SUB(CURRENT_DATE(), INTERVAL 110 DAY)
+  and  app. uappsflyerid is not null and pv. ugmt is not null
+) where event_dt>='2024-01-01'
+
+
+
+---ft--
+create or replace view `prod-gold-external-user-lld`.it_appsflyer_lld.vw_ft_appsflyer_events_lt  as
+select appsflyer_id, advertising_id,android_id,idfa, idfv,  lower(app_id) app_id,
+case when lower(app_id)='id1472050293' or  lower(app_id)='com.pch.pchworld' then 'pchplus'
+when lower(app_id)='id1040200670' or  lower(app_id)='pch.apps.pchsweeps' then 'pchclassic'
+when lower(app_id)='id1532253423' or  lower(app_id)='com.pch.wordmania' then 'wordmania'
+when lower(app_id)='id879181060' or  lower(app_id)='com.pch.lottoblast' then 'lottoblast'
+when lower(app_id)='id1475662207' or  lower(app_id)='pch.apps.pchslots' then 'pchslots'
+when lower(app_id)='id6444869793' or  lower(app_id)='com.pch.treasurematch' then 'treasurematch' end  app_name
+
+,  app_type,  device_type,cast(install_time as DATETIME) install_time, event_name, cast(event_time as DATETIME) event_time ,   platform,  user_agent,cast(min_event_time as DATETIME) min_event_time,date(event_time) event_dt from (
+SELECT appsflyer_id, advertising_id,android_id,idfa, idfv,  app_id, app_name,  app_type,  device_type,install_time,platform, event_name, event_time, user_agent,  min(event_time) over(partition by app_id,appsflyer_id order by event_time>install_time asc ) min_event_time ,rank() over(partition by app_id,appsflyer_id order by event_time desc ) rnk FROM `prod-gold-external-user-lld.it_fivetran_appsflyer_lld.event` where  appsflyer_id is not null) where rnk=1
+
+--TD
+
+create or replace view `prod-gold-external-user-lld`.it_appsflyer_lld.vw_td_appsflyer_events_lt  as
+select distinct appsflyer_id, advertising_id,android_id,idfa, idfv,  app_id,  app_name,  app_type, device_type,install_time, event_name, event_time,   platform,  user_agent,min_event_time,date(event_time) event_dt from(
+select appsflyer_id, advertising_id,android_id,idfa, idfv,  app_id,  'pchplus' app_name,  'na' app_type, device_type,install_time, event_name, event_time,   platform,  user_agent,min_event_time from (
+SELECT *,min(event_time) over(partition by app_id,appsflyer_id order by event_time>install_time asc ) min_event_time  ,rank() over(partition by app_id,appsflyer_id order by event_time desc ) rnk FROM `prod-gold-external-user-lld.it_appsflyer_lld.stg_pchplus_install_events`  )
+union all
+select appsflyer_id, advertising_id,android_id,idfa, idfv,  app_id,  'lottoblast' app_name,  'na' app_type, device_type,install_time, event_name, event_time,   platform,  user_agent,min_event_time from (
+SELECT *,min(event_time) over(partition by app_id,appsflyer_id order by event_time>install_time asc ) min_event_time  ,rank() over(partition by app_id,appsflyer_id order by event_time desc ) rnk FROM `prod-gold-external-user-lld.it_appsflyer_lld.stg_pchlotto_install_events`  )
+union all
+select appsflyer_id, advertising_id,android_id,idfa, idfv,  app_id,  'pchsweeps' app_name,  'na' app_type, device_type,install_time, event_name, event_time,   platform,  user_agent,min_event_time from (
+SELECT *,min(event_time) over(partition by app_id,appsflyer_id order by event_time>install_time asc ) min_event_time  ,rank() over(partition by app_id,appsflyer_id order by event_time desc ) rnk FROM `prod-gold-external-user-lld.it_appsflyer_lld.stg_pchclassic_install_events`  )
+union all
+select appsflyer_id, advertising_id,android_id,idfa, idfv,  app_id,  'wordmania' app_name,  'na' app_type, device_type,install_time, event_name, event_time,   platform,  user_agent,min_event_time from (
+SELECT *,min(event_time) over(partition by app_id,appsflyer_id order by event_time>install_time asc ) min_event_time  ,rank() over(partition by app_id,appsflyer_id order by event_time desc ) rnk FROM `prod-gold-external-user-lld.it_appsflyer_lld.stg_wordmania_install_events`  )
+union all
+select appsflyer_id, advertising_id,android_id,idfa, idfv,  app_id,  'pchslots' app_name,  'na' app_type, device_type,install_time, event_name, event_time,   platform,  user_agent,min_event_time from (
+SELECT *,min(event_time) over(partition by app_id,appsflyer_id order by event_time>install_time asc ) min_event_time  ,rank() over(partition by app_id,appsflyer_id order by event_time desc ) rnk FROM `prod-gold-external-user-lld.it_appsflyer_lld.stg_slots_install_events`  )
+union all
+select appsflyer_id, advertising_id,android_id,idfa, idfv,  app_id,  'treasurematch' app_name,  'na' app_type, device_type,install_time, event_name, event_time,   platform,  user_agent,min_event_time from (
+SELECT *,min(event_time) over(partition by app_id,appsflyer_id order by event_time>install_time asc ) min_event_time  ,rank() over(partition by app_id,appsflyer_id order by event_time desc ) rnk FROM `prod-gold-external-user-lld.it_appsflyer_lld.stg_treasurematch_install_events`  ))
+
+`prod-gold-external-user-lld.it_appsflyer_lld.stg_pchplus_install_events`
+`prod-gold-external-user-lld.it_appsflyer_lld.stg_pchlotto_install_events`
+`prod-gold-external-user-lld.it_appsflyer_lld.stg_pchclassic_install_events` 
+`prod-gold-external-user-lld.it_appsflyer_lld.stg_wordmania_install_events`
+ `prod-gold-external-user-lld.it_appsflyer_lld.stg_slots_install_events`
+ `prod-gold-external-user-lld.it_appsflyer_lld.stg_treasurematch_install_events`
+
+
+--combine--ft and td
+create or replace view `prod-gold-external-user-lld`.it_appsflyer_lld.vw_ft_td_appsflyer_events_lt  as
+select *  from (
+select appsflyer_id,advertising_id,android_id,idfa,platform,
+ user_agent,
+ install_time ,app_name,
+event_time, min_event_time min_event_time , ROW_NUMBER() OVER (PARTITION BY appsflyer_id,advertising_id,android_id,idfa,platform
+  ORDER BY event_time DESC) AS row_num
+ from (
+select appsflyer_id,coalesce(advertising_id,'',null) advertising_id ,coalesce(android_id,'',null)  android_id,coalesce(idfa,'',null) idfa,platform,
+ user_agent,
+ install_time ,app_name,
+event_time, min_event_time
+ from (
+select * from `prod-gold-external-user-lld`.it_appsflyer_lld.vw_td_appsflyer_events_lt
+union all
+select * from `prod-gold-external-user-lld`.it_appsflyer_lld.vw_ft_appsflyer_events_lt)   ) 
+)
+where row_num=1
+
+--finall-mapping
+
+create or replace table `prod-gold-external-user-lld.it_appsflyer_lld.mp_appsflyer_mapping` as 
+SELECT 
+distinct app mobile_app_name,
+platform mobileplatforms,
+lower(case when platform='ios' then idfa 
+when platform='android' then advertising_id  end) mobileidentityid,
+'AUTHORIZED' trackingstatus,
+'RECOGNIZED' mobileusertype,
+appsflyerid extappinstanceid,
+lower(global_member_token) usertoken,
+min_event_time min_event_ts,
+install_time install_ts,
+event_time max_event_ts,user_agent useragent_string
+ FROM `prod-gold-external-user-lld.it_appsflyer_lld.mp_appsflyer_events` mp join 
+`prod-gold-external-user-lld`.it_appsflyer_lld.vw_ft_td_appsflyer_events_lt  af on mp.appsflyerid=af.appsflyer_id
+
+====
+create or replace table `prod-gold-external-user-lld`.it_appsflyer_lld.vw_mp_appsflyer_mapping_drv as
+SELECT distinct  af.app_name mobile_app_name,
+platform mobileplatforms,
+lower(case when platform='ios' then idfa 
+when platform='android' then advertising_id  end) mobileidentityid,
+'AUTHORIZED' trackingstatus,
+'RECOGNIZED' mobileusertype,
+ af.appsflyer_id extappinstanceid,
+lower(mp.global_member_token) usertoken,
+min_event_time min_event_ts,
+install_time install_ts,
+event_time max_event_ts,user_agent useragent_string
+ FROM  
+`prod-gold-external-user-lld`.it_appsflyer_lld.vw_ft_td_appsflyer_events_lt  af 
+left join `prod-gold-external-user-lld.it_appsflyer_lld.mp_appsflyer_events` mp
+on af.appsflyer_id=mp.appsflyerid
+
+
+create or replace table `prod-gold-external-user-lld.it_appsflyer_lld.mp_appsflyer_mapping_final` as
+select * from (
+ select * from`prod-gold-external-user-lld`.it_appsflyer_lld.vw_mp_appsflyer_mapping_drv 
+ where usertoken is  null and extappinstanceid is not null and mobileidentityid is not null and length(extappinstanceid)>=20
+ and mobileidentityid !=''
+ union all
+ SELECT * FROM `prod-gold-external-user-lld.it_appsflyer_lld.mp_appsflyer_mapping` where  mobileidentityid !=''
+)

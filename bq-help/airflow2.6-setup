@@ -1,0 +1,123 @@
+
+First, build the custom image, as mentioned earlier.
+docker build . --tag extending_airflow:latest
+docker compose up -d 
+or 
+docker-compose up -d
+Dockerfile
+
+#Dockerfile
+FROM apache/airflow:2.6.0-python3.9
+# Install additional dependencies
+USER root
+COPY requirements.txt ./requirements.txt
+USER airflow
+RUN pip install --user --upgrade pip
+# Set up additional Python dependencies
+RUN pip install --no-cache-dir --user -r ./requirements.txt
+Compose file
+
+#docker-compose.yaml
+version: '3.7'
+# ====================================== AIRFLOW ENVIRONMENT VARIABLES =======================================
+x-environment: &airflow_environment
+  - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+  - AIRFLOW__CORE__LOAD_DEFAULT_CONNECTIONS=False
+  - AIRFLOW__CORE__LOAD_EXAMPLES=False
+  - AIRFLOW__CORE__SQL_ALCHEMY_CONN=postgresql://airflow:airflow@postgres:5432/airflow
+  - AIRFLOW__CORE__STORE_DAG_CODE=True
+  - AIRFLOW__CORE__STORE_SERIALIZED_DAGS=True
+  - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=True
+  - AIRFLOW__WEBSERVER__RBAC=False
+x-airflow-image: &airflow_image extending_airflow:latest
+# ====================================== /AIRFLOW ENVIRONMENT VARIABLES ======================================
+services:
+  postgres:
+    image: postgres:12-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=airflow
+      - POSTGRES_DB=airflow
+    ports:
+      - "5432"
+  init:
+    image: *airflow_image
+    depends_on:
+      - postgres
+    environment: *airflow_environment
+    entrypoint: /bin/bash
+    command: -c 'airflow db upgrade && sleep 5 && airflow db init && airflow users create --username breno --password fate123 --firstname breno --lastname teixeira --role Admin --email brentchav@gmail.com'
+  webserver:
+    image: *airflow_image
+    restart: always
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+    volumes:
+      - logs:/opt/airflow/logs
+    environment: *airflow_environment
+    command: webserver
+  scheduler:
+    image: *airflow_image
+    restart: always
+    user: root
+    depends_on:
+      - postgres
+      - webserver
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./configurations.json:/tmp/conf_file/configurations.json
+      - logs:/opt/airflow/logs
+      - ./dags/data:/opt/airflow/dags/data
+    environment: *airflow_environment
+    command: scheduler
+volumes:
+  logs:
+
+
+  ----------------------------------------
+Dags
+
+# dag.py
+from airflow import DAG
+from airflow.operators.bash import BashOperator
+import os
+path = os.environ['AIRFLOW_HOME']
+
+from datetime import timedelta, datetime
+
+default_args = {
+                'owner': 'your_user',
+                'depends_on_past': False,
+                'email': ['your@email.com'],
+                'email_on_failure': False,
+                'email_on_retry': False,
+                'retries': 2,
+                'retry_delay': timedelta(minutes=1)
+                }
+
+# Define the DAG, its ID and when should it run.
+dag = DAG(
+            dag_id='products_dag',
+            start_date=datetime(year=2023, month=12, day=11, hour=10),
+            schedule_interval="30 */12 * * *",
+            default_args=default_args,
+            catchup=False
+            )
+
+# Define the task 1 (collect the data) id. Run the bash command because the task is in a .py file.
+task1 = BashOperator(
+                        task_id='get_data',
+                        bash_command=f'python {path}/dags/src/get_data.py --num_pages=1',
+                        dag=dag
+                    )
+
+# Define Task 2 (insert the data into the database)
+task2 = BashOperator(
+                     task_id='insert_data',
+                     bash_command=f'python {path}/dags/src/insert_data.py'
+                    )
+
+task1 >> task2

@@ -1,0 +1,586 @@
+##shows slot usage, slot capacity, and assigned reservation for a project with a reservation assignment, 
+#over the past hour. Slot usage is given in units of slot milliseconds per second.
+WITH
+  job_data AS (
+  SELECT
+    job.period_start,
+    job.reservation_id,
+    job.period_slot_ms,
+    job.job_id,
+    job.job_type
+  FROM
+    `prod-gold-core`.`region-us`.INFORMATION_SCHEMA.JOBS_TIMELINE AS job
+  WHERE
+    job.period_start > TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 1 HOUR))
+SELECT
+  reservation.reservation_name AS reservation_name,
+  job.period_start,
+  reservation.slot_capacity,
+  job.period_slot_ms,
+  job.job_id,
+  job.job_type
+FROM
+  job_data AS job
+INNER JOIN
+  `gcpadmin-bqslots`.`region-us`.INFORMATION_SCHEMA.RESERVATIONS AS reservation
+ON
+  (job.reservation_id = CONCAT(reservation.project_id, ":", "US", ".", reservation.reservation_name));
+
+  
+https://cloud.google.com/bigquery/docs/reference/rest/v2/jobs/get?apix_params=%7B%22projectId%22%3A%22pch-bak-2014%22%2C%22jobId%22%3A%22SimbaJDBC_Job_5ea1765d-07da-4047-83a1-4a879be6cc57%22%2C%22location%22%3A%22US%22%7D
+
+WITH
+  job_data AS (
+  SELECT
+  project_id,
+    job.period_start,
+    job.reservation_id,
+    job.period_slot_ms,
+    job.job_id,
+    job.job_type
+  FROM
+   `region-us`.INFORMATION_SCHEMA.JOBS_TIMELINE_BY_ORGANIZATION AS job
+  WHERE
+    job.period_start > TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 1 HOUR))
+SELECT
+  distinct reservation.reservation_name AS reservation_name,
+  job.period_start,
+  reservation.slot_capacity,
+  job.period_slot_ms,
+  job.job_id,
+  job.job_type,
+  job.project_id
+FROM
+  job_data AS job
+INNER JOIN
+  `gcpadmin-bqslots`.`region-us`.INFORMATION_SCHEMA.RESERVATIONS AS reservation
+ON
+  (job.reservation_id = CONCAT(reservation.project_id, ":", "US", ".", reservation.reservation_name));
+
+
+
+  SELECT 
+      FORMAT_TIMESTAMP("%F %H", period_start , "America/New_York") as start_hour,
+        project_id,
+      sum(period_slot_ms)/3600000 as average_slots  -- deivide by 3,600,000  milliseconds
+FROM   `region-us`.INFORMATION_SCHEMA.JOBS_TIMELINE_BY_ORGANIZATION AS job
+WHERE 
+    job_start_time > timestamp_sub(current_timestamp(), INTERVAL 2 day)
+    AND job_type = "QUERY" and  job.reservation_id is not null
+group by 1,2
+
+
+
+WITH stages as (
+ SELECT job_id, start_time as job_start,job_type, stage
+ FROM  `region-US.INFORMATION_SCHEMA.JOBS_BY_ORGANIZATION`
+ CROSS JOIN unnest(job_stages) as stage
+ WHERE job_type = "QUERY"
+ AND  total_slot_ms > 1e7  -- filter out minor stages
+ ),
+timings as (
+ SELECT job_id, job_start,
+    FORMAT_TIMESTAMP("%F %H", timestamp_millis(stage.start_ms) , "America/New_York") as stage_start_hour,
+    stage.wait_Ms_Avg
+ FROM  stages
+ WHERE stage.slot_ms > 1e8
+)
+SELECT stage_start_hour,
+     FORMAT_TIMESTAMP("%H:%M:%S", timestamp_millis(cast(avg(wait_Ms_Avg) as Int)))    
+                  as wait_avg,
+FROM timings  
+WHERE
+    job_start > timestamp_sub(current_timestamp(), INTERVAL 7 day)
+GROUP BY 1
+ORDER BY 1
+
+The query used to derive the average slot utilization is as follows:
+
+SELECT
+  TIMESTAMP_TRUNC(jbo.creation_time, DAY) AS usage_date,
+  jbo.reservation_id,
+  jbo.project_id,
+  jbo.job_type,
+  jbo.user_email,
+  -- Aggregate total_slots_ms used for all jobs on this day and divide
+  -- by the number of milliseconds in a day. Most accurate for days with
+  -- consistent slot usage
+  SAFE_DIVIDE(SUM(jbo.total_slot_ms), (1000 * 60 * 60 * 24)) AS average_daily_slot_usage
+FROM
+  `region-us`.INFORMATION_SCHEMA.JOBS_BY_ORGANIZATION jbo
+GROUP BY
+  usage_date,
+  jbo.project_id,
+  jbo.job_type,
+  jbo.user_email,
+  jbo.reservation_id
+ORDER BY
+  usage_date ASC
+
+  https://github.com/GoogleCloudPlatform/bigquery-utils/blob/master/dashboards/system_tables/sql/current_assignments.sql
+
+/*
+  * Hourly Utilization Report: Returns hourly BigQuery usage
+  * by reservation, project, job type, and user
+  */
+
+SELECT
+  -- usage_time is used for grouping jobs by the hour
+  -- usage_date is used to separately store the date this job occurred
+  TIMESTAMP_TRUNC(jbo.period_start, HOUR) AS usage_time,
+  EXTRACT(DATE from jbo.period_start) AS usage_date,
+  jbo.reservation_id,
+  jbo.project_id,
+  jbo.job_type,
+  jbo.user_email,
+  -- Aggregate total_slots_ms used for all jobs at this hour and divide
+  -- by the number of milliseconds in an hour. Most accurate for hours with
+  -- consistent slot usage
+  SUM(jbo.period_slot_ms) / (1000 * 60 * 60) AS average_hourly_slot_usage
+FROM
+  `region-{region_name}`.INFORMATION_SCHEMA.JOBS_TIMELINE_BY_ORGANIZATION jbo
+WHERE (jbo.statement_type != "SCRIPT" OR jbo.statement_type IS NULL)  -- Avoid duplicate byte counting in parent and children jobs.
+GROUP BY
+  usage_time,
+  usage_date,
+  jbo.project_id,
+  jbo.reservation_id,
+  jbo.job_type,
+  jbo.user_email
+ORDER BY
+  usage_time ASC
+
+  /*
+ * Copyright 2020 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
+ * It is assumed that the following query will be run in the administration
+ * project where the reservations were created. If this is not the case,
+ * prepend the project id to the table name as follows:
+ * `{project_id}`.`region-{region_name}`.INFORMATION_SCHEMA.{table}
+ */
+
+/*
+ * Reservation Utilization Report: Returns the average usage, average
+ * capacity, current capacity, and average utilization of a reservation
+ * for the last 30 days
+ */
+
+-- This table retrieves the slot capacity history of every reservation
+-- including the start and end time of that capacity
+WITH
+  reservation_slot_capacity AS (
+    SELECT
+      -- Concatenation is needed as RESERVATION_CHANGES_BY_PROJECT only
+      -- includes reservation name but in order to join with
+      -- JOBS_BY_ORGANIZATION, reservation id is required
+      CONCAT("gcpadmin-bqslots:US.", reservation_name) AS reservation_id,
+      change_timestamp AS start_time,
+      IFNULL(
+        LEAD(change_timestamp)
+          OVER (
+            PARTITION BY reservation_name
+            ORDER BY change_timestamp ASC),
+        CURRENT_TIMESTAMP()) AS end_time,
+      action,
+      slot_capacity
+    FROM
+      `region-us`.INFORMATION_SCHEMA.RESERVATION_CHANGES_BY_PROJECT
+  ),
+    -- This table retrieves only the current slot capacity of a reservation
+  latest_slot_capacity AS (
+    SELECT
+      rcp.reservation_name,
+      rcp.slot_capacity,
+      CONCAT("gcpadmin-bqslots:US.", rcp.reservation_name) AS reservation_id,
+    FROM
+      `region-us`.INFORMATION_SCHEMA.RESERVATION_CHANGES_BY_PROJECT AS rcp
+    WHERE
+      -- This subquery returns the latest slot capacity for each reservation
+      -- by extracting the reservation with the maximum timestamp
+      (rcp.reservation_name, rcp.change_timestamp) IN (
+        SELECT AS STRUCT reservation_name, MAX(change_timestamp)
+        FROM
+          `region-us`.INFORMATION_SCHEMA.RESERVATION_CHANGES_BY_PROJECT
+        GROUP BY reservation_name)
+  )
+-- Compute the average slot utilization and average reservation utilization
+SELECT
+  jbo.reservation_id,
+  -- Slot usage is calculated by aggregating total_slot_ms for all jobs
+  -- in the last month and dividing by the number of milliseconds
+  -- in a month
+  SUM(jbo.total_slot_ms) / (1000 * 60 * 60 * 24 * 30) AS average_monthly_slot_usage,
+  AVG(rsc.slot_capacity) AS average_reservation_capacity,
+  (SUM(jbo.total_slot_ms) / (1000 * 60 * 60 * 24 * 30)) / AVG(rsc.slot_capacity)
+    AS reservation_utilization,
+  lsc.slot_capacity AS latest_capacity
+FROM
+  `region-us`.INFORMATION_SCHEMA.JOBS_BY_ORGANIZATION jbo
+-- Join the slot capacity history
+LEFT JOIN reservation_slot_capacity rsc
+  ON
+    jbo.reservation_id = rsc.reservation_id
+    AND jbo.creation_time >= rsc.start_time
+    AND jbo.creation_time < rsc.end_time
+-- Join the latest slot capacity
+LEFT JOIN latest_slot_capacity lsc
+  ON
+    jbo.reservation_id = lsc.reservation_id
+WHERE
+  -- Includes jobs created 31 days ago but completed 30 days ago
+  jbo.creation_time
+    BETWEEN TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 31 DAY)
+    AND CURRENT_TIMESTAMP()
+  AND jbo.end_time
+    BETWEEN TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 DAY)
+    AND CURRENT_TIMESTAMP()
+GROUP BY
+  reservation_id,
+  lsc.slot_capacity
+ORDER BY
+  reservation_id DESC
+
+   ALTER SCHEMA `pch-app-2014`.`PCHSessionMetadata`  SET OPTIONS ( description = 'Enabled physical billing model on this datasets');
+
+
+ ALTER SCHEMA `pch-app-2014`.`PCHSessionMetadata` SET OPTIONS(max_time_travel_hours = 24);
+ 
+
+ALTER SCHEMA `pch-app-2014`.`PCHSessionMetadata` SET OPTIONS(storage_billing_model = 'PHYSICAL');
+
+SELECT distinct table_database,table_schema,table_name,stats__date_shard_min__value
+,stats__date_shard_max__value
+,stats__num_rows__value
+,stats__num_bytes_gb__value
+ FROM `gpcadmin.MetadataStore.all_projects_bq_objects_complete_stats_v2` where 	load_date='2023-07-24' and
+table_database='pch-app-2014' and table_schema='Archive' and table_name like 'NonConv_ReportData_DevType%'
+
+SELECT *
+ FROM `gpcadmin.MetadataStore.all_projects_bq_objects_complete_stats_v2` where 	load_date='2023-07-24' and
+table_database='pch-app-2014' and table_schema='Archive' and table_name like 'NonConv_ReportData_DevType%'
+
+SELECT distinct table_database,table_schema,table_name,stats__date_shard_min__value date_shard_min_value
+,stats__date_shard_max__value date_shard_max_value
+,stats__num_rows__value total_no_of_rows
+,stats__num_bytes_gb__value datasize_gb,date(creation_time) creation_time,date(last_modified_time) last_modified_time
+ FROM `gpcadmin.MetadataStore.all_projects_bq_objects_complete_stats_v2` where 	load_date='2023-07-24' and table_database<>'pch-app-2014' and stats__num_bytes_gb__value>10
+
+
+ SELECT distinct table_database,table_schema,table_name,stats__date_shard_min__value date_shard_min_value
+,stats__date_shard_max__value date_shard_max_value
+,stats__num_rows__value total_no_of_rows
+,stats__num_bytes_gb__value datasize_gb,round(stats__num_bytes_gb__value/1024,2) datasize_tb ,date(creation_time) creation_time,date(last_modified_time) last_modified_time
+ FROM `gpcadmin.MetadataStore.all_projects_bq_objects_complete_stats_v2` where 	load_date='2023-07-24' and table_database<>'pch-app-2014' and 
+ table_database='advertising-aggregates'
+
+ event_params.value.int_value > 0
+      /* Has engaged in last M = 7 days */
+      AND event_timestamp >
+          UNIX_MICROS(TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY))
+
+SELECT
+  dataset_id,
+  table_id,
+  # Convert size in bytes to GB
+  ROUND(size_bytes/POW(10,9),2) AS size_gb,
+  # Convert creation_time and last_modified_time from UNIX EPOCH format to a timestamp
+  TIMESTAMP_MILLIS(creation_time) AS creation_time,
+  TIMESTAMP_MILLIS(last_modified_time) AS last_modified_time,
+  row_count,
+  # Convert table type from numerical value to description
+  CASE
+    WHEN type = 1 THEN 'table'
+    WHEN type = 2 THEN 'view'
+  ELSE
+  NULL
+END
+  AS type
+FROM
+  `prod-gold-external-user-lld.it_survey_reporting`.__TABLES__
+
+
+https://medium.com/google-cloud/how-to-retrieve-bigquery-job-details-and-interpreting-execution-metrics-368409128fa2
+
+https://cloud.google.com/bigquery/docs/query-queues
+https://cloud.google.com/bigquery/docs/best-practices-performance-compute#reduce-data-processed
+
+
+https://xemuliam.medium.com/how-to-implement-bigquery-full-delta-data-refresh-switch-using-table-labels-38c631b6baf7--read
+https://xemuliam.medium.com/how-to-work-with-bigquery-table-labels-as-easy-using-sql-71ff978aa9b8
+
+SELECT
+  t1.period_start,
+  t1.job_count AS dynamic_concurrency_threshold
+FROM (
+  SELECT
+    period_start,
+    state,
+    COUNT(DISTINCT job_id) AS job_count
+  FROM
+    `prod-gold-bi-reporting`.`region-us`.INFORMATION_SCHEMA.JOBS_TIMELINE
+  WHERE
+    period_start BETWEEN TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 1 DAY)
+    AND CURRENT_TIMESTAMP()
+    AND reservation_id = "gcpadmin-bqslots:US.pch-bq-ee-reservation-c-b100-m300"
+  GROUP BY
+    period_start,
+    state) AS t1
+JOIN (
+  SELECT
+    period_start,
+    state,
+    COUNT(DISTINCT job_id) AS job_count
+  FROM
+    `prod-gold-bi-reporting`.`region-us`.INFORMATION_SCHEMA.JOBS_TIMELINE
+  WHERE
+    state = "PENDING"
+    AND period_start BETWEEN TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 1 DAY) and  CURRENT_TIMESTAMP()
+    AND reservation_id="gcpadmin-bqslots:US.pch-bq-ee-reservation-c-b100-m300"
+  GROUP BY
+    period_start,
+    state
+  HAVING
+    COUNT(DISTINCT job_id) > 0 ) AS t2
+ON
+  t1.period_start = t2.period_start
+WHERE
+  t1.state = "RUNNING";
+
+
+  SELECT
+  option_name, option_type, option_value, option_set_level, option_set_on_id
+FROM
+  `region-us`.INFORMATION_SCHEMA.EFFECTIVE_PROJECT_OPTIONS;
+
+
+  SELECT
+  option_name, option_type, option_value
+FROM
+  `region-us`.INFORMATION_SCHEMA.ORGANIZATION_OPTIONS;
+
+
+    SELECT
+project_id,
+  statement_type,
+  job_type,
+  state ,
+  user_email,
+  job_id,
+  TIMESTAMP_DIFF( end_time, creation_time,HOUR) timetorun_hr,
+  TIMESTAMP_DIFF( end_time, creation_time,MINUTE) timetorun_min,
+  reservation_id,
+  priority,
+  case when job_id like 'materialized_view%' then 'materialized_view' 
+  when job_id like 'scheduled_query%' then 'scheduled_query'
+   when job_id like 'airflow_%' then 'from_airflow' 
+    when job_id like 'bquxjob_%' then 'from_bq_ui' 
+    when job_id like 'script_job_%' then 'script_job' 
+    else 'others' end job_classify , total_bytes_billed,
+    cache_hit,
+  `bigquery-public-data`.persistent_udfs.job_url(project_id || ':us.' || job_id) AS job_url,
+  total_slot_ms,error_result.reason err_reaqson,
+  error_result.message err_msg,
+  error_result.location err_loc,
+  ((SUM((total_bytes_billed ))/ POW(2,40)) *6.25) AS estimatedCostUsd
+FROM
+  `region-us`.INFORMATION_SCHEMA.JOBS_BY_ORGANIZATION
+WHERE
+  EXTRACT(DATE FROM creation_time)='2023-10-03'  group by 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18
+    order by estimatedCostUsd desc
+
+
+    SELECT
+  `bigquery-public-data`.persistent_udfs.job_url(
+    project_id || ':us.' || job_id) AS job_url,
+  query_info.performance_insights
+FROM
+  `region-us`.INFORMATION_SCHEMA.JOBS_BY_ORGANIZATION
+WHERE
+  DATE(creation_time) >= CURRENT_DATE - 30 -- scan 30 days of query history
+  AND job_type = 'QUERY'
+  AND state = 'DONE'
+  AND error_result IS NULL
+  AND statement_type != 'SCRIPT'
+  AND EXISTS ( -- Only include queries which had performance insights
+    SELECT 1
+    FROM UNNEST(
+      query_info.performance_insights.stage_performance_standalone_insights
+    )
+    WHERE slot_contention OR insufficient_shuffle_quota
+    UNION ALL
+    SELECT 1
+    FROM UNNEST(
+      query_info.performance_insights.stage_performance_change_insights
+    )
+    WHERE input_data_change.records_read_diff_percentage IS NOT NULL
+  );
+
+
+WITH resource_warnings AS (
+  SELECT
+    EXTRACT(DATE FROM creation_time) AS creation_date
+  FROM
+    `user_project.region-us`.INFORMATION_SCHEMA.JOBS
+  WHERE
+    creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 14 DAY)
+    AND query_info.resource_warning IS NOT NULL
+)
+SELECT
+  creation_date,
+  COUNT(1) AS warning_counts
+FROM
+  resource_warnings
+GROUP BY creation_date
+ORDER BY creation_date DESC;
+
+
+
+
+    SELECT
+project_id,
+  statement_type,
+  job_type,
+  state ,
+  user_email,
+  job_id,
+  TIMESTAMP_DIFF( end_time, creation_time,HOUR) timetorun_hr,
+  TIMESTAMP_DIFF( end_time,creation_time, MINUTE) timetorun_min,
+  case when reservation_id is not null then 'BQ-Slots' else 'On-Demand' end  reservation_id,
+  priority,
+  case when job_id like 'materialized_view%' then 'materialized_view' 
+  when job_id like 'scheduled_query%' then 'scheduled_query'
+   when job_id like 'airflow_%' then 'from_airflow' 
+    when job_id like 'bquxjob_%' then 'from_bq_ui' 
+    when job_id like 'script_job_%' then 'script_job' 
+    else 'others' end job_classify , total_bytes_billed,
+    cache_hit,
+  `bigquery-public-data`.persistent_udfs.job_url(project_id || ':us.' || job_id) AS job_url,
+  total_slot_ms,error_result.reason err_reaqson,
+  error_result.message err_msg,
+  error_result.location err_loc,
+  query_info.resource_warning resource_war,
+  ((SUM((total_bytes_billed ))/ POW(2,40)) *6.25) AS estimatedCostUsd
+FROM
+  `region-us`.INFORMATION_SCHEMA.JOBS_BY_ORGANIZATION
+WHERE
+  EXTRACT(DATE FROM creation_time) =current_date()   AND statement_type != 'SCRIPT' and query_info.resource_warning is not null
+group by 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19
+
+Analyze performance over time for identical queries
+The following example returns the top 10 slowest jobs over the past 7 days that have run the same query:
+
+DECLARE querytext STRING DEFAULT(
+  SELECT query
+  FROM `region-us`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
+  WHERE job_id = 'JOB_ID'
+  LIMIT 1
+);
+
+SELECT
+  start_time,
+  end_time,
+  project_id,
+  job_id,
+  TIMESTAMP_DIFF(end_time, start_time, SECOND) AS run_secs,
+  total_bytes_processed / POW(1024, 3) AS total_gigabytes_processed,
+  query
+FROM
+  `region-us`.INFORMATION_SCHEMA.JOBS_BY_PROJECT
+WHERE
+  query = querytext
+  AND total_bytes_processed > 0
+  AND creation_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
+ORDER BY 5 DESC
+LIMIT 10;
+Replace JOB_ID with any job_id that ran the query you are analyzing.
+
+Estimate slot usage and cost for queries
+The following example computes the average slots and max slots for each job by using estimated_runnable_units.
+
+The reservation_id is NULL if you don't have any reservations.
+
+SELECT
+  project_id,
+  job_id,
+  reservation_id,
+  EXTRACT(DATE FROM creation_time) AS creation_date,
+  TIMESTAMP_DIFF(end_time, start_time, SECOND) AS job_duration_seconds,
+  job_type,
+  user_email,
+  total_bytes_billed,
+
+  -- Average slot utilization per job is calculated by dividing total_slot_ms by the millisecond duration of the job
+
+  SAFE_DIVIDE(job.total_slot_ms,(TIMESTAMP_DIFF(job.end_time, job.start_time, MILLISECOND))) AS job_avg_slots,
+  query,
+
+  -- Determine the max number of slots used at ANY stage in the query.
+  -- The average slots might be 55. But a single stage might spike to 2000 slots.
+  -- This is important to know when estimating number of slots to purchase.
+
+  MAX(SAFE_DIVIDE(unnest_job_stages.slot_ms,unnest_job_stages.end_ms - unnest_job_stages.start_ms)) AS jobstage_max_slots,
+
+  -- Check if there's a job that requests more units of works (slots). If so you need more slots.
+  -- estimated_runnable_units = Units of work that can be scheduled immediately.
+  -- Providing additional slots for these units of work accelerates the query,
+  -- if no other query in the reservation needs additional slots.
+
+  MAX(unnest_timeline.estimated_runnable_units) AS estimated_runnable_units
+FROM `region-us`.INFORMATION_SCHEMA.JOBS AS job
+  CROSS JOIN UNNEST(job_stages) as unnest_job_stages
+  CROSS JOIN UNNEST(timeline) AS unnest_timeline
+WHERE statement_type != 'SCRIPT'
+  AND DATE(creation_time) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 7 DAY) AND CURRENT_DATE()
+GROUP BY 1,2,3,4,5,6,7,8,9,10
+ORDER BY job_id;
+
+
+
+select * from (
+SELECT
+  projectId,
+  user,
+  runQuery,
+  jobBillDate,
+  estimatedCostUsd,
+    SUM(CASE WHEN REGEXP_CONTAINS(runQuery, r'pch-app-2014.Acq_Spend') THEN 1 ELSE 0 END) AS Acq_Spend,
+      SUM(CASE WHEN REGEXP_CONTAINS(runQuery, r'pch-app-2014.Acquire_App') THEN 1 ELSE 0 END) AS Acquire_App ,
+          SUM(CASE WHEN REGEXP_CONTAINS(runQuery, r'pch-app-2014.Addresses') THEN 1 ELSE 0 END) AS Addresses,
+      SUM(CASE WHEN REGEXP_CONTAINS(runQuery, r'pch-app-2014.AppNexus') THEN 1 ELSE 0 END) AS AppNexus, 
+      SUM(CASE WHEN REGEXP_CONTAINS(runQuery, r'pch-app-2014.AppsFlyer') THEN 1 ELSE 0 END) AS AppsFlyer, 
+       SUM(CASE WHEN REGEXP_CONTAINS(runQuery, r'pch-app-2014.Archive') THEN 1 ELSE 0 END) AS Archive 
+
+FROM
+  `gpcadmin.bq_cost_analysis.mw_prevday_bqcost_per_user_v2`
+WHERE
+  jobBillDate BETWEEN DATETIME_SUB(CURRENT_DATE(), INTERVAL 120 DAY)
+  AND CURRENT_DATE() and user <>'rjannu@pch.com'
+  group by 1,2,3,4,5) where Acq_Spend<>0 or Acquire_App <>0 or Addresses<>0 or AppNexus<>0 or AppsFlyer<>0 or Archive<>0
+
+
+
+  SELECT
+  projectId,
+  user,
+  runQuery,
+  jobBillDate,
+  estimatedCostUsd*1.25 cost
+   FROM
+  `gpcadmin.bq_cost_analysis.mw_prevday_bqcost_per_user_v2`
+WHERE
+  jobBillDate BETWEEN DATETIME_SUB(CURRENT_DATE(), INTERVAL 120 DAY)
+  AND CURRENT_DATE()  

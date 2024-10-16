@@ -1,0 +1,200 @@
+CREATE MATERIALIZED VIEW  gpcadmin.bq_cost_analysis.vw_prevday_bqcost_per_user_v2  AS (
+
+
+WITH jobChangeEvent AS (
+SELECT
+  resource.labels.project_id AS projectId,
+  protopayload_auditlog.authenticationInfo.principalEmail AS user,
+  CONCAT( SPLIT(JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson, '$.jobChange.job.jobName'),"/")[SAFE_OFFSET(1)], ":", SPLIT(JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson, '$.jobChange.job.jobName'),"/")[SAFE_OFFSET(3)] ) AS jobId,  
+  CONCAT( SPLIT(JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson, '$.jobChange.job.jobStats.parentJobName'), "/")[SAFE_OFFSET(1)], ":", SPLIT(JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson,'$.jobChange.job.jobStats.parentJobName'), "/")[SAFE_OFFSET(3)] ) AS parentJobId,
+  JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson, '$.jobChange.job.jobConfig.queryConfig.query') AS runQuery,
+  REGEXP_EXTRACT(protopayload_auditlog.metadataJson, r'BigQueryAuditMetadata","(.*?)":') AS eventName,
+  JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson, '$.jobChange.job.jobStats.queryStats.billingTier') AS queryJobStatsBillingTier,
+  JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson, '$.jobChange.job.jobStatus.jobState') AS jobStatusJobState,
+  JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson, '$.jobChange.job.jobStatus.errorResult.code') AS jobStatusErrorResultCode,
+  JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson, '$.jobChange.job.jobStatus.errorResult.message') AS jobStatusErrorResultMessage,
+  TIMESTAMP(JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson, '$.jobChange.job.jobStats.createTime')) AS jobStatsCreateTime,
+  TIMESTAMP(JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson, '$.jobChange.job.jobStats.startTime')) AS jobStatsStartTime,
+  DATE(JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson, '$.jobChange.job.jobStats.startTime')) AS jobBillDate,
+  TIMESTAMP(JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson, '$.jobChange.job.jobStats.endTime')) AS jobStatsEndTime,
+  CAST(JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson, '$.jobChange.job.jobStats.queryStats.totalBilledBytes') AS INT64) AS queryJobStatsTotalBilledBytes,
+  TIMESTAMP_DIFF( TIMESTAMP(JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson, '$.jobChange.job.jobStats.endTime')), TIMESTAMP(JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson, '$.jobChange.job.jobStats.startTime')), MILLISECOND) AS jobStatsRuntimeMs,
+  TIMESTAMP_DIFF( TIMESTAMP(JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson, '$.jobChange.job.jobStats.endTime')), TIMESTAMP(JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson, '$.jobChange.job.jobStats.startTime')), SECOND) AS jobStatsRuntimeSecs,
+  CAST(CEILING(SAFE_DIVIDE(TIMESTAMP_DIFF( TIMESTAMP(JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson, '$.jobChange.job.jobStats.endTime')), TIMESTAMP(JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson, '$.jobChange.job.jobStats.startTime')), SECOND), 60)) AS INT64) AS jobStatsExecutionMinuteBuckets,
+      CAST(JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson,
+      '$.jobChange.job.jobStats.totalSlotMs') AS INT64) AS jobStatsTotalSlotMs,
+     JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson,
+      '$.jobChange.job.jobConfig.queryConfig.statementType') AS queryConfigStatementType,
+  JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson, '$.jobChange.job.jobConfig.type') AS jobConfigType,
+  JSON_EXTRACT(protopayload_auditlog.metadataJson, '$.jobChange.job.jobConfig.labels') AS jobConfigLabels ,
+   REGEXP_CONTAINS(JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson, '$.jobChange.job.jobConfig.queryConfig.query'), 'cloudaudit_googleapis_com_') AS isAuditDashboardQuery 
+FROM
+  `prod-pch-it-secmon.it_gcp_logs_export.cloudaudit_googleapis_com_data_access`
+WHERE
+  JSON_EXTRACT_SCALAR(protopayload_auditlog.metadataJson,  "$.jobChange.job.jobConfig.type") = "QUERY"  
+ ) select 
+ projectId,
+ user, 
+ jobId,
+ parentJobId, 
+ runQuery,
+ eventName,
+ queryJobStatsBillingTier,
+ jobStatusJobState,
+ jobStatusErrorResultCode,
+ jobStatusErrorResultMessage,
+ jobStatsCreateTime,
+ jobStatsStartTime,
+  jobBillDate,
+ jobStatsEndTime,
+ queryJobStatsTotalBilledBytes,
+ jobStatsRuntimeMs,
+ jobStatsRuntimeSecs,
+ jobStatsExecutionMinuteBuckets,
+ queryConfigStatementType,
+ jobConfigType,
+ jobConfigLabels,
+ isAuditDashboardQuery,
+ jobStatsTotalSlotMs,
+ SUM(SAFE_DIVIDE(jobStatsTotalSlotMs, jobStatsRuntimeMs)) AS avgSlots,
+  SUM((SAFE_DIVIDE(queryJobStatsTotalBilledBytes, pow(2,30)))) AS totalBilledGigabytes,
+SUM( (SAFE_DIVIDE(queryJobStatsTotalBilledBytes, pow(2,40)))) AS totalBilledTerabytes,
+  SUM(ROUND((SAFE_DIVIDE(queryJobStatsTotalBilledBytes, pow(2,40))) * 5,3)) AS estimatedCostUsd
+
+ from jobChangeEvent
+ group by jobBillDate,
+ projectId,
+ user, 
+ jobId,
+ parentJobId, 
+ runQuery,
+ eventName,
+ queryJobStatsBillingTier,
+ jobStatusJobState,
+ jobStatusErrorResultCode,
+ jobStatusErrorResultMessage,
+ jobStatsCreateTime,
+ jobStatsStartTime,
+ jobStatsEndTime,
+ queryJobStatsTotalBilledBytes,
+ jobStatsRuntimeMs,
+ jobStatsRuntimeSecs,
+ jobStatsExecutionMinuteBuckets,
+ queryConfigStatementType,
+ jobConfigType,
+ jobConfigLabels,
+ isAuditDashboardQuery,
+ jobStatsTotalSlotMs);
+
+https://cloud.google.com/bigquery/docs/materialized-views-create#query_limitations
+https://blog.economize.cloud/bigquery-pricing-changes/
+https://github.com/GoogleCloudPlatform/bigquery-utils/blob/master/dashboards/system_tables/sql/daily_utilization.sql
+https://github.com/GoogleCloudPlatform/bigquery-utils/blob/master/dashboards/system_tables/docs/hourly_utilization.md
+https://medium.com/google-cloud/bigquery-slot-squeezes-896d9e0f2fc
+https://cloud.google.com/blog/products/data-analytics/introducing-new-bigquery-pricing-editions?_gl=1*1f99rk*_ga*NzM4NTQ4ODUuMTY3NTEwMzE4MQ..*_ga_WH2QY8WWF5*MTY4MDcwODU0Ny43LjAuMTY4MDcwODU0Ny4wLjAuMA..&_ga=2.55177195.1163226569.1680708548-73854885.1675103181
+https://github.com/GoogleCloudPlatform/bigquery-utils/blob/master/dashboards/system_tables/sql/job_execution.sql
+https://cloud.google.com/bigquery/docs/slot-estimator
+
+https://cloud.google.com/bigquery/docs/datasets-intro#dataset_storage_billing_models
+https://cloud.google.com/bigquery/docs/information-schema-jobs
+
+https://github.com/GoogleCloudPlatform/bigquery-utils/tree/master/tools/cloud_functions/bq_table_snapshots
+
+https://github.com/GoogleCloudPlatform/bigquery-utils/tree/master/views/audit
+
+   SELECT COUNT(*) TOTAL_QUERIES, SUM(total_slot_ms/TIMESTAMP_DIFF(end_time,creation_time,MILLISECOND)) AVG_SLOT_USAGE,
+   SUM(TIMESTAMP_DIFF(end_time,creation_time,SECOND)) TOTAL_DURATION_IN_SECONDS, AVG(TIMESTAMP_DIFF(end_time,creation_time,SECOND)) AVG_DURATION_IN_SECONDS, SUM(total_bytes_processed*10e-12) TOTAL_PROCESSED_TB, EXTRACT (DATE FROM creation_time) AS EXECUTION_DATE, user_email as USER FROM `region-us.INFORMATION_SCHEMA.JOBS_BY_PROJECT` WHERE state='DONE' AND statement_type='SELECT' AND creation_time BETWEEN TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 30 DAY) AND CURRENT_TIMESTAMP() GROUP BY EXECUTION_DATE, USER ORDER BY EXECUTION_DATE,AVG_SLOT_USAGE
+The pivotal element here is total_slot_ms field, which contains the total amount of slots per millisecond used by a query. That’s the total number of slots consumed by the query over its entire execution time, considered in milliseconds. If you want to compute the average slot usage of the query, divide the value by the milliseconds duration of the query. You can do that by subtracting the value of endTime field from creationTime field. For example, if you have a 10-second query that used 20,000 totalSlotMs, it means that the average slot usage is 2: 20.000/10*1000.
+
+CASE description
+    WHEN 'BQ' THEN CONCAT(description,'-',REGEXP_EXTRACT(skudescription, r'\w+(?:\s+\w+)(?:\s+\w+)?'))
+    WHEN'BQ-Storage-API' THEN description
+    WHEN 'Support' then 'Support' 
+    WHEN 'GCS' THEN CONCAT(description,'-',SPLIT(skudescription,' ')[ OFFSET (0)] ) 
+    ELSE description  END description1,  
+
+24 thousand --$5000+3000
+
+
+# Monitor Query costs in BigQuery; standard-sql; 2020-06-21
+# @see http://www.pascallandau.com/bigquery-snippets/monitor-query-costs/
+
+DECLARE timezone STRING DEFAULT "Europe/Berlin";
+DECLARE gb_divisor INT64 DEFAULT 1024*1024*1024;
+DECLARE tb_divisor INT64 DEFAULT gb_divisor*1024;
+DECLARE cost_per_tb_in_dollar INT64 DEFAULT 5;
+DECLARE cost_factor FLOAT64 DEFAULT cost_per_tb_in_dollar / tb_divisor;
+
+SELECT
+ DATE(creation_time, timezone) creation_date,
+ FORMAT_TIMESTAMP("%F %H:%I:%S", creation_time, timezone) as query_time,
+ job_id,
+ ROUND(total_bytes_processed / gb_divisor,2) as bytes_processed_in_gb,
+ IF(cache_hit != true, ROUND(total_bytes_processed * cost_factor,4), 0) as cost_in_dollar,
+ project_id,
+ user_email,
+FROM 
+  `region-us`.INFORMATION_SCHEMA.JOBS_BY_USER
+WHERE
+  DATE(creation_time) BETWEEN DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY) and CURRENT_DATE()
+ORDER BY
+  bytes_processed_in_gb DESC
+
+
+  CREATE SCHEMA gpcadmin.rpt_dashboard
+  OPTIONS (
+    description = ' dashboard reports',
+    labels = [('org','pch'),('purpose','reporting')],
+    location = 'us',
+    max_time_travel_hours = 1,
+    storage_billing_model = physical);
+
+SELECT
+  CONCAT(v1.table_catalog, ":", v1.table_schema, ".", v1.table_name) AS unmodified_table_name,
+FROM
+  `region-us`.INFORMATION_SCHEMA.TABLES v1
+LEFT JOIN `region-us`.INFORMATION_SCHEMA.TABLE_STORAGE v2 ON v1.table_name = v2.table_name
+WHERE v2.table_name IS NULL;
+
+
+SELECT * FROM prod-gold-usersummary.`region-us`.INFORMATION_SCHEMA.TABLE_STORAGE_BY_PROJECT;
+SELECT * FROM `region-REGION`.INFORMATION_SCHEMA.TABLE_STORAGE_BY_ORGANIZATION;
+
+  DECLARE active_logical_gb_price FLOAT64 DEFAULT 0.02;
+  DECLARE long_term_logical_gb_price FLOAT64 DEFAULT 0.01;
+  DECLARE active_physical_gb_price FLOAT64 DEFAULT 0.04;
+  DECLARE long_term_physical_gb_price FLOAT64 DEFAULT 0.02; 
+
+  WITH
+    storage_sizes AS (
+      SELECT
+        table_schema AS dataset_name,
+        SUM(active_logical_bytes) / power(1024, 3) AS active_logical_gb,
+        SUM(long_term_logical_bytes) / power(1024, 3) AS long_term_logical_gb,
+        SUM(active_physical_bytes) / power(1024, 3) AS active_physical_gb,
+        SUM(long_term_physical_bytes) / power(1024, 3) AS long_term_physical_gb,
+        SUM(total_physical_bytes) / power(1024, 3) AS total_physical_gb,
+        SUM(total_logical_bytes) / power(1024, 3) AS total_logical_gb
+      FROM
+        region-REGION.INFORMATION_SCHEMA.TABLE_STORAGE_BY_PROJECT
+      WHERE total_logical_bytes > 0
+      AND total_physical_bytes > 0
+      GROUP BY 1
+    )
+  SELECT
+    dataset_name,
+    active_logical_gb,
+    long_term_logical_gb,
+    active_physical_gb,
+    long_term_physical_gb,
+    total_logical_gb / total_physical_gb AS compression_ratio,
+    active_logical_gb * active_logical_gb_price AS active_logical_cost,
+    long_term_logical_gb * long_term_logical_gb_price AS long_term_logical_cost,
+    active_physical_gb * active_physical_gb_price AS active_physical_cost,
+    long_term_physical_gb * long_term_physical_gb_price AS long_term_physical_cost,
+    ((active_logical_gb * active_logical_gb_price) + (long_term_logical_gb * long_term_logical_gb_price))
+    - ((active_physical_gb * active_physical_gb_price) + (long_term_physical_gb * long_term_physical_gb_price)) AS total_cost_difference
+  FROM
+    storage_sizes
+  ORDER BY
+    compression_ratio DESC;

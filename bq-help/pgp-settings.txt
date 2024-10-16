@@ -1,0 +1,197 @@
+=================================
+[11:22 AM] Patel, Tejaskumar
+PCHMicrosites
+ 
+[11:24 AM] Patel, Tejaskumar
+gpg --batch --passphrase 'your-passphrase' --output decrypted-file --decrypt encrypted-file.pgp
+
+ 
+[11:26 AM] Patel, Tejaskumar
+gpg --list-secret-keys
+
+ 
+[11:28 AM] Patel, Tejaskumar
+PCH Microsites 1.asc
+ 
+[11:29 AM] Patel, Tejaskumar
+gpg --import /path/to/your-key-file.asc
+
+ 
+[11:29 AM] Patel, Tejaskumar
+import using above
+ 
+[11:29 AM] Patel, Tejaskumar
+gpg --list-keys
+
+for list
+ 
+[11:30 AM] Patel, Tejaskumar
+gpg --list-secret-keys
+
+private keys
+ 
+[11:36 AM] Patel, Tejaskumar
+gpg --no-batch --edit-key micrositepgp@pchmail.com
+ 
+[11:36 AM] Patel, Tejaskumar
+enter trust
+ 
+[11:36 AM] Patel, Tejaskumar
+enter   5 = I trust ultimately
+ 
+[11:36 AM] Patel, Tejaskumar
+quit
+ 
+[11:40 AM] Patel, Tejaskumar
+gpg --cipher-algo AES256 --output encrypted-file.pgp --encrypt --recipient recipient-key-id file-to-encrypt
+
+ 
+[11:41 AM] Patel, Tejaskumar
+~/.gnupg/gpg.conf
+ 
+[11:42 AM] Patel, Tejaskumar
+personal-cipher-preferences AES256 AES192 AES256
+ 
+[11:47 AM] Patel, Tejaskumar
+[11:36 AM] Patel, Tejaskumar
+gpg --no-batch --edit-key micrositepgp@pchmail.com
+ 
+[11:36 AM] Patel, Tejaskumar
+enter trust
+ 
+[11:36 AM] Patel, Tejaskumar
+enter   5 = I trust ultimately
+ 
+[11:36 AM] Patel, Tejaskumar
+quit
+ 
+ 
+=================================
+
+/mapr/JMAPRCLUP01.CLASSIC.PCHAD.COM/codebase/bigdata/dev
+
+2022-06-18
+gpg --batch --passphrase 'PCHMicrosites' --output decrypted-file.txt --decrypt encrypted-file.pgp
+
+
+gpg --import /mapr/JMAPRCLUP01.CLASSIC.PCHAD.COM/codebase/bigdata/dev/PCHMicrosites.asc
+
+gpg --batch --passphrase 'PCHMicrosites' --output /mapr/JMAPRCLUP01.CLASSIC.PCHAD.COM/sa/bigdata/mainframe/prod/hot/CAF_NB_MO08_YR2021.txt --decrypt CAF_NB_MO08_YR2021.pgp
+
+gpg --batch --passphrase 'PCHMicrosites' --output /mapr/JMAPRCLUP01.CLASSIC.PCHAD.COM/sa/bigdata/mainframe/prod/hot/decrypted-file.txt --decrypt CampaignMetaData_20240717140139.txt.pgp
+
+gpg --cipher-algo AES256 --batch --passphrase 'PCHMicrosites' --output /mapr/JMAPRCLUP01.CLASSIC.PCHAD.COM/sa/bigdata/mainframe/prod/hot/CAF_NB_MO08_YR2021_2.txt --decrypt CAF_NB_MO08_YR2021.pgp
+
+gpg --batch --passphrase 'PCHMicrosites' --output /mapr/JMAPRCLUP01.CLASSIC.PCHAD.COM/sa/bigdata/mainframe/prod/hot/DSMASTER_WK678_YR2022_1.txt --decrypt DSMASTER_WK678_YR2022.PGP
+
+
+gpg --batch --passphrase 'PCHMicrosites' --output /mapr/JMAPRCLUP01.CLASSIC.PCHAD.COM/sa/bigdata/mainframe/prod/hot/DSMASTER_WK678_YR2022_2.txt --decrypt DSMASTER_WK678_YR2022.PGP
+
+C:\Users\rjannu\AppData\Local\Google\Cloud SDK>gsutil -m cp -r d:\MFContestArchi
+ve\* gs://bkt_prod_gold_legacy_vault/
+
+gpg --batch --passphrase 'PCHMicrosites' --output /mapr/JMAPRCLUP01.CLASSIC.PCHAD.COM/sa/bigdata/mainframe/prod/hot/DSMASTER_WK678_YR2022_2.txt --decrypt DSMASTER_WK678_YR2022.PGP
+
+gpg --batch --passphrase 'PCHMicrosites' --output /mapr/JMAPRCLUP01.CLASSIC.PCHAD.COM/sa/bigdata/mainframe/prod/hot/CAF_NB_MO07_YR2022_722.txt --decrypt CAF_NB_MO07_YR2022
+
+gpg --batch --passphrase 'PCHMicrosites' --output /mapr/JMAPRCLUP01.CLASSIC.PCHAD.COM/sa/bigdata/mainframe/prod/hot/DSMASTER_WK678_YR2022.txt --decrypt  DSMASTER_WK678_YR2022.PGP
+
+
+gpg --batch --passphrase 'PCHMicrosites' --output /mapr/JMAPRCLUP01.CLASSIC.PCHAD.COM/sa/bigdata/mainframe/prod/hot/WK18_MO01_YR2021.txt --decrypt  WK18_MO01_YR2021
+
+gsutil -m cp -r d:\MFContestArchive\WK18_2022/* gs://bkt_prod_gold_legacy_vault/WK18_2022/
+
+gsutil -m cp -r d:\MFContestArchive\DSMASTER2023/*.TXT gs://bkt_prod_gold_legacy_vault/db2/sftp/dsmaster=2023/
+
+gpg  --output encrypted-file.pgp --encrypt --recipient recipient-key-id file-to-encrypt
+
+gpg --no-batch --edit-key micrositepgp@pchmail.com
+C:\Users\rjannu\AppData\Local\Google\Cloud SDK>gsutil -m cp -r d:\MFContestArchive\DSMASTER2024/* gs://bkt_prod_gold_legacy_vault/DSMASTER2024/
+
+gsutil -m cp -r d:\MFContestArchive\DSMASTER2023/* gs://bkt_prod_gold_legacy_vault/DSMASTER2023/
+
+[d_di_ms_talend_svc@JMAPREDGE7 DEV]$ gpg -o TestFile.out -d TestFile.txt.pgp
+gpg: can't open `TestFile.txt.pgp': No such file or directory
+gpg: decrypt_message failed: No such file or directory
+[d_di_ms_talend_svc@JMAPREDGE7 DEV]$ gpg -o DDM_LIST.txt.pgp -r microsites -e DDM_LIST.txt
+[d_di_ms_talend_svc@JMAPREDGE7 DEV]$ ls -l DDM_LIST*
+-rwxrwxr-x 1 d_di_ms_talend_svc mapr_prod_users 34512 Aug 21  2023 DDM_LIST.txt
+-rwxrwxr-x 1 d_di_ms_talend_svc mapr_prod_users  4338 Jul 22 12:40 DDM_LIST.txt.pgp
+[d_di_ms_talend_svc@JMAPREDGE7 DEV]$ gpg -o DDM_LIST.out -d DDM_LIST.txt.pgp
+gpg: Invalid passphrase; please try again ...
+gpg: Invalid passphrase; please try again ...
+gpg: encrypted with 1024-bit ELG key, ID AD126FBB, created 2008-05-21
+      "PCH Microsites <micrositepgp@pchmail.com>"
+[d_di_ms_talend_svc@JMAPREDGE7 DEV]$
+
+
+LOAD DATA OVERWRITE prod-gold-legacy-vault.dms_legacy_objects_validate.test2
+(no_id string,cust_id string,col3 string,col4 integer,col5 string,col6 string,col7 string,col8 string,col9 string,col10 string,col11 string,col12 string,col13 string,col14 string,col15 string,col16 string,col17 string,col18 string,col19 string,col20 string,col21 string,col22 string,col23 string,col24 string,col25 string,col26 string,col27 string,col28 string)
+FROM FILES (
+  format = 'CSV',field_delimiter ='¦',
+  uris = ['gs://bkt_prod_gold_legacy_vault/validation_file/DSMASTER_WK678_YR2022_1.txt']);
+
+
+
+LOAD DATA OVERWRITE prod-gold-legacy-vault.dms_legacy_objects_validate.DSMASTER2022_sample
+(no_id string,cust_id string,col3 string,col4 integer,col5 string,col6 string,col7 string,col8 string,col9 string,col10 string,col11 string,col12 string,col13 string,col14 string,col15 string)
+FROM FILES (
+  format = 'CSV',field_delimiter ='¦',
+  uris = ['gs://bkt_prod_gold_legacy_vault/Sample_Validation/DSMASTER_PGP/*.txt']);
+
+
+  LOAD DATA OVERWRITE prod-gold-legacy-vault.dms_legacy_objects_validate.DSMASTER2022_sample
+(no_id string,cust_id string,col3 string,col4 integer,col5 string,col6 string,col7 string,col8 string,col9 string,col10 string,col11 string,col12 string,col13 string,col14 string,col15 string,col16 string,col17 string,col18 string,col19 string,col20 string,col21 string,col22 string,col23 string,col24 string,col25 string,col26 string,col27 string,col28 string)
+FROM FILES (
+  format = 'CSV',field_delimiter ='¦',
+  uris = ['gs://bkt_prod_gold_legacy_vault/Sample_Validation/DSMASTER_PGP/*.txt']);
+  
+
+bq mk --connection --location=us-east1 --project_id=prod-gold-legacy-vault --connection_type=CLOUD_RESOURCE  bl_pglv_bkt_prod_gold_legacy_vault
+
+    CREATE EXTERNAL TABLE prod-gold-legacy-vault.it_dms_legacy_objects.DSMASTER_WK678_YR2022
+WITH CONNECTION `us-east1.bl_pglv_bkt_prod_gold_legacy_vault`
+OPTIONS(
+    format ="CSV",
+    uris = ['gs://bkt_prod_gold_legacy_vault/DB2/sftp/DSMASTER2022/*'],
+    field_delimiter="¦",
+  max_staleness = INTERVAL 2 HOUR,
+  metadata_cache_mode = 'MANUAL'
+    );
+
+
+        CREATE EXTERNAL TABLE prod-gold-legacy-vault.it_dms_legacy_objects.dsmaster_yr2022
+WITH CONNECTION `us-east1.bl_pglv_bkt_prod_gold_legacy_vault`
+OPTIONS(
+    format ="CSV",
+  hive_partition_uri_prefix = "gs://bkt_prod_gold_legacy_vault/db2/sftp",
+  uris = ['gs://bkt_prod_gold_legacy_vault/db2/sftp/*'],
+    field_delimiter="¦",
+  max_staleness = INTERVAL 2 HOUR,
+  metadata_cache_mode = 'MANUAL'
+    );
+
+
+
+OPTIONS(
+  hive_partition_uri_prefix = "gs://bkt_prod_gold_legacy_vault/db2/sftp",
+  uris = ['gs://bkt_prod_gold_legacy_vault/db2/sftp/*'],
+  format= PARQUET,
+  max_staleness = INTERVAL 1 DAY,
+  metadata_cache_mode = 'AUTOMATIC'
+);
+
+
+        CREATE EXTERNAL TABLE prod-gold-legacy-vault.it_dms_legacy_objects.dsmaster_yr2022
+          WITH PARTITION COLUMNS(dsmaster STRING)
+WITH CONNECTION `us-east1.bl_pglv_bkt_prod_gold_legacy_vault`
+OPTIONS(
+    format ="CSV",
+  hive_partition_uri_prefix = "gs://bkt_prod_gold_legacy_vault/db2/sftp",
+  uris = ['gs://bkt_prod_gold_legacy_vault/db2/sftp/*'],
+    field_delimiter="¦",
+  max_staleness = INTERVAL 2 HOUR,
+  metadata_cache_mode = 'MANUAL'
+    );
+
+gsutil -m cp -r d:\MFContestArchive\DSMASTER2023/*.TXT gs://bkt_prod_gold_legacy_vault/db2/sftp/dsmaster=2023/

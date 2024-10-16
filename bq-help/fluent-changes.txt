@@ -1,0 +1,14 @@
+cat filename.txt | jq -c '.[]' > newfilename.txt
+
+CREATE EXTERNAL TABLE dev-gold-bi-reporting.poc_fluent.fluent_sample_3
+OPTIONS (
+  format = 'JSON',
+  uris = ['gs://bkt_dev_pch_fluent_exch/PCH_export_examples/ndjson/*'] 
+);
+
+
+
+LOAD DATA INTO dev-gold-bi-reporting.poc_fluent.fluent_sample2
+FROM FILES (
+  format = 'JSON',
+  uris = ['gs://bkt_dev_pch_fluent_exch/PCH_export_examples/*']);

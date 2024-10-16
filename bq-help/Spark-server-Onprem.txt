@@ -1,0 +1,28 @@
+ssh jldcdjob02
+find /opt/spark/work/app* -mindepth 1 -mtime +3 -delete
+
+JLEDGE09	10.27.18.50	Talend DEV
+JLEDGE10	10.27.18.51	Talend DEV
+JLDCDJOB01	10.27.18.52	Airflow
+JLDCDJOB02	10.27.18.53	Spark
+JLDCDJOB03	10.27.18.54	Spark
+JLDCDJOB04	10.27.18.55	Spark
+JLDCDJOB05	10.27.18.56	Spark
+JLDCDJOB06	10.27.18.57	Spark
+JLDCDJOB07	10.27.18.58	Spark
+JLPDIJOB01	10.27.18.59	Talend PROD
+JLPDIJOB02	10.27.18.60	Talend PROD
+JLPDIJOB03	10.27.18.61	Talend PROD
+JLDCDJOB08	10.27.18.62	Spark
+
+sudo -s --root login
+
+df -T
+
+
+10.27.18.250
+
+
+mysql://u_bd_ms_mysql_svc:S3ntr@L-st@shnU@10.27.18.250:3306/mapr_bigdata_uat_metahub
+
+mysql://u_bd_ms_mysql_svc:S3ntr@L-st@shnU@maprsqldb.prod.pch.com:3306/mapr_bigdata_uat_metahub

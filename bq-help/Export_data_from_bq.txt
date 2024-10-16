@@ -1,0 +1,69 @@
+EXPORT DATA
+OPTIONS(
+  uri="gs://my-super-awesome-bucket/" || CURRENT_DATE("America/Chicago") || "/1000" || "/my-super-awesome-file-*.csv",
+  format="CSV",
+  overwrite=true,
+  header=true,
+  field_delimiter=","
+) AS (
+SELECT    RIGHT(GENERATE_UUID(), 12) AS row_id,
+          UPPER(group_id) AS group_id, 
+          num,
+          TIMESTAMP_ADD(CURRENT_TIMESTAMP(), INTERVAL num SECOND) AS created_ts,
+FROM      (
+            SELECT GENERATE_UUID() AS group_id, [1, 2, 3] AS nums
+            UNION ALL
+            SELECT GENERATE_UUID(), [4, 5, 6]
+            UNION ALL
+            SELECT GENERATE_UUID(), [7, 8, 9]
+          ) AS src
+          INNER JOIN UNNEST(src.nums) AS num
+)
+
+
+WITH source_data AS (
+SELECT    RIGHT(GENERATE_UUID(), 12) AS row_id,
+          UPPER(group_id) AS group_id, 
+          num,
+          TIMESTAMP_ADD(CURRENT_TIMESTAMP(), INTERVAL num SECOND) AS created_ts,
+FROM      (
+            SELECT GENERATE_UUID() AS group_id, [1, 2, 3] AS nums
+            UNION ALL
+            SELECT GENERATE_UUID(), [4, 5, 6]
+            UNION ALL
+            SELECT GENERATE_UUID(), [7, 8, 9]
+          ) AS src
+          INNER JOIN UNNEST(src.nums) AS num
+)
+SELECT    sd.row_id,
+          RIGHT(sd.group_id, 17)AS group_id,
+          sd.num,
+          FORMAT_TIMESTAMP("%F %T", sd.created_ts) AS created_ts,
+          FORMAT_TIMESTAMP("%F %T", MIN(sd.created_ts) OVER (PARTITION BY sd.group_id) ) AS session_init_ts,
+FROM      source_data AS sd
+ORDER BY  sd.created_ts
+
+
+-- this is a "semantic" example - how to filter is really a matter of your business logic!
+WITH source_data AS (
+SELECT    RIGHT(GENERATE_UUID(), 12) AS row_id,
+          UPPER(group_id) AS group_id, 
+          num,
+          TIMESTAMP_ADD(CURRENT_TIMESTAMP(), INTERVAL num * 5 SECOND) AS created_ts,
+FROM      (
+            SELECT GENERATE_UUID() AS group_id, [1, 2, 3] AS nums
+            UNION ALL
+            SELECT GENERATE_UUID(), [4, 5, 6]
+            UNION ALL
+            SELECT GENERATE_UUID(), [7, 8, 9]
+          ) AS src
+          INNER JOIN UNNEST(src.nums) AS num
+)
+SELECT    sd.row_id,
+          RIGHT(sd.group_id, 17)AS group_id,
+          sd.num,
+          FORMAT_TIMESTAMP("%F %T", sd.created_ts) AS created_ts,
+          FORMAT_TIMESTAMP("%F %T", MIN(sd.created_ts) OVER (PARTITION BY sd.group_id)) AS session_init_ts,
+FROM      source_data AS sd
+QUALIFY   MIN(sd.created_ts) OVER (PARTITION BY sd.group_id) <= TIMESTAMP_TRUNC(TIMESTAMP_ADD(CURRENT_TIMESTAMP(), INTERVAL 1 HOUR), HOUR, "America/Chicago")
+ORDER BY  sd.created_ts
