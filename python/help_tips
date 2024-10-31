@@ -1,0 +1,26 @@
+conda env list
+conda create --name my-app numpy flask pandas
+source activate my-app
+conda install panda
+pip list
+conda env export > environment.yaml
+conda env create -f environment.yaml
+conda env list
+
+create env variables
+mkdir -p etc/conda/deactivate.d/env_vars.sh
+mkdir -p etc/conda/activate.d/env_vars.sh
+
+pip help panda
+pip list -o (show diff)
+pip install -u
+
+pip list --outdated
+pip freeze --local |grep -v '^\-e' |cut -d = -f 1| xargs -n1 pip install -U
+
+nano ~./bash_profile
+
+Notebooks
+!pip list
+%lsmagic   --cell majics
+

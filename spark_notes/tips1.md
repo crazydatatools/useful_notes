@@ -208,3 +208,21 @@ df_skew.show(3,False)
     .show()
 )
 ```
+##Use partitioning when:
+
+You have very large amounts of data.
+Tables can be split into a few large partitions.
+
+##Don't use partitioning when:
+    - Data volumes are small.
+    -  A partitioning column has high cardinality, as this creates a large number of partitions.
+    -  A partitioning column would result in multiple levels.
+    Partitions are a fixed data layout and don't adapt to different query patterns. When considering how to use partitioning, think about how your data is used, and its granularity.
+    ```
+    from pyspark.sql.functions import col,expr
+    transformed_df=df.filter(col("price").isNotNull()) \
+                    .withColumn("IsBike",expr("INSTR(Product,'Bike')>0").cast('int')) \
+                    .withColumn("Total",expr("Quantity * Price").cast('decimal')) 
+
+    df.write.format("delta").partitionBy("products").saveAsTable("partitioned_products", path="abfs_path/partitioned_products")
+    ```
