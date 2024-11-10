@@ -43,7 +43,7 @@
       - coreference resolution-- language expert need to help--like ravi and he in sentence
     - optional prep-processing
       - stop word removal
-      - streaming--les used reduce the dimension like play,played,playing-->play--sports
+      - stemmer--les used reduce the dimension like play,played,playing-->play--sports
       - lamatization --more used--same as above--root shud be readable
       - punctuation detection
       - language detection

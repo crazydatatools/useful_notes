@@ -398,3 +398,378 @@ we would have one row, but an additional column to denote the previous and curre
 
 ##SCD Type 4
 Historical data will be maintained as in SCD Type 2 but the distinction here is that the history will be maintained on a separate table within the data warehouse. The current record will be included in the primary table.
+
+# To find the median of the records--Middle record
+  ```With ranks AS (
+      SELECT LAT_N, RANK() OVER(ORDER BY LAT_N DESC) as ranking
+      FROM STATION
+  )
+  SELECT ROUND(LAT_N,4)
+  FROM ranks
+  WHERE ranking IN (
+      SELECT ROUND((COUNT(*)/2)) 
+      FROM STATION
+      WHERE LAT_N IS NOT NULL);
+#To select Vowels
+      select DISTINCT CITY from station where CITY REGEXP  '^[^AEIOUaeiou]'
+
+-- Identify the employee who received at least  3 year over year increase in salaries!
+INSERT INTO employee_salary (employee_id, name, year, salary, department) VALUES
+(125, 'John Doe', 2021, 50000, 'Sales'),
+(125, 'John Doe', 2022, 52000, 'Sales'),
+with pre_sal as(
+select *,lag(salary,1) over (partition by employee_id order by year ) prev_sal from employee_salary
+) select employee_id,
+    name,count(1) from pre_sal where salary>prev_sal
+GROUP BY employee_id, name
+HAVING COUNT(*) >= 3
+
+--Calculate each store running total Growth ratio compare to previous month return store name, sales amount, running total, growth ratio 
+INSERT INTO sales (store_name, sale_date, sales_amount) 
+VALUES
+('A', '2024-01-01', 1000.00),
+('A', '2024-02-01', 1500.00),
+WITH cte_monthly_sale
+AS
+(
+SELECT *,
+    SUM(sales_amount) OVER(PARTITION BY store_name ORDER  BY sale_date) as running_total,
+    LAG(sales_amount, 1) OVER(PARTITION BY store_name ORDER  BY sale_date) as last_month_sale
+FROM sales
+)
+SELECT
+    store_name,
+    sale_date,
+    sales_amount,
+    running_total,
+    last_month_sale,
+    (sales_amount - last_month_sale)/last_month_sale * 100
+FROM cte_monthly_sale
+
+-- Write a SQL query to find the top 2 restaurants in each city with the highest average rating.
+ If two restaurants have the same average rating, they should have the same rank.
+ 
+ select * from(
+ select r.restaurant_id,r.restaurant_name,c.city_name,avg(rating) as avg_rating, dense_rank() over (partition by c.city_name order by avg(rating) desc) kk  
+ from restaurants r
+ join cities c on r.city_id=c.city_id
+ join orders o on r.restaurant_id=o.restaurant_id
+ group by r.restaurant_id,r.restaurant_name,c.city_name)l
+ where kk<=2
+
+
+  Write a query to find the top 3 products with the 
+highest sales volume (total quantity sold) for each quarter of the year 2023.
+
+ Products (product_id, product_name, category, price)
+ Sales (sale_id, product_id, customer_id, sale_date, quantity, amount)
+ 
+ select * from (
+select EXTRACT(QUARTER FROM sale_date) qtr ,p.product_id, product_name,
+sum(quantity) sum_sal_vol,
+dense_rank() over(partition by EXTRACT(QUARTER FROM sale_date) order by sum(quantity) desc)  k
+from Products p
+join Sales s on p.product_id=s.product_id
+where extract(year from s.sale_date)=2023
+group by EXTRACT(QUARTER FROM sale_date),p.product_id, product_name
+) k where k<=3
+
+/*
+Question:
+Analyze Spotify's user listening data to find out 
+which genre of music has the highest average listening time per user.
+*/
+-- users (user_id, user_name, country)
+-- plays (user_id, song_id, genre, listening_time) 
+
+SELECT genre, 
+       AVG(total_listening_time) AS avg_listening_time_per_user
+FROM (
+    SELECT genre, user_id, SUM(listening_time) AS total_listening_time
+    FROM plays
+    GROUP BY genre, user_id
+) AS user_genre_listening
+GROUP BY genre
+ORDER BY avg_listening_time_per_user DESC
+LIMIT 1;
+
+-- Write a query to calculate the average monthly sales for each category!
+-- return category that has highest average sale in each month!
+	-- Products (product_id, product_name, category, price) 
+	-- Customers (customer_id, customer_name, customer_city, customer_state)
+	-- Sales (sale_id, product_id, customer_id, sale_date, quantity, amount)
+
+select * from (
+select extract(month from sale_date) sales_monthly,
+p.category,
+avg(amount) avg_sal_amt ,
+rank() over(partition by extract(month from sale_date) order by avg(amount) desc) rnk
+from   Sales s 
+join Products p on s.product_id=p.product_id
+join Customers c on c.customer_id=c.customer_id
+group by  extract(month from sale_date) ,
+p.category
+) k where rnk=1
+#https://github.com/najirh/100_days_challenge_community/blob/main/day_12_q2.sql
+-- Write a query to identify the customers who spent the most 
+-- money during the Big Billion Days Sale (November 24-27) in 2023. return customer name, id and total spent
+
+select c.customer_name,c.customer_id,sum(amount) sum_sal_amt ,
+rank() over (partition by customer_id order by sum(amount) desc) rnk
+from   Sales s 
+join Customers c on c.customer_id=c.customer_id
+where date(sale_date) between '2023-11-24' and  '2023-11-27' 
+group by c.customer_name,c.customer_id
+order by sum_sal_amt desc
+limit 1
+
+-- Write a SQL query to find the customer IDs who have made purchases consecutively in every month up to the current month (July 2024) of this year.
+-- amazon_sales (customer_id, purchase_date, amount)
+
+SELECT customer_id
+FROM amazon_sales
+WHERE purchase_date >= '2024-01-01' AND purchase_date < '2024-08-01'  -- restrict to Jan to Jul 2024
+GROUP BY customer_id
+HAVING COUNT(DISTINCT MONTH(purchase_date)) = 7; 
+
+/*
+You are given two tables: Restaurants and Orders. After receiving an order, 
+each restaurant has 15 minutes to dispatch it. Dispatch times are categorized as follows:
+
+on_time_dispatch: Dispatched within 15 minutes of order received.
+late_dispatch: Dispatched between 15 and 20 minutes after order received.
+super_late_dispatch: Dispatched after 20 minutes.
+Task: Write an SQL query to count the number of dispatched orders in each category for each restaurant.
+*/
+-- Restaurants (name, location)
+-- Orders (restaurant_id, order_time, dispatch_time) 
+select name,
+count(case when dispatch_category='on_time_dispatch' then 1 end) cnt_on_time_dispatch,
+count(case when dispatch_category='late_dispatch' then 1 end) cnt_late_dispatch,
+count(case when dispatch_category='super_late_dispatch' then 1 end) cnt_super_late_dispatch from (
+select r.name,
+case 
+	when o.dispatch_time< DATE_ADD(o.order_time, INTERVAL 15 MINUTE)   THEN 'on_time_dispatch'
+    when o.dispatch_time> DATE_ADD(o.order_time, INTERVAL 15 MINUTE)  and o.dispatch_time< DATE_ADD(o.order_time, INTERVAL 20 MINUTE)  then 'late_dispatch'
+	else 'super_late_dispatch' end as dispatch_category
+    
+from Restaurants r
+join Orders o on r.id=o.restaurant_id
+) k group by name
+
+
+-- Find out each users and productivity time in hour!
+-- productivity time = login - logout time
+-- user_activities (user_id, activity, activity_time)
+(2, 'Logout', '2024-01-01 18:00:00'),
+(3, 'Login', '2024-01-01 08:30:00'),
+(3, 'Logout', '2024-01-01 12:30:00');
+WITH login_logout_table
+AS
+(
+SELECT 
+    *,
+    LAG(activity_time) OVER(PARTITION BY user_id ORDER BY activity_time) as prev_activity_time,
+    LAG(activity) OVER(PARTITION BY user_id ORDER BY activity_time) as prev_activity
+FROM user_activities
+),
+session_table
+AS
+(
+SELECT
+    user_id,
+    prev_activity as login,
+    prev_activity_time as login_time,
+    activity as logout,
+    activity_time as logout_time,
+TIMESTAMPDIFF(HOUR,prev_activity_time,activity_time) as productivity_hour
+FROM login_logout_table
+WHERE 
+    prev_activity = 'Login'
+    AND
+    activity = 'Logout'
+)
+SELECT 
+     user_id,
+     SUM(productivity_hour)
+FROM session_table
+GROUP BY user_id;
+-- Write SQL Query to find users whose email addresses contain only lowercase letters before the @ symbol
+
+
+SELECT * FROM users
+WHERE mail REGEXP '^[a-z.0-9]+@[a-z]+\.[a-z]+$'; 
+
+
+-- Given a user_activity table, write a SQL query to find all users who have logged in on at least 3 consecutive days.
+INSERT INTO user_activity (user_id, login_date) VALUES
+(1, '2024-08-01'),
+(1, '2024-08-02'),
+WITH steak_table
+AS    
+(SELECT 
+    user_id,
+    login_date,
+    CASE
+        WHEN login_date = LAG(login_date) OVER(PARTITION BY user_id ORDER BY login_date) + INTERVAL '1 day' THEN 1
+        ELSE 0
+    END as steaks
+FROM user_activity),
+steak2
+AS
+(SELECT 
+    user_id,
+    login_date,
+    SUM(steaks) OVER(PARTITION BY user_id ORDER BY login_date) as consecutive_login
+FROM steak_table    
+)
+SELECT 
+    distinct user_id
+FROM steak2
+WHERE consecutive_login >=2
+
+
+
+
+ -- spotify (user_id, song_id, play_date) 
+/*
+Question:
+Identifying Trending Songs:
+Spotify wants to identify songs that have suddenly gained popularity within a week.
+
+Write a SQL query to find the song_id and week_start 
+date of all songs that had a play count increase of 
+at least 300% from one week to the next. 
+Consider weeks starting on Mondays.
+*/
+INSERT INTO spotify (user_id, song_id, play_date) VALUES
+(333, 101, '2023-01-17'), -- Week 1
+(233, 101, '2023-01-17'), -- Week 1
+
+WITH weekly_plays
+AS    
+(SELECT 
+     song_id,
+     week(play_date) as week_start_day,
+     COUNT(*)::numeric as play_cnt   
+FROM spotify
+GROUP BY 1, 2
+),
+prev_plays
+AS    
+(SELECT 
+     song_id,
+     week_start_day,
+     play_cnt,   
+    LAG(play_cnt) OVER(PARTITION BY song_id ORDER BY week_start_day) as prev_w_play_cnt
+FROM weekly_plays
+),
+growth_ratio
+AS    
+(SELECT 
+     song_id,
+     week_start_day,
+     play_cnt,   
+     prev_w_play_cnt,
+    ROUND((play_cnt-prev_w_play_cnt)/prev_w_play_cnt * 100, 2) as growth_ratio
+FROM prev_plays
+WHERE play_cnt > prev_w_play_cnt
+)
+SELECT 
+     song_id,
+     week_start_day 
+FROM growth_ratio    
+WHERE growth_ratio > 300;
+    
+-- Retrieve all Ids of a person whose rating is greater than friend's id
+-- If person does not have any friend, retrieve only their id only if rating greater than 85
+Friends (id, friend_id)
+Ratings (id, rating)
+
+SELECT 
+    -- f.id,
+    -- f.friend_id,
+    -- r.rating as rating,
+    DISTINCT(f.id)
+    
+FROM Friends as f
+LEFT JOIN Ratings as r
+ON r.id = f.id
+LEFT JOIN Ratings as r2
+ON f.friend_id = r2.id
+WHERE 
+    (f.friend_id IS NOT NULL AND r.rating > r2.rating)    
+    OR
+    (f.friend_id IS NULL AND r.rating > 85) 
+
+-- Write SQL query to find average processing time by each machine!
+INSERT INTO Activity (machine_id, process_id, activity_type, timestamp)
+VALUES
+(1, 1, 'start', 10.5),
+(1, 1, 'end', 15.0),
+(1, 2, 'start', 20.0),
+(1, 2, 'end', 25.5),
+SELECT machine_id,
+       AVG(TIMESTAMPDIFF(SECOND, start_time, end_time)) AS avg_processing_time_seconds
+FROM (
+    SELECT machine_id, 
+           process_id,
+           MAX(CASE WHEN activity_type = 'start' THEN timestamp END) AS start_time,
+           MAX(CASE WHEN activity_type = 'end' THEN timestamp END) AS end_time
+    FROM Activity
+    GROUP BY machine_id, process_id
+) AS process_durations
+WHERE start_time IS NOT NULL AND end_time IS NOT NULL
+GROUP BY machine_id;
+--To find each customer's latest and second latest order amounts, we can use window functions such as 
+ROW_NUMBER or RANK to assign a rank to each order by date for each customer. Here’s a query to achieve this:orders (customer_id, order_date, amount)
+
+WITH ranked_orders AS (
+    SELECT customer_id,
+           amount,
+           ROW_NUMBER() OVER (PARTITION BY customer_id ORDER BY order_date DESC) AS order_rank
+    FROM orders
+)
+SELECT customer_id,
+       MAX(CASE WHEN order_rank = 1 THEN amount END) AS latest_order_amount,
+       MAX(CASE WHEN order_rank = 2 THEN amount END) AS second_latest_order_amount
+FROM ranked_orders
+WHERE order_rank IN (1, 2)
+GROUP BY customer_id;
+--To determine each employee's level in the hierarchy, we can use a recursive common table expression (CTE).
+ Employees without a manager are at level 1, and for each subsequent level, we increment the level by 1.
+WITH RECURSIVE EmployeeHierarchy AS (
+    -- Base case: Employees with no manager are at level 1
+    SELECT id, name, manager_id, 1 AS level
+    FROM Employees
+    WHERE manager_id IS NULL
+    
+    UNION ALL
+    
+    -- Recursive case: Find direct reports and increment their level by 1
+    SELECT e.id, e.name, e.manager_id, eh.level + 1 AS level
+    FROM Employees e
+    JOIN EmployeeHierarchy eh ON e.manager_id = eh.id
+)
+
+SELECT id, name, level
+FROM EmployeeHierarchy
+ORDER BY id;
+
+SELECT e1.id,
+       e1.name,
+       CASE 
+           WHEN e1.manager_id IS NULL THEN 1
+           WHEN e2.manager_id IS NULL THEN 2
+           WHEN e3.manager_id IS NULL THEN 3
+           ELSE 4
+       END AS level
+FROM Employees e1
+LEFT JOIN Employees e2 ON e1.manager_id = e2.id
+LEFT JOIN Employees e3 ON e2.manager_id = e3.id
+LEFT JOIN Employees e4 ON e3.manager_id = e4.id
+ORDER BY e1.id;
+
+
+  ```
+

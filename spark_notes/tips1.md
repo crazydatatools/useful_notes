@@ -226,3 +226,65 @@ Tables can be split into a few large partitions.
 
     df.write.format("delta").partitionBy("products").saveAsTable("partitioned_products", path="abfs_path/partitioned_products")
     ```
+
+## Spark EMR Settings
+- Support for cross account and federated role to access data in s3
+- Support multi tenancy with multiple applciations and parallelism with multiple jobs
+- Pre-initialized capacity for faster job starts and fine-graned scaling at job level.
+
+```
+aws emr-serverless --region us-east-1 create-application \
+--type "SPARK" \
+--name emr-disney-engagement-domain \
+--release-label emr-6.8.0
+--initial-capacity '{
+        "DRIVER" :{
+        "workerCount": 3,
+        "workerConfiguration": {
+            "cpu": 4vCPU",
+            "memory" : "30GB"        
+        }
+},
+    "EXECUTOR":{
+        "workerCount": 100,
+        "workerConfiguration": {
+            "cpu": 4vCPU",
+            "memory" : "30GB"        
+        }
+
+    }
+}
+```
+# Tips for Shuffle managment
+- Fewer Partitions like val keysMoved=KeysToMove.repartition(numPartitions).map{}
+- Always fewer n/w requests and better compression
+- Larger Tasks that leads to more memory needs
+- approx 100 Mib per partition is ideal
+- set default partition settings for RDD(Reselient Distribution Datasets)-- sqlContext.sparkContext.getConf.set("spark.default.parallelism","1024")
+- set default parition setting for Dataset --sqlContext.sparkContext.getConf.set("spark.sql.shuffle.partitions","1024")
+- more partition means more shuffle blocks and more n/w requests
+
+# Shuffle with Coalesce
+- Shuffle with coalesce --doesn't suffle data --reduces number of partitions but require large memory,it good to apply aggregation using coalesce.
+- df.coalesce(numPartitions).combineByKey()
+- Fewer shuffle partitions and doesn't shuffle data
+-Larger task and it require more memory and it only descrese the partitions
+
+# Perfoemance depends on below factors
+- CPU Cores-If an Executor is allocated fewer CPU cores than it needs, it may become a bottleneck and slow down processing.
+- Memory- If an Executor runs out of memory, it may need to spill data to disk, which can slow down processing.
+- N/W-Slow network connections can cause delays in data transfer, which can slow down processing.
+- Data Distribution-- If data is skewed, meaning that some nodes have more data to process than others, it can cause some Executors to become bottlenecks and slow down processing.
+- Task Granularity --If tasks are too small, there may be too much overhead associated with task scheduling and data transfer, which can slow down processing. Conversely, if tasks are too large, they may take longer to complete, which can also slow down processing.
+optimize the performance of Spark Executors, it’s important to balance the resources allocated to each Executor, tune the application to minimize data skew and optimize the task granularity, and choose the appropriate type of Executor based on the specific requirements of the application
+
+- Always keep in mind, that the number of Spark jobs is equal to the number of actions in the application and each Spark job should have at least one Stage.
+- The number of tasks you can see in each stage is the number of partitions that Spark is going to work on and each task inside a stage is the same work that will be done by Spark but on a different partition of data.
+
+- RDD transformation are lazy,none of the transformation get executed until you call the action on RDD. as those immuatable any transformation will result in new RDD
+# Two types of  Tranformations :-
+    ##  Narrow transformations 
+    - are result of map() and filter() functions and these compute data that live on a single partition meaning there will not be any data movement between partitions to execute narrow transformations. other map(),mapPartition(),filter(),flatMap(),union()
+
+    -Wide Transformations are result of groupByKey(),reduceByKey() and CombineByKey() functions and these compute data that live on many partitions meaning there will be data movements between partitions to execute wide transformations. Since these shuffles the data, they also called shuffle transformations.
+    other aggregateByKey(), aggregate(), join(), repartition() wide transformations are expensive operations due to shuffling.
