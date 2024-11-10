@@ -400,7 +400,8 @@ we would have one row, but an additional column to denote the previous and curre
 Historical data will be maintained as in SCD Type 2 but the distinction here is that the history will be maintained on a separate table within the data warehouse. The current record will be included in the primary table.
 
 # To find the median of the records--Middle record
-  ```With ranks AS (
+  ```
+  With ranks AS (
       SELECT LAT_N, RANK() OVER(ORDER BY LAT_N DESC) as ranking
       FROM STATION
   )
@@ -770,6 +771,218 @@ LEFT JOIN Employees e3 ON e2.manager_id = e3.id
 LEFT JOIN Employees e4 ON e3.manager_id = e4.id
 ORDER BY e1.id;
 
+
+  ```
+
+  # New Emloyee based quries
+  ```
+  /*
+Enter your query here.
+*/
+with pg as(
+    select task_id,start_date,end_date,
+     DATE_ADD(Start_Date, interval (-ROW_NUMBER() OVER (ORDER BY Start_Date)) day) AS Project_Group_date
+    from Projects
+),
+Projectstart_endDate AS (
+    SELECT 
+        MIN(start_date) AS Project_StartDate,
+        MAX(end_date) AS Project_EndDate,
+ DATEDIFF(  MAX(End_Date),MIN(Start_Date)) + 1 AS Duration
+    FROM pg
+    GROUP BY Project_Group_date
+)
+SELECT 
+    Project_StartDate, 
+    Project_EndDate
+FROM Projectstart_endDate
+ORDER BY 
+    Duration ASC,
+    Project_StartDate ASC;
+
+
+
+select * from Students s
+join Packages p
+on s.id=p.id
+
+SELECT s.hacker_id, h.name, SUM(s.max_score) AS total_score
+FROM (
+    SELECT hacker_id, challenge_id, MAX(score) AS max_score
+    FROM Submissions
+    GROUP BY hacker_id, challenge_id
+) s
+JOIN Hackers h ON s.hacker_id = h.hacker_id
+GROUP BY s.hacker_id, h.name
+HAVING SUM(s.max_score) > 0
+ORDER BY total_score DESC, s.hacker_id;
+
+SELECT 
+    CASE WHEN a + b > c AND b + c > a AND c + a > b
+        THEN  
+            CASE WHEN a = b AND b = c
+                THEN 'Equilateral'
+            ELSE
+                CASE WHEN a = b OR b = c OR c = a
+                    THEN 'Isosceles'
+                ELSE 'Scalene'
+                END
+            END
+    ELSE 'Not A Triangle'
+    END
+    FROM triangles;
+
+    SELECT 
+    MAX(CASE WHEN Occupation = 'Doctor' THEN Name END) AS Doctor,
+    MAX(CASE WHEN Occupation = 'Professor' THEN Name END) AS Professor,
+    MAX(CASE WHEN Occupation = 'Singer' THEN Name END) AS Singer,
+    MAX(CASE WHEN Occupation = 'Actor' THEN Name END) AS Actor
+FROM (
+    SELECT Name, Occupation,
+           ROW_NUMBER() OVER (PARTITION BY Occupation ORDER BY Name) AS RowNum
+    FROM OCCUPATIONS
+) AS NumberedOccupations
+GROUP BY RowNum
+ORDER BY RowNum;
+
+
+
+select 
+max(case when OCCUPATION ='Doctor' then name end )as Doctor,
+max(case when OCCUPATION ='Professor' then name end )as Professor ,
+max(case when OCCUPATION ='Singer' then name end )as Singer  ,
+max(case when OCCUPATION ='Actor' then name end )as Actor   
+from OCCUPATIONS 
+group OCCUPATION
+
+
+select (case when g.grade >=8 then s.name else null end), g.grade, s.marks from students s
+join grades g on s.marks between g.min_mark and g.max_mark order by g.grade desc, s.name asc, s.marks asc;
+
+select ID, case when  grade > 8 then Name else 'NULL' end name, Marks,grade ,case when grade > 8 then 1 else 0 end flag from (
+select ID, Name, Marks,g.grade from Students s join Grades g on s.marks between g.min_mark and g.max_mark
+    )k order by 
+        flag DESC, 
+    CASE WHEN flag = 1 THEN grade END DESC,
+    CASE WHEN flag = 1 THEN Name END,
+    CASE WHEN flag = 0 THEN Name END,
+    CASE WHEN flag = 0 THEN Marks END ASC;
+
+
+WITH RECURSIVE Numbers AS ( SELECT 2 AS num UNION ALL SELECT num + 1 FROM Numbers WHERE num < 1000 ), 
+Primes AS ( SELECT n.num FROM Numbers n WHERE NOT EXISTS ( SELECT 1 FROM Numbers n2 WHERE n2.num < n.num AND n.num % n2.num = 0 ) ) SELECT GROUP_CONCAT(num SEPARATOR '&') AS PrimeNumber FROM Primes;
+
+
+select studentid ,count(distinct courseid) cnt
+ where cnt=(
+select
+  count(distinct courseid) course_cnt
+ from sudent_batch where extract(year from enrollmentdate)=2019)
+ where extract(year from enrollmentdate)=2019
+ group by studentid
+
+
+ -- i. List out the department wise maximum salary, 
+-- minimum salary, average salary of the employees.
+
+-- join d and e on departid
+-- departmentname, ef. salary
+-- GROUP BY departmentname, MIN, MAX, AVG
+
+SELECT 
+    d.department,
+    MIN(ef.salary) as min_salary,
+    MAX(ef.salary) as max_salry,
+    AVG(ef.salary) as avg_salary
+FROM department as d
+JOIN 
+emp_fact ef
+ON ef.department_id = d.department_id
+GROUP BY d.department
+
+
+
+
+-- ii. List out employee having the third highest salary.
+
+SELECT *
+FROM 
+ (   SELECT 
+        *,
+        RANK() OVER(ORDER BY salary DESC) as ranks,
+        DENSE_RANK() OVER(ORDER BY salary DESC) as dr
+    FROM emp_fact
+    ) as subqeury
+WHERE dr = 3
+
+
+WITH cte_salary_table
+AS
+ (   SELECT 
+        *,
+        RANK() OVER(ORDER BY salary DESC) as ranks,
+        DENSE_RANK() OVER(ORDER BY salary DESC) as dr
+    FROM emp_fact
+    ) 
+SELECT * FROM 
+cte_salary_table
+WHERE dr = 3
+
+-- List out the department having at least four employees.
+
+
+SELECT 
+    d.department
+    -- COUNT(ef.employee_id)
+FROM department as d
+JOIN 
+emp_fact ef
+ON ef.department_id = d.department_id
+GROUP BY d.department
+HAVING COUNT(ef.employee_id) >= 4
+
+
+-- iv. Find out the employees who earn greater than the average salary for their department.
+
+SELECT 
+    e1.employee_id,
+    e1.emp_name,
+    e1.salary,
+    e1.department_id
+FROM emp_fact as e1 
+WHERE e1.salary > (SELECT
+                    AVG(e2.salary)
+                FROM emp_fact as e2
+                WHERE e2.department_id = e1.department_id);
+
+SELECT
+    AVG(salary)
+FROM emp_fact
+WHERE department_id = 30
+
+
+# list out employee whose drwing more salary than there managers
+
+with emp_slary as(
+select e.employee_id,e.salary from 
+employee s
+),
+manager_sal as (
+select e.employe_id,m.manager_id,e.salary from 
+employee e join emp-manager m on e=employeeid=m.employeeid
+)
+select distinct e.employee_id
+from  empl_salary e join manager_sal m 
+on e.employeeid=m.manager_id
+where e.empsal>m.manger_sal
+
+select a.employee_id,m.managerid,a.salary_empsalary,sm salary manager_sal
+from employee a
+join manager_employee m
+on a.employee_id=m.employee_id
+join employee sm
+on m.manager_id=sm.employee.id
+where a.salary>sm.salary
 
   ```
 
