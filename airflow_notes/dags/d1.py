@@ -10,7 +10,7 @@ default_args = {
     "retries": 0,
     "depends_on_past": False,
     "start_date": "2024-09-09",
-    "email": ["nikumar@pch.com"],
+    "email": ["xx"],
     "email_on_failure": True,
     "email_on_retry": True,
 }

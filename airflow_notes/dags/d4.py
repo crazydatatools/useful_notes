@@ -10,7 +10,7 @@ default_args = {
     "retries": 0,
     "depends_on_past": False,
     "start_date": "2023-11-01",
-    "email": "cda_dev_support@pch.com",
+    "email": "x",
     "email_on_failure": True,
     "email_on_retry": True,
 }

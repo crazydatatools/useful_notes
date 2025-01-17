@@ -23,7 +23,7 @@ default_args = {
     "retries": 0,
     "depends_on_past": False,
     "start_date": datetime(2024, 9, 20, tzinfo=pendulum.timezone("America/New_York")),
-    "email": ["lkolluru@pch.com","dlychev@pch.com"],
+    "email": ["xx"],
     "email_on_failure": True,
     "email_on_retry": True,
 }

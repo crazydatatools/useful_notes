@@ -9,7 +9,7 @@ default_args = {
     "retries": 0,
     "depends_on_past": False,
     "start_date": "2021-03-01",
-    "email": "premieraudiencesupport@pch.com",
+    "email": "x@x.com",
     "email_on_failure": True,
     "email_on_retry": True,
 }
