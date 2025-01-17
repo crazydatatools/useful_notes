@@ -68,6 +68,8 @@
 ## Deployment
  - Monitoring and Re-training
 
+ https://towardsdatascience.com/transforming-data-quality-automating-sql-testing-for-faster-smarter-analytics-6da431493570
+
 
 ## Common Terms
 -  corpus --entrie text

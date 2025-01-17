@@ -191,6 +191,9 @@ df_uniform
     .show()
 
 ```
+
+Best Link--https://urlit.me/blog/pyspark-estimate-partition-count-for-file-read/
+
 - Skewed Dataset
 
 ```
@@ -288,3 +291,209 @@ optimize the performance of Spark Executors, it’s important to balance the res
 
     -Wide Transformations are result of groupByKey(),reduceByKey() and CombineByKey() functions and these compute data that live on many partitions meaning there will be data movements between partitions to execute wide transformations. Since these shuffles the data, they also called shuffle transformations.
     other aggregateByKey(), aggregate(), join(), repartition() wide transformations are expensive operations due to shuffling.
+
+/*
+When the Spark application is executed, it creates a DAG. Then the DAG Scheduler creates stages, which are further divided into several tasks. A task is a unit of work that sends to the executor. The Task Scheduler schedules task execution on executors. Each stage has some task, one task per shuffle partition. The Same task is done over different partitions of RDD. Each task processes each shuffle partition.
+
+The number of shuffle partitions depends on two properties.
+
+spark.default.parallelism
+spark.sql.shuffle.partitions
+The property spark.default.parallelism was introduced with RDD hence this property is only applicable to RDD. This property defines the initial number of partitions created when creating an RDD. The default value for this configuration is set to the number of all cores on all nodes in a cluster. If you are running Spark locally, it is set to the number of cores on your system. You can set this property as below:
+
+spark.default.parallelism = <<integer value>>
+
+The property spark.sql.shuffle.partitions controls the number of shuffle partitions created after wide transformation for RDD and dataframe. Whenever wide transformations such as join(), agg(), etc., are executed by a Spark application, it generates N shuffle partitions where N is the value set by the spark.sql.shuffle.partitions property. Spark can potentially create N files in the output directory. If you are storing a dataframe in a partitioned table, the total number of files will equal N * <potential table partitions> in the output directory. The default value for this property is 200. You should set the number of shuffle partitions according to your cluster's data size and available resources. The number of partitions should be multiple of the number of executors you have so that partitions can be equally distributed across tasks.
+*/
+```rdd= spark.sparkContext.parallelize(range(0,20))
+#rdd.collect()
+print("no of partitions"+str(rdd.getNumPartitions()))
+#print("spark.default.parallelism"+str(spark.default.parallelism))
+#print("spark.sql.shuffle.partitions"+spark.conf("spark.sql.shuffle.partitions")
+for i ,data in enumerate(rdd.glom().collect()):
+    print("Partition{}:{}".format(i,data))
+
+rdd2=rdd.repartition(4)
+print("after no of partitions"+str(rdd2.getNumPartitions()))
+for i ,data in enumerate(rdd2.glom().collect()):
+    print("Partition{}:{}".format(i,data))
+rdd3 = rdd.coalesce(4)
+print("Number of partitions after coalesce: " + str(rdd3.getNumPartitions()))
+for i ,data in enumerate(rdd3.glom().collect()):
+        print("Partition{}:{}".format(i,data))
+
+https://github.com/subhamkharwal/ease-with-apache-spark/blob/master/09_salting_technique.ipynb
+```
+In the PySpark example given below, I am processing 2GB of data. I have a dataframe called df. I want to repartition it and then store it on a table. This can be achieved in three steps, as given below.
+Create a variable number_of_files and assign an integer value to it. Depending on the data, you need to tweak the value of this variable. I have set number_of_files = 10. Create a column having unique values, as shown below. I created the _unique_id column having unique values by using the monotonically_increasing_id() function.
+``from pyspark.sql import functions as F
+number_of_files = 10
+df = df.withColumn('_unique_id', F.monotonically_increasing_id())```
+
+2. After this, apply the salting technique to distribute records across partitions using a random value. In Spark, salting is a technique that adds random values to distribute Spark partition data evenly. For this, we need to create a derived column by taking the modulo value of the _unique_id column created above; not really a random number, but it works well. I have created a column called _salted_key in this example.
+
+df = df.withColumn('_salted_key', F.col('_unique_id') % number_of_files)
+
+3. Repartition dataframe based on _salted_key column.
+
+df = df.repartition(number_of_files, '_salted_key') \                  
+                           .drop('_unique_id', '_salted_key')
+
+from pyspark.sql.functions import broadcast
+small_df = spark.read.parquet("small_dataset.parquet")
+result_df = large_df.join(broadcast(small_df), "common_column")
+
+# Even with 2 dataframes of 10 rows each, you would end up having 64 number of partitions after a cross join.
+from pyspark.sql.types import *
+number of partitions (cross-joined df) =number of partitions(df1) x number of partitions(df2)
+def beautiful_func(range1, range2):
+    count1 = list(range(range1))
+    count2 = list(range(range2))
+    df1 = spark.createDataFrame(count1,IntegerType())
+    df2 = spark.createDataFrame(count2,IntegerType())
+    df1_num_partitions = df1.rdd.getNumPartitions() #getting the number of partitions of df1
+    df2_num_partitions = df2.rdd.getNumPartitions() #getting the number of partitions of df2
+    df1 = df1.repartition(df1_num_partitions) #repartitioning df1 with same number of partitions as earlier
+    df2 = df2.repartition(df2_num_partitions) #repartitioning df2 with same number of partitions as earlier
+    cj = df1.crossJoin(df2)
+    print("number of partition of df1: " + str(df1.rdd.getNumPartitions()))
+    print("number of partition of df2: " + str(df2.rdd.getNumPartitions()))
+    print("number of partition after cross join: " + str(cj.rdd.getNumPartitions()))
+
+### What AQE (Adaptive Query Execution) does is, it:
+    Dynamically coalesce shuffle partitions
+    Dynamically switching join strategies (changing physical plan midway!)
+    Dynamically optimizing skew join
+        Note: AQE cannot avoid shuffle because AQE gets statistics of data from output exchange which is after shuffling (end of that stage)
+
+##  Driver Memory Allocation
+The driver memory itself has 2 kinds of memories again:
+Heap memory: Here all the JVM processes runs (and that’ll be your spark code).
+Overhead memory: Here all the non JVM processes runs. This memory is used for shuffles, exchanges and network buffer.
+
+
+## Executor Memory Allocation
+Coming to executor memory, we have 4 kinds of memories:
+
+Heap memory
+Overhead memory
+Offheap memory
+pyspark memory
+Note1: Say you ask for 8GBs of executor memory → 800MBs of overhead memory. If container size itself < 8GBs then YRM (YARN Resource Manager or Cluster Manager) cannot assign the asked executor memory (isn’t it!). So, always make sure you know about the cluster configuration when you go around manually specifying memories (just kidding guys 🤗)
+Note2: pyspark is NOT a JVM process, so you get only the overhead memory for running pyspark code. If pyspark memory > overhead memory, then you will end up getting OOM Error (yeah, now you know why you get this error. Thank me later 😉)        
+
+Reserved memory: 300MB and is fixed for spark engine.
+Spark memory: 60% of (8GB-300MB). This memory is used for dataframe operations and caching. (This is where the magic happens ✨)
+User memory: 40% of (8GB-300MB). This memory is used for user defined functions, spark internal metadata, RDD conversion operations and RDD lineage and dependencies.
+sPARK MEMORY DIVIDED INTO TWO:-
+    Storage memory pool: cache memory for dataframes
+    Executor memory pool: This memory is used as buffer memory for dataframe operations.
+    Note: Executor memory pool is short lived and is freed immediately as soon as execution is completed.
+    The executor memory pool is divided further in slots which gets the tasks. Task distribution is done by Unified Memory Manager (UMM). The process is something like this:
+    slots get the tasks >> tasks ask for memory from UMM >> UMM assigns some % of total executor pool memory to tasks.
+
+rECURSIVE qUERY
+with recursive nums as (
+select 1 as num --base query
+union All
+select num+1 as num from nums where num < 10 --recursive query
+)
+select * from nums
+
+
+WITH data AS (
+    SELECT  *
+    FROM
+    (
+        VALUES  (N'Alice', 250, 1, 250)
+        ,   (N'Bob', 170, 2, 420)
+        ,   (N'Alex', 350, 3, 770)
+        ,   (N'John', 400, 4, 1170)
+        ,   (N'Winston', 500, 5, 1670)
+        ,   (N'Marie', 200, 6, 1870)
+    ) t (name,weight,turn,weight_cumulative)
+
+)
+, cte_elevator AS (
+    SELECT  name, weight, turn, weight AS total, 1 AS trip
+    FROM    data d
+    WHERE   turn = 1
+    UNION ALL
+    SELECT  d.name, d.weight, d.turn
+    ,   CASE WHEN e.total + d.weight > 1000 THEN d.weight ELSE e.total + d.weight END as weight
+    ,   CASE WHEN e.total + d.weight > 1000 THEN trip + 1 ELSE trip END as trip
+    FROM    cte_elevator e
+    INNER JOIN data d
+        ON  d.turn = e.turn + 1
+    )
+
+select name from 
+data d join (SELECT max(turn) as turn from cte_elevator group by trip) sq
+on d.turn = sq.turn
+
+# there are 2 kinds of actions:
+
+Which brings data to driver node: collect(), take(), show(), count(), reduce() etc.
+Which performs the actions on each partition/RDD: saveAsTextFile(), saveAsTable(), write(), foreach()
+only foreach() is an action which allows you to perform transformation on RDDs before saving
+
+read.csv() is NOT always a transformation. If you “inferSchema”, then its an Action
+pivot() is not a transformation. Tt triggers a new job to “collect” the distinct values of column it needs to pivot. Pass the second parameter of pivot() to skip the collect() call.
+foreach() is a neat-and-clean action which allows you to iterate over the dataset row by row to perform an IO operation
+- Files Partition Size is a well known configuration which is configured through — spark.sql.files.maxPartitionBytes. The default value is set to 128 MB since Spark Version ≥ 2.0.0. 
+# Check the default partition size
+partition_size = spark.conf.get("spark.sql.files.maxPartitionBytes").replace("b","")
+print(f"Partition Size: {partition_size} in bytes and {int(partition_size) / 1024 / 1024} in MB")
+# Check the default parallelism available
+print(f"Parallelism : {spark.sparkContext.defaultParallelism}")
+
+# File size that we are going to import
+import os
+file_size = os.path.getsize('dataset/sales_combined_2.csv')
+print(f"""Data File Size: 
+            {file_size} in bytes 
+            {int(file_size) / 1024 / 1024} in MB
+            {int(file_size) / 1024 / 1024 / 1024} in GB""")
+def get_time(func):n t
+    def inner_get_time() -> str:
+        start_time = time.time()
+        func()
+        end_time = time.time()
+        print("-"*80)
+        return (f"Execution time: {(end_time - start_time)*1000} ms")
+    print(inner_get_time())
+    print("-"*80)            
+
+# Lets read the file and write in noop format for Performance Benchmarking
+@get_time
+def x():
+    df = spark.read.format("csv").option("header", True).load("dataset/sales_combined_2.csv")
+    print(f"Number of Partition -> {df.rdd.getNumPartitions()}")
+    df.write.format("noop").mode("overwrite").save()            
+The data was divided into 20 partitions (which is not factor of cores) and took around 11.5 seconds to complete the execution.    
+
+- Execution 2: Increase the Partition Size to 3 times i.e. 384 MB
+Lets increase the partition size to 3 times in order to see the effect.Copy
+# Change the default partition size to 3 times to decrease the number of partitions
+spark.conf.set("spark.sql.files.maxPartitionBytes", str(128 * 3 * 1024 * 1024)+"b")
+
+# Verify the partition size
+partition_size = spark.conf.get("spark.sql.files.maxPartitionBytes").replace("b","")
+print(f"Partition Size: {partition_size} in bytes and {int(partition_size) / 1024 / 1024} in MB")
+# Lets read the file again with new partition size and write in noop format for Performance Benchmarking
+@get_time
+def x():
+    df = spark.read.format("csv").option("header", True).load("dataset/sales_combined_2.csv")
+    print(f"Number of Partition -> {df.rdd.getNumPartitions()}")
+    df.write.format("noop").mode("overwrite").save()
+    OK, it seems the number of partitions now decreased to 8 (factor of cores) and the time reduced to 9.5 seconds.
+- Execution 3: Set the partition size to 160 MB    
+# Change the default partition size to 160 MB to decrease the number of partitions
+spark.conf.set("spark.sql.files.maxPartitionBytes", str(160 * 1024 * 1024)+"b")
+# Verify the partition size
+partition_size = spark.conf.get("spark.sql.files.maxPartitionBytes").replace("b","")
+print(f"Partition Size: {partition_size} in bytes and {int(partition_size) / 1024 / 1024} in MB")
+the job timing further reduced to 7 seconds and the partition is increased to 16 which is factor of cores.
+
+In case of count(1) and count(*) we have almost same performance (as explain plans are same) but with count(col_name) we can have slight performance hit, but that’s OK as sometimes we need to get the correct count based on columns.
+If you notice the highlighted segment in the explain plans, count(1) and count(*) has the same plan (function = [count(1)]) with no change at all, whereas in count(city_id) — Spark applies function=[count(city_id)], which has to iterate over column to check for null values.https://urlit.me/blog/

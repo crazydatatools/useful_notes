@@ -1,5 +1,30 @@
 # useful_notes
 
+# Docker MYSQL Setup
+- $ docker pull mysql:latest
+$ docker run --name test-mysql -e MYSQL_ROOT_PASSWORD=strong_password -d mysql
+$ docker exec -it container_name bash
+$ docker exec -it test-mysql bash
+$ mysql -u root -p
+ mysql --host=127.0.0.1 --port=3307 -u root -p
+ $ ls /etc/mysql/conf.d/ # Returns no output
+Enter password: ...
+mysql>
+$ sudo apt update
+$ sudo apt install mysql-client
+$ docker run -d --name test-mysql -e MYSQL_ROOT_PASSWORD=strong_password -p 3307:3306 mysql
+Create an empty configuration file locally (on your machine):
+estart the container by linking the two empty .cnf files:
+
+
+$ docker run \
+   --name test-mysql \
+   -v /etc/docker/test-mysql:/etc/mysql/conf.d \
+   -e MYSQL_ROOT_PASSWORD=strong_password \
+   -d mysql
+$ sudo mkdir -p /etc/docker/test-mysql # Create a dir
+$ sudo touch /etc/docker/test-mysql/my.cnf # Create a config file inside dir
+
 # Hive Metadata extract from DB-Query----
 
 SELECT D.NAME DatabaseName,t.TBL_NAME tbl_name, t.TBL_TYPE,D.OWNER_NAME,c.column_name, c.comment, c.type_name, c.integer_idx,
@@ -984,5 +1009,196 @@ join employee sm
 on m.manager_id=sm.employee.id
 where a.salary>sm.salary
 
+
+# Write your MySQL query statement below
+WITH CTE AS(
+    SELECT  DISTINCT visited_on
+          , SUM(amount) OVER(PARTITION BY visited_on ORDER BY visited_on) AS am  
+    FROM customer
+)
+SELECT visited_on 
+      ,amount  
+      ,ROUND(average_amount,2) AS average_amount
+FROM (
+        SELECT visited_on 
+            ,SUM(am) OVER(ORDER BY visited_on ROWS BETWEEN 6 PRECEDING AND CURRENT ROW ) AS amount
+            ,AVG(SUM(am)) OVER(ORDER BY visited_on ROWS BETWEEN 6 PRECEDING AND CURRENT ROW ) AS average_amount
+            ,COUNT(*) OVER(ORDER BY visited_on ROWS BETWEEN 6 PRECEDING AND CURRENT ROW ) AS cnt
+        FROM CTE
+        GROUP BY visited_on
+)l 
+WHERE cnt = 7 
+ORDER BY visited_on
+
   ```
 
+  # Cohort
+  - new_user_activity restricts user activity to new users:
+
+  with new_user_activity as ( select activity.* from activity join users on users.id = activity.user_id and users.date = activity.date )
+  
+  - Cohort_active_user_count calculates the total number of active users — the denominator in our retention calculation — in each daily cohort:
+  ,cohort_active_user_count as (select date , count(distinct user_id)as count from new_user_activity group by 1)
+- On top of that, we’ll make a few smaller changes to the main query:--https://www.sisense.com/blog/how-to-calculate-cohort-retention-in-sql/
+SELECT
+  date,
+  'Day '|| to_char(period,
+    'DD') AS period,
+  new_users,
+  retained_users,
+  retention
+FROM (
+  SELECT
+    new_user_activity.date AS date,
+    (future_activity.date - new_user_activity.date) AS period,
+    MAX(cohort_size.count) AS new_users,
+    -- ALL equal IN GROUP 
+    COUNT(DISTINCT future_activity.user_id) AS retained_users,
+    COUNT(DISTINCT future_activity.user_id) / MAX(cohort_size.count)::float AS retention
+  FROM
+    new_user_activity
+  LEFT JOIN
+    activity AS future_activity
+  ON
+    new_user_activity.user_id = future_activity.user_id
+    AND new_user_activity.date = future_activity.date
+  LEFT JOIN
+    cohort_active_user_count AS cohort_size
+  ON
+    new_user_activity.date = cohort_size.date
+  GROUP BY
+    1,
+    2) t
+WHERE
+  period IS NOT NULL
+ORDER BY
+  date,
+  period
+
+
+#### Rentions MOM
+select
+  year(first_yyyymm),
+  month(first_yyyymm),
+  count(distinct customer_id) as new_customers,
+  sum(case when seqnum = 1 then 1 else 0 end) as m1,
+  sum(case when seqnum = 2 then 1 else 0 end) as m2,
+  sum(case when seqnum = 3 then 1 else 0 end) as m3,
+  sum(case when seqnum = 4 then 1 else 0 end) as m4,
+  sum(case when seqnum = 5 then 1 else 0 end) as m5,
+  sum(case when seqnum = 6 then 1 else 0 end) as m6,
+  sum(case when seqnum = 7 then 1 else 0 end) as m7,
+  sum(case when seqnum = 8 then 1 else 0 end) as m8,
+  sum(case when seqnum = 9 then 1 else 0 end) as m9,
+  sum(case when seqnum = 10 then 1 else 0 end) as m10
+from
+  (
+    select
+      customer_id,
+      first_yyyymm, yyyymm,
+      datediff(month, first_yyyymm, yyyymm) as seqnum
+    from
+      (
+        select
+          customer_id,
+          eomonth(created_at) as yyyymm,
+          min(eomonth(created_at))
+            over (partition by customer_id) as first_yyyymm
+        from transactions t
+        group by customer_id, eomonth(created_at)
+      ) t
+  ) t
+group by year(first_yyyymm), month(first_yyyymm)
+order by month(first_yyyymm);
+
+
+WITH del_orders AS (
+  SELECT 
+    order_id,
+    item,
+    LAG(item, 1) OVER (ORDER BY order_id) AS prev_order_item,
+    LEAD(item, 1) OVER (ORDER BY order_id) AS next_order_item,
+    LEAD(order_id, 1) OVER (ORDER BY order_id) AS next_order_id
+  FROM 
+    orders
+)
+SELECT 
+  order_id,
+  CASE 
+    WHEN order_id % 2 != 0 AND next_order_item IS NOT NULL THEN next_order_item
+    WHEN order_id % 2 != 0 AND next_order_id IS NULL THEN item
+    ELSE prev_order_item
+  END AS item
+FROM 
+  del_orders;
+
+
+WITH order_counts AS (
+  SELECT COUNT(order_id) AS total_orders 
+  FROM orders
+)
+
+SELECT
+  CASE
+    WHEN order_id % 2 != 0 AND order_id != total_orders THEN order_id + 1
+    WHEN order_id % 2 != 0 AND order_id = total_orders THEN order_id
+    ELSE order_id - 1
+  END AS corrected_order_id,
+  item
+FROM orders
+CROSS JOIN order_counts
+ORDER BY corrected_order_id;  
+
+WITH highest_prices AS (
+  SELECT 
+    ticker,
+    TO_CHAR(date, 'Mon-YYYY') AS highest_mth,
+    MAX(open) AS highest_open,
+    ROW_NUMBER() OVER (PARTITION BY ticker ORDER BY open DESC) AS row_num
+  FROM stock_prices
+  GROUP BY ticker, TO_CHAR(date, 'Mon-YYYY'), open
+),
+lowest_prices AS (
+  SELECT 
+    ticker,
+    TO_CHAR(date, 'Mon-YYYY') AS lowest_mth,
+    MIN(open) AS lowest_open,
+    ROW_NUMBER() OVER (PARTITION BY ticker ORDER BY open) AS row_num
+  FROM stock_prices
+  GROUP BY ticker, TO_CHAR(date, 'Mon-YYYY'), open
+)
+
+SELECT
+  highest.ticker,
+  highest.highest_mth,
+  highest.highest_open,
+  lowest.lowest_mth,
+  lowest.lowest_open
+FROM highest_prices as highest
+INNER JOIN lowest_prices AS lowest
+  ON highest.ticker = lowest.ticker
+  AND highest.row_num = 1 -- Highest open price
+  AND lowest.row_num = 1 -- Lowest open price
+ORDER BY highest.ticker;
+
+
+SELECT * FROM
+(
+  -- #1 from_item
+  SELECT 
+    airline,
+    departure_airport,
+    departure_delay
+  FROM `bigquery-samples.airline_ontime_data.flights`
+)
+PIVOT
+(
+  -- #2 aggregate
+  AVG(departure_delay) AS avgdelay
+  -- #3 pivot_column
+  FOR airline in ('AA', 'KH', 'DL', '9E')
+)
+
+Data models serve as the backbone upon which complex systems are built and operated. At its core, a data model is a structured representation that organizes and encapsulates the essential characteristics of real-world entities, events, and actions. The schema in a data model defines the structure of the tables, including the columns, data types, and relationships.
+https://towardsdatascience.com/data-entropy-more-data-more-problems-fa889a9dd0ec
+https://freedium.cfd/https://medium.com/@junshan0/designing-data-model-with-schema-evolution-678a069dbc75

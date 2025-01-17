@@ -38,3 +38,16 @@ smtp_pwd_get = smtp_pwd_response.payload.data.decode('UTF-8')
 ```
 google-cloud-platform://?extra__google_cloud_platform__key_secret_name=suneb&extra__google_cloud_platform__project=coregcpproj&extra__google_cloud_platform__key_secret_project_id=hostprojectname&extra__google_cloud_platform__num_retries=0
 ```
+
+
+# best practices:
+# It's ok to import modules that are not expensive to load at top-level of a DAG file
+import random
+import pendulum
+
+# Expensive imports should be avoided as top level imports, because DAG files are parsed frequently, resulting in top-level code being executed.
+#
+# import pandas
+# import torch
+# import tensorflow
+#
