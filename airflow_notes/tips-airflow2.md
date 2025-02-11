@@ -51,3 +51,5 @@ import pendulum
 # import torch
 # import tensorflow
 #
+
+- An Airflow dataset serves as a logical grouping of data and can be updated by upstream “producer” tasks. These dataset updates contribute to the scheduling of downstream “consumer” DAGs.

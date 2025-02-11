@@ -7,4 +7,5 @@ gcp_grp_devai_users@pch.com custom_bq_datacanvas_access
 --BigQuery Connection User
 --Data Lineage Viewer
 
-val df = spark.read.format("jdbc").option("driver","com.mysql.cj.jdbc.Driver").option("url", "jdbc:mysql://frontpagefpcdbslave.prod.pch.com:3306/frontv2_prod").option("dbtable", "story_log").option("user", "p_bd_ms_mysql_svc").option("password", "GR@nd-s3ntrLP").load()
+val df = spark.read.format("jdbc").option("driver","com.mysql.cj.jdbc.Driver").option("url", "jdbc:mysql://frontpagefpcdbslave.prod.pch.com:3306/frontv2_prod")
+.option("dbtable", "story_log").option("user", "p_bd_ms_mysql_svc").option("password", "GR@nd-s3ntrLP").load()

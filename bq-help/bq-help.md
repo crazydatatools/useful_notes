@@ -1,0 +1,29 @@
+Optimizing BigQuery costs is an ongoing journey that requires vigilance, understanding, and proactive management. By implementing the strategies outlined in this guide—from effective table partitioning to executing smart cleanup processes—organizations can significantly reduce their BigQuery expenses without compromising performance. Remember that cost optimization isn’t just about immediate savings; it’s about building sustainable data practices that scale with your organization’s growth. Regular monitoring, continuous optimization, and staying informed about BigQuery’s latest features will ensure you’re making the most of your data infrastructure investment while keeping costs under control.
+
+For organizations looking to take their BigQuery cost optimization to the next level, Masthead’s platform offers advanced insights and tools to identify cost-saving opportunities and eliminate wasteful compute resources. By partnering with experts who understand the complexities of BigQuery operations, you can unlock additional savings and ensure your data infrastructure operates at peak efficiency.
+
+-- Use partition tables 
+It is very important to use partition tables, even if you have a small amount of data in the table. Without table partitioning, your cloud cost bill may be notably higher than with it.
+For example, we have a transactional table with ~700M rows and a historical depth of around one year, which is not partitioned.
+
+Above this table are some simple Looker studio reports that query the last 7 days with many different types of visualizations (charts, graphs, tables, etc.). Regular “select” from this table performs a full scan for the whole table (~650 GB of billed bytes ), and it will cost around $4 in On-demand billing. It might not seem too much, but if you query this table through the Looker Studio report, each refresh data will refresh each visualization, and each refresh will cost you $4. It can quickly become a daily $2-3K bill (from our experience). On the other hand, the usage for the partition daily table – the same “select” for 7 days of data will cost you 43.3 GB of billed bytes = ~ $0.2.
+
+--  Partition types. We have two main types of partitions:
+ # Time-unit column partitioning
+# Ingestion time partitioning
+From our practice, the preferred type is the time_unit type. It is happening when your data is arriving late, for example, we have a daily level ingestion partitioned table with massive data inserted daily (~ 5 Billion rows), and partly (10%) the data from yesterday is arriving today because of a traffic\network issue. So, we have a significant amount (~ 500M rows) with a transaction date current_date()-1 inserted to the current_date() ingestion partition. 
+
+Note that it happens when we use the SQL inserting command or API request. This issue can be avoided with the BigQuery load command (reference). However, practice shows that all data ingestion happens in API request/streaming/dataform pipelines and not in the BigQuery command line with bash scripts. 
+
+This issue causes the problem with querying data by data analytics/data scientists because they need to manipulate with two timestamp columns: transactional_data and pseudo-column _PARTITIONTIME/_PARTITIONDATE and sometimes it is complicated to understand the difference between them – plus, if the table has set partition filter requirements = true it becomes really difficult to get the right date time boundaries for the data. One more unpleasant scenario is to fulfill the deleted/missed historical data from a few days. In the ingestion partition type, all this data will be inserted into the same daily partition regardless of the actual transaction date. 
+
+Managing the partition tables – the only way to get the actual size of the partition (we can not see the actual size of the partition in the BigQuery Studio UI of the table)
+Partition limits:
+You cannot repartition a table that is already partitioned. Creating a new table is the only option. From our experience, this process can be complicated and very costly, especially for large tables where you want to change the partitioning. Therefore, it’s important to plan the partitioning of the main tables from the design stage, if possible. Plus, creating a new partitioned table will revert all long-term storage data in the original table to active and thus bill at the higher active rate the storage.
+The same issue applies to tables without partitions — you’ll need to create a new table. This process can be complicated and costly, particularly for large tables, so it’s essential to plan the partitioning and the structure of the main tables from the design stage, if possible.
+Each table can have up to 10,000 partitions. If you use daily partitions, this will be sufficient for about 27 years; however, if you apply partitions by the hour, it will only last for about 14 months.
+BigQuery Execution Graph to improve query performance and costs
+ETL processes in BigQuery are often complicated and composite SQL queries with many common table expressions (CTEs)/subqueries/temp tables, etc. If we are not using a procedural language, where all separated by semicolons actions are executed as independent jobs, then all actions are executed within a single transaction, making this process very complicated to follow the data stream. So we don’t know how much data is inserted into the pipeline, how much data will be in the pipeline output, where is the “bottleneck” of the pipeline, and how we can improve the execution (and reduce costs). 
+
+
+In practice, we have found that leveraging the Bigquery Execution Graph is a good way to troubleshoot query performance. Here, you can find an essential guide on how to use it, though it may not be as detailed as you wish.
